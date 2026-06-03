@@ -52,8 +52,8 @@
   .tools{margin-left:auto; display:flex; gap:8px;}
   .tool{
     border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
-    border-radius:999px; padding:7px 12px; font-size:12.5px; cursor:pointer;
-    font-family:inherit; display:flex; align-items:center; gap:6px; transition:.18s;
+    border-radius:999px; padding:9px 15px; font-size:14.5px; cursor:pointer;
+    font-family:inherit; display:flex; align-items:center; gap:7px; transition:.18s;
   }
   .tool:hover{border-color:var(--accent); color:var(--accent-deep);}
   .tool.on{background:var(--accent); border-color:var(--accent); color:#fff;}
@@ -104,14 +104,14 @@
   .row{display:flex; gap:9px; align-items:flex-end;}
   .row.me{flex-direction:row-reverse;}
   .mini{
-    width:30px; height:30px; border-radius:50%; flex:0 0 auto;
+    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
     background:var(--accent); color:#fff; display:grid; place-items:center;
-    font-size:14px; font-family:"Klee One";
+    font-size:16px; font-family:"Klee One";
   }
   .row.me .mini{background:var(--sage);}
   .bubble{
-    padding:11px 14px; border-radius:16px; max-width:78%;
-    font-size:15px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
+    padding:13px 16px; border-radius:16px; max-width:80%;
+    font-size:18px; line-height:1.85; white-space:pre-wrap; word-break:break-word;
     box-shadow:0 2px 8px rgba(90,60,30,.07); animation:pop .25s ease;
   }
   @keyframes pop{from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none}}
@@ -132,12 +132,12 @@
   }
   textarea{
     flex:1; border:none; outline:none; resize:none; background:transparent;
-    font-family:inherit; font-size:15px; line-height:1.5; color:var(--ink);
-    max-height:120px; padding:8px 0;
+    font-family:inherit; font-size:18px; line-height:1.6; color:var(--ink);
+    max-height:140px; padding:9px 0;
   }
   textarea::placeholder{color:#b6a892;}
   .send{
-    flex:0 0 auto; width:42px; height:42px; border:none; border-radius:50%;
+    flex:0 0 auto; width:50px; height:50px; border:none; border-radius:50%;
     background:var(--accent); color:#fff; cursor:pointer; display:grid; place-items:center;
     transition:.18s; box-shadow:0 4px 12px rgba(201,104,61,.4);
   }
@@ -148,7 +148,7 @@
   /* ---- attach ---- */
   .composer{padding:6px 6px 6px 6px;}
   .attach{
-    flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+    flex:0 0 auto; width:46px; height:46px; border-radius:50%;
     border:1px solid var(--line); background:#fffdf8; cursor:pointer;
     display:grid; place-items:center; transition:.18s;
   }
@@ -197,7 +197,7 @@
   .dl-link:hover{filter:brightness(.95);}
 
   /* ---- mic ---- */
-  .mic{flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:#fffdf8; cursor:pointer; display:grid; place-items:center; transition:.18s;}
+  .mic{flex:0 0 auto; width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:#fffdf8; cursor:pointer; display:grid; place-items:center; transition:.18s;}
   .mic:hover{border-color:var(--accent); background:#fff5ec;}
   .mic.on{background:var(--accent); border-color:var(--accent); animation:micpulse 1.2s ease-in-out infinite;}
   .mic.on svg rect{fill:#fff;}
@@ -254,14 +254,14 @@
     <div class="composer">
       <input type="file" id="file" accept="image/*,application/pdf" hidden>
       <button class="attach" id="attachBtn" title="画像・PDFを添付">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3l7.8-7.8" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3l7.8-7.8" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="mic" id="micBtn" title="声で話す">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
       </button>
       <textarea id="input" rows="1" placeholder="ここに話したいことを書いてね…"></textarea>
       <button class="send" id="send" title="送る" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
       </button>
     </div>
     <div class="hint">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</div>
