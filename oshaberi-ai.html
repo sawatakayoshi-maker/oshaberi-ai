@@ -419,7 +419,7 @@ function loadVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
   const ja=vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
   if(!ja.length){ jaVoice=null; return; }
-  const prefer=["kyoko","o-ren","oren","sara","haruka","ayumi","nanami","mizuki","google","premium","enhanced","siri"]; // 女性・高品質寄りを優先
+  const prefer=["o-ren","oren","kyoko","sara","haruka","ayumi","nanami","mizuki","google","premium","enhanced","siri"]; // O-ren を最優先、なければ従来の女性・高品質寄りにフォールバック（表記ゆれ対応でハイフン有無の両方を残す）
   const avoid=["otoya","hattori","ichiro","daniel"]; // 男性ボイスは避ける
   let best=ja[0], bestScore=-1;
   for(const v of ja){
