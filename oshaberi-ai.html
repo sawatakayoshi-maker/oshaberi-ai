@@ -58,6 +58,18 @@
   .tool:hover{border-color:var(--accent); color:var(--accent-deep);}
   .tool.on{background:var(--accent); border-color:var(--accent); color:#fff;}
 
+  /* ---- header show/hide toggle ---- */
+  body.header-hidden header{ display:none; }
+  #hdrShowBtn{
+    position:fixed; top:calc(8px + env(safe-area-inset-top)); right:14px; z-index:20;
+    display:none; align-items:center; gap:7px;
+    border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
+    border-radius:999px; padding:9px 15px; font-size:14.5px; cursor:pointer;
+    font-family:inherit; box-shadow:var(--shadow);
+  }
+  #hdrShowBtn:hover{border-color:var(--accent); color:var(--accent-deep);}
+  body.header-hidden #hdrShowBtn{ display:inline-flex; }
+
   /* ---- Avatar stage ---- */
   .stage{
     display:flex; align-items:center; justify-content:center;
@@ -216,8 +228,11 @@
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
+      <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
     </div>
   </header>
+
+  <button id="hdrShowBtn" title="メニューを表示する">☰ メニュー</button>
 
   <div class="stage">
     <div class="avatar-wrap" id="avatarWrap">
@@ -266,6 +281,7 @@
 const MODEL = "claude-sonnet-4-20250514";
 const K_HIST = "oshaberi:history";
 const K_SUM  = "oshaberi:summary";
+const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
 const SUMMARY_EVERY = 8; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -408,6 +424,18 @@ async function clearMemory(){
   try{ await window.storage.delete(K_SUM); }catch(e){}
 }
 
+/* ---------- ヘッダーの表示/非表示 ---------- */
+function applyHeaderHidden(hidden){
+  document.body.classList.toggle("header-hidden", !!hidden);
+}
+async function setHeaderHidden(hidden){
+  applyHeaderHidden(hidden);
+  try{ await window.storage.set(K_UI, hidden ? "1" : "0", false); }catch(e){}
+}
+async function loadHeaderPref(){
+  try{ const v=await window.storage.get(K_UI); applyHeaderHidden(v && v.value==="1"); }catch(e){}
+}
+
 /* ---------- TTS ---------- */
 let jaVoice=null;
 function loadVoices(){
@@ -514,6 +542,9 @@ inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.valu
 
 inputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
 sendEl.addEventListener("click", send);
+
+$("hdrHideBtn").addEventListener("click", ()=> setHeaderHidden(true));
+$("hdrShowBtn").addEventListener("click", ()=> setHeaderHidden(false));
 
 voiceBtn.addEventListener("click",()=>{
   ttsEnabled=!ttsEnabled;
@@ -694,6 +725,7 @@ slideMake.addEventListener("click", makeSlides);
 
 (async function init(){
   setState("idle");
+  await loadHeaderPref();
   await loadMemory();
   greet(false);
   await saveMemory();
