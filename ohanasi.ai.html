@@ -181,6 +181,16 @@
   .attach-chip .rm:hover{color:var(--accent-deep);}
   .row.me .bubble .attach-chip{background:#fff;}
 
+  /* ---- quick actions (ファイル・天気・近くの名所) ---- */
+  .quickbar{max-width:680px; margin:0 auto 8px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .qbtn{
+    border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
+    border-radius:999px; padding:9px 15px; font-family:inherit; font-size:14.5px;
+    cursor:pointer; transition:.18s;
+  }
+  .qbtn:hover{border-color:var(--accent); color:var(--accent-deep); background:#fff5ec;}
+  .qbtn:disabled{opacity:.5; cursor:default;}
+
   /* ---- drop overlay ---- */
   #dropMask{
     position:fixed; inset:0; z-index:60; display:none;
@@ -265,6 +275,13 @@
   </main>
 
   <footer>
+    <div class="quickbar" id="quickbar">
+      <button class="qbtn" id="fileBtn" type="button" title="ファイルを読み込んでAIに渡す">📎 ファイル</button>
+      <button class="qbtn" id="wxBtn" type="button" title="今いる場所の天気">🌤 天気</button>
+      <button class="qbtn" id="placeBtn" type="button" title="最寄駅や近くの名所">📍 近くの名所</button>
+    </div>
+    <input type="file" id="fileInput" hidden accept=".txt,.text,.md,.markdown,.csv,.tsv,.json,.log,.html,.htm,.xml,.rtf,.pdf,text/*,application/pdf">
+    <div class="pending" id="pending" hidden></div>
     <div class="composer">
       <button class="mic" id="micBtn" title="声で話す">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
@@ -352,6 +369,7 @@ let memorySummary = "";  // 長期記憶（要約）
 let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
+let pendingFile = null;  // 送信待ちの添付ファイル {name, kind, text}
 
 const $ = (id)=>document.getElementById(id);
 const faceEl=$("face"), statusEl=$("status"), logEl=$("log"), mainEl=$("main");
@@ -502,21 +520,26 @@ async function refreshSummary(){
 }
 
 /* ---------- send flow ---------- */
-async function send(){
-  const text=inputEl.value.trim();
-  if(!text || busy) return;
-  busy=true; sendEl.disabled=true;
-  inputEl.value=""; autoGrow();
+function refreshSendDisabled(){
+  sendEl.disabled = busy || (inputEl.value.trim()==="" && !pendingFile);
+}
+// 1ターン実行。画面に出す文(displayText)と、AIにだけ渡す内容(modelContent)を分けられる。
+// modelContent を渡すと、その回のユーザー発言の中身だけ差し替えてAIに送る
+// （ファイル本文・天気・現在地データは吹き出しに出さず、AIにだけ渡すため）。
+async function runTurn(displayText, modelContent, file){
+  if(busy) return;
+  busy=true; refreshSendDisabled();
 
-  addBubble("user", text);
-  history.push({role:"user", content:text});
+  addBubble("user", displayText, file||null);
+  history.push({role:"user", content:displayText});
   userTurns++;
 
   setState("thinking"); setStatus("…考えてるよ");
 
   let system = SYSTEM_PROMPT + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
-  if(needsExpertGuard(text)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
-  let msgs = history.slice(-16);
+  if(needsExpertGuard(displayText)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
+  let msgs = history.slice(-16).map(m=>({role:m.role, content:m.content}));
+  if(modelContent){ msgs[msgs.length-1].content = modelContent; }
 
   try{
     const reply = await callClaude(msgs, system) || "ごめん、うまく言葉が出てこなかった。もう一度言ってもらえる?";
@@ -532,19 +555,242 @@ async function send(){
     setState("idle"); setStatus("接続エラー: "+msg);
     addBubble("assistant", "うまくつながらなかったみたい…。\n（"+msg+"）\n\n※このアプリは Claude.ai のアーティファクトとして開くと動きます。");
   }finally{
-    busy=false; sendEl.disabled = (inputEl.value.trim()==="");
+    busy=false; refreshSendDisabled();
   }
+}
+
+async function send(){
+  const text=inputEl.value.trim();
+  if((!text && !pendingFile) || busy) return;
+  inputEl.value=""; autoGrow();
+
+  const file=pendingFile; pendingFile=null; renderPending();
+  const display = text || "（ファイルを送ったよ）";
+  let modelContent = null;
+  if(file){
+    modelContent = (text || "このファイルの中身を読んで、わかりやすくやさしく教えて。") +
+      "\n\n――――――――\n【相手が送ってくれたファイル「"+file.name+"」の中身】\n"+file.text+
+      "\n――――――――\n（この中身をふまえて、短くやさしく話してね。長い丸写しはしないで。）";
+  }
+  await runTurn(display, modelContent, file ? {name:file.name, kind:file.kind} : null);
 }
 
 /* ---------- ui wiring ---------- */
 function autoGrow(){ inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,120)+"px"; }
-inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.value.trim()==="")||busy; });
+inputEl.addEventListener("input",()=>{ autoGrow(); refreshSendDisabled(); });
 
 inputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
 sendEl.addEventListener("click", send);
 
 $("hdrHideBtn").addEventListener("click", ()=> setHeaderHidden(true));
 $("hdrShowBtn").addEventListener("click", ()=> setHeaderHidden(false));
+
+/* ===================================================================
+   便利機能：ファイル読み込み / 天気 / 近くの名所
+   AIはテキスト1本しか受け取れないので、アプリ側でデータを集めて
+   プロンプトに添えてAIに渡す方式。外部通信や位置情報がこの表示枠で
+   ブロックされたときは、やさしいメッセージで取りやめる。
+   =================================================================== */
+const fileBtn=$("fileBtn"), fileInput=$("fileInput"), pendingEl=$("pending");
+const wxBtn=$("wxBtn"), placeBtn=$("placeBtn");
+const FILE_MAX = 20000; // AIに渡す文字数の上限（長すぎ防止）
+
+/* ---- 送信待ちファイルのチップ表示 ---- */
+function renderPending(){
+  pendingEl.innerHTML="";
+  if(!pendingFile){ pendingEl.hidden=true; return; }
+  pendingEl.hidden=false;
+  const chip=document.createElement("div"); chip.className="attach-chip";
+  const dc=document.createElement("div"); dc.className="doc"; dc.textContent="📄"; chip.appendChild(dc);
+  const nm=document.createElement("span"); nm.className="nm"; nm.textContent=pendingFile.name; chip.appendChild(nm);
+  const rm=document.createElement("button"); rm.className="rm"; rm.textContent="✕"; rm.title="取り消し";
+  rm.addEventListener("click",()=>{ pendingFile=null; renderPending(); refreshSendDisabled(); });
+  chip.appendChild(rm);
+  pendingEl.appendChild(chip);
+}
+
+/* ---- ファイル本文の取り出し（テキスト / PDF） ---- */
+let pdfjsReady=null;
+function loadPdfjs(){
+  if(pdfjsReady) return pdfjsReady;
+  pdfjsReady=new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+    s.onload=()=>{ try{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+      res(window.pdfjsLib);
+    }catch(e){ rej(e); } };
+    s.onerror=()=>rej(new Error("PDFを読む準備ができなかった"));
+    document.head.appendChild(s);
+  });
+  return pdfjsReady;
+}
+async function extractPdfText(f){
+  const lib=await loadPdfjs();
+  const buf=await f.arrayBuffer();
+  const pdf=await lib.getDocument({data:buf}).promise;
+  const max=Math.min(pdf.numPages, 40);
+  let out="";
+  for(let i=1;i<=max;i++){
+    const page=await pdf.getPage(i);
+    const tc=await page.getTextContent();
+    out+=tc.items.map(it=>it.str).join(" ")+"\n";
+  }
+  return out;
+}
+async function extractFileText(f){
+  if(/^image\//.test(f.type)){
+    throw new Error("画像の中身は読めないんだ。文字のファイルかPDFを送ってね");
+  }
+  if(f.type==="application/pdf" || /\.pdf$/i.test(f.name)){
+    return await extractPdfText(f);
+  }
+  return await f.text();
+}
+
+fileBtn.addEventListener("click", ()=>{ if(!busy) fileInput.click(); });
+fileInput.addEventListener("change", async ()=>{
+  const f=fileInput.files && fileInput.files[0];
+  fileInput.value="";
+  if(!f) return;
+  setStatus("…ファイルを読んでるよ");
+  try{
+    let text=await extractFileText(f);
+    if(!text || !text.trim()){
+      addBubble("assistant","このファイルからは文字を読み取れなかった…。テキストかPDFを試してみてね。");
+      setStatus(""); return;
+    }
+    let truncated=false;
+    if(text.length>FILE_MAX){ text=text.slice(0,FILE_MAX); truncated=true; }
+    pendingFile={ name:f.name, kind:"doc", text: text + (truncated ? "\n…（長いので途中までにしたよ）" : "") };
+    renderPending();
+    refreshSendDisabled();
+    setStatus("読めたよ。送るボタンか、ひとこと添えて送ってね");
+    setTimeout(()=>{ if(statusEl.textContent.indexOf("読めたよ")===0) setStatus(""); }, 4000);
+  }catch(e){
+    addBubble("assistant","ごめん、ファイルを読めなかった…。\n（"+(e.message||e)+"）");
+    setStatus("");
+  }
+});
+
+/* ---- 位置情報・天気・近くの場所（無料・キー不要のAPIを使用） ---- */
+function getPosition(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation){ rej(new Error("位置情報が使えない")); return; }
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:p.coords.latitude, lon:p.coords.longitude}),
+      e=>rej(e),
+      {enableHighAccuracy:false, timeout:9000, maximumAge:300000}
+    );
+  });
+}
+function haversine(la1,lo1,la2,lo2){
+  const R=6371000, t=Math.PI/180;
+  const dLa=(la2-la1)*t, dLo=(lo2-lo1)*t;
+  const a=Math.sin(dLa/2)**2 + Math.cos(la1*t)*Math.cos(la2*t)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function wxDesc(c){
+  const m={0:"快晴",1:"晴れ",2:"晴れときどき曇り",3:"曇り",45:"霧",48:"霧氷の霧",
+    51:"弱い霧雨",53:"霧雨",55:"強い霧雨",56:"凍る霧雨",57:"強い凍る霧雨",
+    61:"弱い雨",63:"雨",65:"強い雨",66:"凍る雨",67:"強い凍る雨",
+    71:"弱い雪",73:"雪",75:"強い雪",77:"細かい雪",
+    80:"にわか雨",81:"強いにわか雨",82:"激しいにわか雨",85:"にわか雪",86:"強いにわか雪",
+    95:"雷雨",96:"雷雨(ひょう)",99:"激しい雷雨(ひょう)"};
+  return m[c]||"—";
+}
+async function fetchWeather(lat,lon){
+  const url="https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"+
+    "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"+
+    "&timezone=auto&forecast_days=1";
+  const r=await fetch(url); if(!r.ok) throw new Error("天気の取得に失敗("+r.status+")");
+  const d=await r.json(); const c=d.current, day=d.daily;
+  return "現在 "+Math.round(c.temperature_2m)+"℃（体感"+Math.round(c.apparent_temperature)+"℃）、"+
+    wxDesc(c.weather_code)+"、湿度"+c.relative_humidity_2m+"%、風 "+c.wind_speed_10m+"m/s。"+
+    "今日の最高"+Math.round(day.temperature_2m_max[0])+"℃／最低"+Math.round(day.temperature_2m_min[0])+"℃、"+
+    "降水確率"+day.precipitation_probability_max[0]+"%。";
+}
+async function geocodeCity(q){
+  const url="https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ja&q="+encodeURIComponent(q);
+  const r=await fetch(url); if(!r.ok) throw new Error("場所検索に失敗");
+  const a=await r.json(); if(!a.length) return null;
+  return {lat:+a[0].lat, lon:+a[0].lon, name:a[0].display_name};
+}
+async function reverseName(lat,lon){
+  const url="https://nominatim.openstreetmap.org/reverse?format=json&accept-language=ja&zoom=14&lat="+lat+"&lon="+lon;
+  const r=await fetch(url); if(!r.ok) throw new Error("逆引き失敗");
+  const d=await r.json(); const a=d.address||{};
+  return a.suburb||a.neighbourhood||a.town||a.city||a.county||a.state||d.display_name||"";
+}
+async function nearbyPOI(lat,lon){
+  const q="[out:json][timeout:20];("+
+    'node["railway"="station"](around:2500,'+lat+','+lon+');'+
+    'node["tourism"~"attraction|museum|viewpoint|theme_park|zoo|gallery"](around:1800,'+lat+','+lon+');'+
+    'node["historic"](around:1800,'+lat+','+lon+');'+
+    ');out body 40;';
+  const r=await fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:"data="+encodeURIComponent(q)});
+  if(!r.ok) throw new Error("近くの場所の取得に失敗");
+  const d=await r.json(); const stations=[], spots=[];
+  for(const el of (d.elements||[])){
+    const t=el.tags||{}; const nm=t["name:ja"]||t.name; if(!nm || el.lat==null) continue;
+    const dist=haversine(lat,lon,el.lat,el.lon);
+    if(t.railway==="station") stations.push({nm,dist}); else spots.push({nm,dist});
+  }
+  const uniq=(arr)=>{ const seen=new Set(); return arr.filter(x=>seen.has(x.nm)?false:(seen.add(x.nm),true)); };
+  stations.sort((a,b)=>a.dist-b.dist); spots.sort((a,b)=>a.dist-b.dist);
+  return {stations:uniq(stations).slice(0,3), spots:uniq(spots).slice(0,6)};
+}
+
+// 位置を決める（端末の位置情報→だめなら地名を手入力）
+async function resolveLocation(askLabel){
+  try{ const p=await getPosition(); return {lat:p.lat, lon:p.lon}; }
+  catch(e){
+    const c=prompt(askLabel+"\n（位置情報が使えなかったので、市や駅の名前を入れてね。例：東京駅）");
+    if(!c) return null;
+    const g=await geocodeCity(c.trim()).catch(()=>null);
+    if(!g){ addBubble("assistant","ごめん、その場所が見つからなかった…。もう一度ためしてみてね。"); return null; }
+    return {lat:g.lat, lon:g.lon};
+  }
+}
+
+async function doWeather(){
+  if(busy) return;
+  setStatus("…天気を調べてるよ");
+  const loc=await resolveLocation("天気を知りたい場所を教えてね。");
+  if(!loc){ setStatus(""); return; }
+  let wx, place="";
+  try{ wx=await fetchWeather(loc.lat, loc.lon); }
+  catch(e){ addBubble("assistant","ごめん、天気の情報が取れなかった…。\n（この表示枠の制限でネットにつながらないのかも）"); setStatus(""); return; }
+  try{ place=await reverseName(loc.lat, loc.lon); }catch(e){}
+  setStatus("");
+  const display="今日の天気を教えて";
+  const modelContent=display+"\n\n【今の天気データ】場所: "+(place||"現在地")+"\n"+wx+
+    "\n（このデータをもとに、今日の天気と、服装や持ち物のひとことアドバイスを、やさしく短く話してね。数値の丸読みはしないで。）";
+  await runTurn(display, modelContent, null);
+}
+
+async function doPlace(){
+  if(busy) return;
+  setStatus("…近くを調べてるよ");
+  const loc=await resolveLocation("近くの名所を知りたいエリアを教えてね。");
+  if(!loc){ setStatus(""); return; }
+  let place="", poi=null;
+  try{ place=await reverseName(loc.lat, loc.lon); }catch(e){}
+  try{ poi=await nearbyPOI(loc.lat, loc.lon); }catch(e){}
+  setStatus("");
+  if(!place && !poi){ addBubble("assistant","ごめん、近くの情報が取れなかった…。\n（この表示枠の制限でネットにつながらないのかも）"); return; }
+  let ctx="【現在地の情報】エリア: "+(place||"不明");
+  if(poi && poi.stations.length){ ctx+="\n最寄駅: "+poi.stations.map(s=>s.nm+"（約"+Math.round(s.dist)+"m）").join("、"); }
+  if(poi && poi.spots.length){ ctx+="\n近くの名所・見どころ: "+poi.spots.map(s=>s.nm).join("、"); }
+  const display="今いるところの近くを教えて";
+  const modelContent=display+"\n\n"+ctx+
+    "\n（このデータをもとに、今いる場所のこと・最寄駅・近くで楽しめそうな所を、やさしく短く案内してね。データに無い場所は作らないで。）";
+  await runTurn(display, modelContent, null);
+}
+
+wxBtn.addEventListener("click", doWeather);
+placeBtn.addEventListener("click", doPlace);
 
 voiceBtn.addEventListener("click",()=>{
   ttsEnabled=!ttsEnabled;
