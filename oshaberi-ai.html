@@ -250,12 +250,7 @@
   </main>
 
   <footer>
-    <div class="pending" id="pending" hidden></div>
     <div class="composer">
-      <input type="file" id="file" accept="image/*,application/pdf" hidden>
-      <button class="attach" id="attachBtn" title="画像・PDFを添付">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3l7.8-7.8" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
       <button class="mic" id="micBtn" title="声で話す">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
       </button>
@@ -450,16 +445,22 @@ function speak(text){
   }catch(e){ setState("idle"); }
 }
 
-/* ---------- API ---------- */
+/* ---------- API（Claude.aiアーティファクト公式API / テキスト専用・APIキー不要） ---------- */
 async function callClaude(messages, system){
-  const res=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ model:MODEL, max_tokens:1024, system, messages })
-  });
-  if(!res.ok){ let detail=""; try{ detail=await res.text(); }catch(e){} throw new Error("API "+res.status+(detail?(": "+detail.slice(0,180)):"")); }
-  const data=await res.json();
-  return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  if(!(window.claude && typeof window.claude.complete === "function")){
+    throw new Error("この環境ではAIに接続できません。Claude.ai のアーティファクトとして開いてください。");
+  }
+  // window.claude.complete はテキスト1本のプロンプトを受け取る。system と会話を1つの文字列にまとめる。
+  let prompt = "";
+  if(system) prompt += system + "\n\n";
+  for(const m of messages){
+    const role = (m.role === "assistant") ? "Assistant" : "Human";
+    const content = (typeof m.content === "string") ? m.content : "";
+    prompt += role + ": " + content + "\n\n";
+  }
+  prompt += "Assistant:";
+  const out = await window.claude.complete(prompt);
+  return (out || "").replace(/^\s*Assistant:\s*/i, "").trim();
 }
 
 async function refreshSummary(){
@@ -475,32 +476,19 @@ async function refreshSummary(){
 /* ---------- send flow ---------- */
 async function send(){
   const text=inputEl.value.trim();
-  if((!text && !pendingFile) || busy) return;
+  if(!text || busy) return;
   busy=true; sendEl.disabled=true;
   inputEl.value=""; autoGrow();
 
-  const sentFile = pendingFile;
-  addBubble("user", text, sentFile);
-  const histText = text || (sentFile ? (sentFile.kind==="image" ? "(画像を添付)" : "(PDFを添付)") : "");
-  history.push({role:"user", content:histText});
+  addBubble("user", text);
+  history.push({role:"user", content:text});
   userTurns++;
-  pendingFile=null; renderPending();
 
   setState("thinking"); setStatus("…考えてるよ");
 
   let system = SYSTEM_PROMPT + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
   if(needsExpertGuard(text)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
   let msgs = history.slice(-16);
-  if(sentFile){
-    const blocks=[];
-    if(sentFile.kind==="image"){
-      blocks.push({type:"image", source:{type:"base64", media_type:sentFile.mediaType, data:sentFile.base64}});
-    }else{
-      blocks.push({type:"document", source:{type:"base64", media_type:"application/pdf", data:sentFile.base64}});
-    }
-    blocks.push({type:"text", text: text || "この内容について、いっしょに見て話そう。"});
-    msgs = msgs.slice(0,-1).concat([{role:"user", content:blocks}]);
-  }
 
   try{
     const reply = await callClaude(msgs, system) || "ごめん、うまく言葉が出てこなかった。もう一度言ってもらえる?";
@@ -514,68 +502,16 @@ async function send(){
     const msg = (err && err.message) ? err.message : "原因不明";
     console.error("callClaude failed:", err);
     setState("idle"); setStatus("接続エラー: "+msg);
-    addBubble("assistant", "うまくつながらなかったみたい…。\n（接続エラー: "+msg+"）\n\n※このアプリのAIは、外部の応答サービスに接続して動きます。今いる環境がその接続に対応していない可能性があります。パソコンのブラウザ版 Claude.ai で開くと動くことがあります。");
+    addBubble("assistant", "うまくつながらなかったみたい…。\n（"+msg+"）\n\n※このアプリは Claude.ai のアーティファクトとして開くと動きます。");
   }finally{
-    busy=false; sendEl.disabled = (inputEl.value.trim()==="" && !pendingFile);
+    busy=false; sendEl.disabled = (inputEl.value.trim()==="");
   }
 }
 
 /* ---------- ui wiring ---------- */
 function autoGrow(){ inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,120)+"px"; }
-inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy; });
+inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.value.trim()==="")||busy; });
 
-/* ---------- file attach ---------- */
-let pendingFile=null;
-const fileEl=document.getElementById("file");
-const attachBtn=document.getElementById("attachBtn");
-const pendingEl=document.getElementById("pending");
-function readFileDataUrl(file){
-  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error("読み込み失敗")); r.readAsDataURL(file); });
-}
-function renderPending(){
-  pendingEl.innerHTML="";
-  if(!pendingFile){ pendingEl.hidden=true; return; }
-  pendingEl.hidden=false;
-  const chip=document.createElement("div"); chip.className="attach-chip";
-  if(pendingFile.kind==="image"){ const im=document.createElement("img"); im.src=pendingFile.dataUrl; chip.appendChild(im); }
-  else{ const dc=document.createElement("div"); dc.className="doc"; dc.textContent="📄"; chip.appendChild(dc); }
-  const nm=document.createElement("span"); nm.className="nm"; nm.textContent=pendingFile.name; chip.appendChild(nm);
-  const x=document.createElement("button"); x.className="rm"; x.textContent="×"; x.title="取り消し";
-  x.onclick=()=>{ pendingFile=null; fileEl.value=""; renderPending(); sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy; };
-  chip.appendChild(x);
-  pendingEl.appendChild(chip);
-}
-attachBtn.addEventListener("click",()=>{ if(!busy) fileEl.click(); });
-async function acceptFile(f){
-  if(!f) return;
-  const isImg=f.type.startsWith("image/");
-  const isPdf=f.type==="application/pdf";
-  if(!isImg && !isPdf){ alert("画像かPDFを選んでね。"); fileEl.value=""; return; }
-  if(f.size > 8*1024*1024){ alert("ファイルが大きすぎるよ（8MBまで）。"); fileEl.value=""; return; }
-  try{
-    const dataUrl=await readFileDataUrl(f);
-    pendingFile={ name:f.name, kind:isImg?"image":"pdf", mediaType:f.type, base64:dataUrl.split(",")[1], dataUrl };
-    renderPending();
-    sendEl.disabled = busy;
-  }catch(e){ alert("ファイルを読み込めなかったよ。"); fileEl.value=""; }
-}
-fileEl.addEventListener("change", ()=>{ const f=fileEl.files && fileEl.files[0]; if(f) acceptFile(f); });
-
-/* ---------- drag & drop ---------- */
-const dropMask=document.createElement("div");
-dropMask.id="dropMask";
-dropMask.innerHTML='<div class="dm-inner">📎 ここにドロップして添付（画像・PDF）</div>';
-document.body.appendChild(dropMask);
-let dragDepth=0;
-window.addEventListener("dragenter",(e)=>{ e.preventDefault(); if(busy) return; dragDepth++; dropMask.classList.add("show"); });
-window.addEventListener("dragover",(e)=>{ e.preventDefault(); });
-window.addEventListener("dragleave",(e)=>{ e.preventDefault(); dragDepth--; if(dragDepth<=0){ dragDepth=0; dropMask.classList.remove("show"); } });
-window.addEventListener("drop",(e)=>{
-  e.preventDefault(); dragDepth=0; dropMask.classList.remove("show");
-  if(busy) return;
-  const f=e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if(f) acceptFile(f);
-});
 inputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
 sendEl.addEventListener("click", send);
 
@@ -645,7 +581,7 @@ function startListening(){
         if(r.isFinal) finalText+=r[0].transcript; else interim+=r[0].transcript;
       }
       inputEl.value=(finalText+interim); autoGrow();
-      sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy;
+      sendEl.disabled=(inputEl.value.trim()==="")||busy;
     };
     recog.onerror=(e)=>{
       clearTimeout(startWatch); listening=false; micBtn.classList.remove("on");
