@@ -227,6 +227,7 @@
   @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(201,104,61,.45)}50%{box-shadow:0 0 0 7px rgba(201,104,61,0)}}
 </style>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 <body>
   <header>
@@ -278,7 +279,7 @@
     <div class="quickbar" id="quickbar">
       <button class="qbtn" id="fileBtn" type="button" title="文章ファイルやPDFを読み込んでAIに渡す">📎 ファイルを読み込む</button>
     </div>
-    <input type="file" id="fileInput" hidden accept=".txt,.text,.md,.markdown,.csv,.tsv,.json,.log,.html,.htm,.xml,.rtf,.pdf,text/*,application/pdf">
+    <input type="file" id="fileInput" hidden>
     <div class="pending" id="pending" hidden></div>
     <div class="composer">
       <button class="mic" id="micBtn" title="声で話す">
@@ -608,25 +609,33 @@ function renderPending(){
 }
 
 /* ---- ファイル本文の取り出し（テキスト / PDF） ---- */
-let pdfjsReady=null;
-function loadPdfjs(){
-  if(pdfjsReady) return pdfjsReady;
-  pdfjsReady=new Promise((res,rej)=>{
-    const s=document.createElement("script");
-    s.src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
-    s.onload=()=>{ try{
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-      res(window.pdfjsLib);
-    }catch(e){ rej(e); } };
-    s.onerror=()=>rej(new Error("PDFを読む準備ができなかった"));
-    document.head.appendChild(s);
-  });
-  return pdfjsReady;
+// pdf.js は <head> で静的に読み込み済み（PptxGenJSと同じ方式）。
+// 表示枠の制限でWeb Worker/evalが使えないことがあるので、
+// ワーカーを使わず（fakeWorker）・eval無効でメインスレッド実行する。
+function getPdfLib(){
+  if(!window.pdfjsLib){
+    throw new Error("PDFを読む機能を準備できなかった（ネットの制限かも）");
+  }
+  if(!getPdfLib._init){
+    try{
+      // クロスオリジンWorkerは作れないため、pdf.jsはこのURLからワーカー本体を
+      // <script>として読み込み、メインスレッドで処理する（fakeWorker）。
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    }catch(e){}
+    getPdfLib._init=true;
+  }
+  return window.pdfjsLib;
 }
 async function extractPdfText(f){
-  const lib=await loadPdfjs();
+  const lib=getPdfLib();
   const buf=await f.arrayBuffer();
-  const pdf=await lib.getDocument({data:buf}).promise;
+  const pdf=await lib.getDocument({
+    data:buf,
+    isEvalSupported:false,      // CSPでevalが禁止でも動くように
+    disableFontFace:true,
+    useWorkerFetch:false
+  }).promise;
   const max=Math.min(pdf.numPages, 40);
   let out="";
   for(let i=1;i<=max;i++){
@@ -658,16 +667,20 @@ async function extractFileText(f){
   return await readAsText(f);
 }
 
+const PDF_TIP = "\n\nもしPDFがうまく読めないときは、PDFを開いて文章を選んでコピーし、下の入力欄に貼り付けて送ってね。それなら確実に読めるよ。";
 fileBtn.addEventListener("click", ()=>{ if(!busy) fileInput.click(); });
 fileInput.addEventListener("change", async ()=>{
   const f=fileInput.files && fileInput.files[0];
   fileInput.value="";
   if(!f) return;
+  const isPdf = f.type==="application/pdf" || /\.pdf$/i.test(f.name);
   setStatus("…ファイルを読んでるよ");
   try{
     let text=await extractFileText(f);
     if(!text || !text.trim()){
-      addBubble("assistant","このファイルからは文字を読み取れなかった…。テキストかPDFを試してみてね。");
+      addBubble("assistant", isPdf
+        ? "このPDFからは文字を取り出せなかった…。写真をスキャンしただけのPDF（中身が画像）かもしれないね。"+PDF_TIP
+        : "このファイルからは文字を読み取れなかった…。テキストファイルかPDFを試してみてね。");
       setStatus(""); return;
     }
     let truncated=false;
@@ -678,7 +691,8 @@ fileInput.addEventListener("change", async ()=>{
     setStatus("読めたよ。送るボタンか、ひとこと添えて送ってね");
     setTimeout(()=>{ if(statusEl.textContent.indexOf("読めたよ")===0) setStatus(""); }, 4000);
   }catch(e){
-    addBubble("assistant","ごめん、ファイルを読めなかった…。\n（"+(e.message||e)+"）");
+    const reason=(e && e.message) ? e.message : String(e);
+    addBubble("assistant","ごめん、ファイルを読めなかった…。\n（"+reason+"）"+(isPdf?PDF_TIP:""));
     setStatus("");
   }
 });
