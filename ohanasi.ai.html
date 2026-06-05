@@ -817,7 +817,20 @@ voiceBtn.addEventListener("click",()=>{
   ttsEnabled=!ttsEnabled;
   voiceBtn.classList.toggle("on", ttsEnabled);
   voiceLbl.textContent = ttsEnabled ? "声オン" : "声オフ";
-  if(!ttsEnabled && window.speechSynthesis){ speechSynthesis.cancel(); setState("idle"); }
+  if(ttsEnabled){
+    if(!window.speechSynthesis){
+      setStatus("ごめん、この画面では音声が使えないみたい");
+      return;
+    }
+    // このボタンのタップ操作の“中で”直接しゃべる＝iPhoneで音が出やすい。
+    // これで声が聞こえたら音声機能はOK。聞こえないときは端末のマナー
+    // モード/音量、または表示枠の制限が原因。
+    ttsUnlocked=true;
+    loadVoices();
+    speak("こんにちは。わたしの声、聞こえてるかな？");
+  } else if(window.speechSynthesis){
+    speechSynthesis.cancel(); setState("idle");
+  }
 });
 
 resetBtn.addEventListener("click", async ()=>{
