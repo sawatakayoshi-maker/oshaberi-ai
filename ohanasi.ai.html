@@ -324,6 +324,7 @@
   <footer>
     <div class="quickbar" id="quickbar">
       <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真を読み込む</button>
+      <select class="qbtn" id="voiceSel" title="声を選ぶ" hidden></select>
     </div>
     <input type="file" id="fileInput" hidden>
     <div class="pending" id="pending" hidden></div>
@@ -344,6 +345,7 @@ const MODEL = "claude-sonnet-4-20250514";
 const K_HIST = "oshaberi:history";
 const K_SUM  = "oshaberi:summary";
 const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
+const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でおまかせ
 const SUMMARY_EVERY = 8; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -489,30 +491,56 @@ async function setHeaderHidden(hidden){
 async function loadHeaderPref(){
   try{ const v=await window.storage.get(K_UI); applyHeaderHidden(v && v.value==="1"); }catch(e){}
 }
+async function loadVoicePref(){
+  try{ const v=await window.storage.get(K_VOICE); if(v && v.value) voicePref=v.value; }catch(e){}
+  loadVoices();   // 保存していた声を反映
+}
 
 /* ---------- TTS ---------- */
 let jaVoice=null;
 let ttsUnlocked=false;
-function loadVoices(){
+let voicePref="auto";   // ユーザーが選んだ声の名前（"auto"でおまかせ）
+function jaVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
-  const ja=vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
-  if(!ja.length){ jaVoice=null; return; }
-  // 流暢さ重視で選ぶ：高品質(enhanced/premium/neural)やネット系を最優先、
-  // 次に自然な女性ボイス。男性ボイスは避ける。
-  function score(v){
-    const n=(v.name||"").toLowerCase();
-    let s=0;
-    if(/(otoya|hattori|ichiro|daniel|男性|male)/.test(n)) s-=10;
-    if(v.localService===false) s+=6;                                  // ネット系＝高品質寄り
-    if(/(enhanced|premium|neural|natural|高品質|siri)/.test(n)) s+=8;  // 高品質バリアント
-    ["o-ren","oren","kyoko","mizuki","nanami","haruka","ayumi","sara","google"]
-      .forEach((p,i)=>{ if(n.includes(p)) s+=6-i*0.4; });
-    if(/(female|女性)/.test(n)) s+=2;
-    return s;
-  }
-  let best=ja[0], bestScore=-Infinity;
-  for(const v of ja){ const s=score(v); if(s>bestScore){ bestScore=s; best=v; } }
-  jaVoice=best;
+  return vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
+}
+// 流暢さ重視のスコア：高品質(enhanced/premium/neural)やネット系を最優先、
+// 次に自然な女性ボイス。男性ボイスは避ける。
+function voiceScore(v){
+  const n=(v.name||"").toLowerCase();
+  let s=0;
+  if(/(otoya|hattori|ichiro|daniel|男性|male)/.test(n)) s-=10;
+  if(v.localService===false) s+=6;                                  // ネット系＝高品質寄り
+  if(/(enhanced|premium|neural|natural|高品質|siri)/.test(n)) s+=8;  // 高品質バリアント
+  ["o-ren","oren","kyoko","mizuki","nanami","haruka","ayumi","sara","google"]
+    .forEach((p,i)=>{ if(n.includes(p)) s+=6-i*0.4; });
+  if(/(female|女性)/.test(n)) s+=2;
+  return s;
+}
+function loadVoices(){
+  const ja=jaVoices();
+  if(!ja.length){ jaVoice=null; populateVoiceSelect(ja); return; }
+  // 選択された声があればそれを使う。なければスコアで自動選択。
+  let pick=null;
+  if(voicePref && voicePref!=="auto"){ pick=ja.find(v=>v.name===voicePref)||null; }
+  if(!pick){ pick=ja[0]; let best=-Infinity; for(const v of ja){ const s=voiceScore(v); if(s>best){ best=s; pick=v; } } }
+  jaVoice=pick;
+  populateVoiceSelect(ja);
+}
+function populateVoiceSelect(ja){
+  const sel=document.getElementById("voiceSel");
+  if(!sel) return;
+  if(!ja || ja.length<=1){ sel.hidden=true; return; }  // 選べる声が無ければ隠す
+  sel.hidden=false;
+  const cur = voicePref || "auto";
+  sel.innerHTML="";
+  const opt0=document.createElement("option"); opt0.value="auto"; opt0.textContent="声：おまかせ"; sel.appendChild(opt0);
+  ja.forEach(v=>{
+    const o=document.createElement("option"); o.value=v.name;
+    o.textContent="声："+v.name;
+    sel.appendChild(o);
+  });
+  sel.value = (cur!=="auto" && ja.some(v=>v.name===cur)) ? cur : "auto";
 }
 if(window.speechSynthesis){
   loadVoices();
@@ -843,6 +871,19 @@ voiceBtn.addEventListener("click",()=>{
   }
 });
 
+// 声を選ぶメニュー：選ぶと保存して、その声でテスト発声する
+const voiceSel=document.getElementById("voiceSel");
+if(voiceSel){
+  voiceSel.addEventListener("change", ()=>{
+    voicePref = voiceSel.value || "auto";
+    try{ window.storage.set(K_VOICE, voicePref, false); }catch(e){}
+    ttsUnlocked=true;
+    loadVoices();
+    if(!ttsEnabled){ ttsEnabled=true; voiceBtn.classList.add("on"); voiceLbl.textContent="声オン"; }
+    speak("この声でお話しするね。");
+  });
+}
+
 resetBtn.addEventListener("click", async ()=>{
   if(!confirm("これまでの会話の記憶を消すよ。いい?")) return;
   await clearMemory();
@@ -1016,6 +1057,7 @@ slideMake.addEventListener("click", makeSlides);
 (async function init(){
   setState("idle");
   await loadHeaderPref();
+  await loadVoicePref();
   await loadMemory();
   greet(false);
   await saveMemory();
