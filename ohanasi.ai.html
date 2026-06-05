@@ -832,7 +832,7 @@ async function extractFileText(f){
 }
 
 const PDF_TIP = "\n\nもしPDFがうまく読めないときは、PDFを開いて文章を選んでコピーし、下の入力欄に貼り付けて送ってね。それなら確実に読めるよ。";
-const IMG_TIP = "\n\n写真は、文字が大きくはっきり写っていると読みやすいよ。明るいところで、文字の面を真上から撮り直すとうまくいきやすいよ。";
+const IMG_TIP = "\n\n【確実な方法（無料）】iPhoneの「ライブテキスト」を使うと、写真の文字をそのままコピーできるよ。\n①「写真」アプリで写真を開く → ②文字を長押し → ③『すべて選択』でコピー → ④下の入力欄に貼り付けて送ってね。\nそれと、写真は文字が大きくはっきり・明るいところで真上から撮ると読みやすいよ。";
 fileBtn.addEventListener("click", ()=>{ if(!busy) fileInput.click(); });
 fileInput.addEventListener("change", async ()=>{
   const f=fileInput.files && fileInput.files[0];
