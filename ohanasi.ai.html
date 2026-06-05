@@ -511,7 +511,8 @@ function voiceScore(v){
   let s=0;
   if(/(otoya|hattori|ichiro|daniel|男性|male)/.test(n)) s-=10;
   if(v.localService===false) s+=6;                                  // ネット系＝高品質寄り
-  if(/(enhanced|premium|neural|natural|高品質|siri)/.test(n)) s+=8;  // 高品質バリアント
+  if(/(o-?ren|siri)/.test(n)) s+=10;                                // O-ren / Siri系は最優先
+  if(/(enhanced|premium|neural|natural|高品質)/.test(n)) s+=8;       // 高品質バリアント
   ["o-ren","oren","kyoko","mizuki","nanami","haruka","ayumi","sara","google"]
     .forEach((p,i)=>{ if(n.includes(p)) s+=6-i*0.4; });
   if(/(female|女性)/.test(n)) s+=2;
