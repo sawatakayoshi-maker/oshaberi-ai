@@ -1134,17 +1134,27 @@ const noteModal=document.getElementById("noteModal");
 const noteText=document.getElementById("noteText");
 const noteSave=document.getElementById("noteSave");
 const noteCancel=document.getElementById("noteCancel");
-const NOTE_MAX=1500;
-function openNote(){ noteText.value=persistentNote||""; noteModal.hidden=false; setTimeout(()=>noteText.focus(),50); }
+const NOTE_MAX=50000;  // 安全上限（実用上はほぼ無制限。AIが読める量の範囲）
+function updateNoteCount(){
+  const n=(noteText.value||"").length;
+  if(noteHintEl) noteHintEl.textContent = "現在 "+n.toLocaleString()+" 文字　※ここに書いた内容は毎回かならずAIに伝わります。消したいときは空にして保存してね。";
+}
+const noteHintEl=document.getElementById("noteHint");
+function openNote(){ noteText.value=persistentNote||""; updateNoteCount(); noteModal.hidden=false; setTimeout(()=>noteText.focus(),50); }
+if(noteText) noteText.addEventListener("input", updateNoteCount);
 if(noteBtn) noteBtn.addEventListener("click", openNote);
 if(noteCancel) noteCancel.addEventListener("click", ()=>{ noteModal.hidden=true; });
 if(noteModal) noteModal.addEventListener("click",(e)=>{ if(e.target===noteModal) noteModal.hidden=true; });
 if(noteSave) noteSave.addEventListener("click", async ()=>{
-  persistentNote=(noteText.value||"").trim().slice(0,NOTE_MAX);
+  const raw=(noteText.value||"").trim();
+  const over = raw.length>NOTE_MAX;
+  persistentNote = over ? raw.slice(0,NOTE_MAX) : raw;
   try{ await window.storage.set(K_NOTE, persistentNote, false); }catch(e){}
   noteModal.hidden=true;
-  setStatus(persistentNote ? "メモを覚えたよ。これからずっと忘れないね" : "メモを空にしたよ");
-  setTimeout(()=>{ const t=statusEl.textContent; if(t.indexOf("メモを")===0) setStatus(""); }, 3000);
+  setStatus(!persistentNote ? "メモを空にしたよ"
+    : over ? ("長すぎたので "+NOTE_MAX.toLocaleString()+" 文字まで覚えたよ")
+           : "メモを覚えたよ。これからずっと忘れないね");
+  setTimeout(()=>{ const t=statusEl.textContent; if(t.indexOf("メモを")===0||t.indexOf("長すぎた")===0) setStatus(""); }, 4000);
 });
 async function loadNotePref(){
   try{ const v=await window.storage.get(K_NOTE); if(v && v.value) persistentNote=v.value; }catch(e){}
