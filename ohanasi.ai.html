@@ -692,16 +692,23 @@ async function send(){
   // Webで調べる（オンのとき・ファイル添付が無いとき）。無料・キー不要のWikipediaを使用。
   if(webSearchOn && text && !file){
     setStatus("🔎 ネットで調べているよ…");
-    let web=null;
+    let web=null, errKind=null;
     try{ web=await webLookup(text); }
-    catch(e){
-      if(!webErrShown){ webErrShown=true; addBubble("assistant","ごめん、今はネットにつながらないみたい。この画面の制限でWeb検索が使えないことがあるんだ。（ふだんの知識でお答えするね）"); }
-    }
+    catch(e){ errKind=(e && e.message) ? e.message : "error"; }
     if(web){
       modelContent=(text)+
         "\n\n――――――――\n【Webで調べた参考情報（Wikipedia「"+web.title+"」より）】\n"+web.extract+
         "\n出典: "+web.url+
         "\n――――――――\n（この参考をもとに、相手の質問へやさしく短く答えてね。Wikipediaで調べたことだと一言そえて。質問と関係なさそうなら無視していいよ。確かでないことは断定しないでね。）";
+    } else if(errKind){
+      // 通信そのものが遮断/失敗（種類を表示して切り分けできるように）
+      if(!webErrShown){ webErrShown=true; addBubble("assistant","（メモ：今はWebにつながらなかったよ。理由＝"+errKind+"。ふだんの知識でお答えするね）"); }
+      modelContent=(text)+
+        "\n\n（システムからの補足：今回のWeb検索は使えませんでした。あなたのふだんの知識の範囲で、やさしく短く答えてください。『ウィキペディアを見に行けない』などの説明・言い訳はしないでください。）";
+    } else {
+      // 通信は通ったが該当記事なし
+      modelContent=(text)+
+        "\n\n（システムからの補足：Webで該当する記事が見つかりませんでした。あなたのふだんの知識の範囲で、やさしく短く答えてください。『調べに行けない』などの言い訳はしないでください。）";
     }
   }
   await runTurn(display, modelContent, file ? {name:file.name, kind:file.kind} : null);
