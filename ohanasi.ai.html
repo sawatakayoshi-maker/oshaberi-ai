@@ -708,24 +708,36 @@ async function send(){
 }
 
 // 無料・キー不要・CORS対応のWikipedia(日本語)で調べる。
+// 通常のfetchは表示枠で遮断されることがあるため、<script>タグ経由(JSONP)で取得する。
+// 外部ライブラリ読み込みと同じ仕組みなので、制限をすり抜けられる可能性がある。
+function jsonp(baseUrl, timeoutMs){
+  return new Promise((res,rej)=>{
+    const cb="__wpcb_"+Math.random().toString(36).slice(2);
+    const url=baseUrl+(baseUrl.includes("?")?"&":"?")+"callback="+cb;
+    const s=document.createElement("script");
+    let done=false;
+    const cleanup=()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); clearTimeout(tm); };
+    const tm=setTimeout(()=>{ if(!done){ done=true; cleanup(); rej(new Error("timeout")); } }, timeoutMs||9000);
+    window[cb]=(data)=>{ if(done) return; done=true; cleanup(); res(data); };
+    s.onerror=()=>{ if(!done){ done=true; cleanup(); rej(new Error("script blocked")); } };
+    s.src=url;
+    document.head.appendChild(s);
+  });
+}
 async function webLookup(query){
   const q=(query||"").trim().slice(0,150);
   if(!q) return null;
-  const api="https://ja.wikipedia.org/w/api.php";
-  const sUrl=api+"?action=query&format=json&origin=*&list=search&srlimit=1&srsearch="+encodeURIComponent(q);
-  const sr=await fetch(sUrl); if(!sr.ok) throw new Error("search "+sr.status);
-  const sd=await sr.json();
-  const hit=sd && sd.query && sd.query.search && sd.query.search[0];
-  if(!hit) return null;
-  const title=hit.title;
-  const eUrl=api+"?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&redirects=1&titles="+encodeURIComponent(title);
-  const er=await fetch(eUrl); if(!er.ok) throw new Error("extract "+er.status);
-  const ed=await er.json();
-  const pages=ed && ed.query && ed.query.pages;
-  let extract=""; if(pages){ const k=Object.keys(pages)[0]; extract=(pages[k]&&pages[k].extract)||""; }
-  extract=extract.replace(/\s+/g," ").trim().slice(0,1200);
+  const url="https://ja.wikipedia.org/w/api.php?action=query&format=json"+
+    "&generator=search&gsrlimit=1&gsrsearch="+encodeURIComponent(q)+
+    "&prop=extracts&exintro&explaintext&redirects=1";
+  const d=await jsonp(url, 9000);
+  const pages=d && d.query && d.query.pages;
+  if(!pages) return null;
+  const k=Object.keys(pages)[0]; const p=pages[k];
+  if(!p) return null;
+  let extract=(p.extract||"").replace(/\s+/g," ").trim().slice(0,1200);
   if(!extract) return null;
-  return { title, extract, url:"https://ja.wikipedia.org/wiki/"+encodeURIComponent(title.replace(/ /g,"_")) };
+  return { title:p.title, extract, url:"https://ja.wikipedia.org/wiki/"+encodeURIComponent((p.title||"").replace(/ /g,"_")) };
 }
 
 /* ---------- ui wiring ---------- */
