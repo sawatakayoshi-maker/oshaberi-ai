@@ -243,7 +243,6 @@
     </div>
     <div class="tools">
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
-      <button class="tool" id="webBtn" title="Webで調べる（Wikipedia）を切り替え">🔎 <span id="webLbl">調べるオフ</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
       <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
@@ -349,7 +348,6 @@ const K_HIST = "oshaberi:history";
 const K_SUM  = "oshaberi:summary";
 const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
 const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でおまかせ
-const K_WEB  = "oshaberi:web";  // Webで調べる（Wikipedia）のオン/オフ
 const SUMMARY_EVERY = 8; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -421,8 +419,6 @@ let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
 let pendingFile = null;  // 送信待ちの添付ファイル {name, kind, text}
-let webSearchOn = false;  // Webで調べる（Wikipedia）が有効か
-let webErrShown = false;  // ネット不可の案内を一度だけ出すための印
 
 const $ = (id)=>document.getElementById(id);
 const faceEl=$("face"), statusEl=$("status"), logEl=$("log"), mainEl=$("main");
@@ -689,62 +685,9 @@ async function send(){
       "\n\n――――――――\n【相手が送ってくれたファイル「"+file.name+"」の中身】\n"+file.text+
       "\n――――――――\n（この中身をふまえて、短くやさしく話してね。長い丸写しはしないで。）";
   }
-  // Webで調べる（オンのとき・ファイル添付が無いとき）。無料・キー不要のWikipediaを使用。
-  if(webSearchOn && text && !file){
-    setStatus("🔎 ネットで調べているよ…");
-    let web=null, errKind=null;
-    try{ web=await webLookup(text); }
-    catch(e){ errKind=(e && e.message) ? e.message : "error"; }
-    if(web){
-      modelContent=(text)+
-        "\n\n――――――――\n【Webで調べた参考情報（Wikipedia「"+web.title+"」より）】\n"+web.extract+
-        "\n出典: "+web.url+
-        "\n――――――――\n（この参考をもとに、相手の質問へやさしく短く答えてね。Wikipediaで調べたことだと一言そえて。質問と関係なさそうなら無視していいよ。確かでないことは断定しないでね。）";
-    } else if(errKind){
-      // 通信そのものが遮断/失敗（種類を表示して切り分けできるように）
-      if(!webErrShown){ webErrShown=true; addBubble("assistant","（メモ：今はWebにつながらなかったよ。理由＝"+errKind+"。ふだんの知識でお答えするね）"); }
-      modelContent=(text)+
-        "\n\n（システムからの補足：今回のWeb検索は使えませんでした。あなたのふだんの知識の範囲で、やさしく短く答えてください。『ウィキペディアを見に行けない』などの説明・言い訳はしないでください。）";
-    } else {
-      // 通信は通ったが該当記事なし
-      modelContent=(text)+
-        "\n\n（システムからの補足：Webで該当する記事が見つかりませんでした。あなたのふだんの知識の範囲で、やさしく短く答えてください。『調べに行けない』などの言い訳はしないでください。）";
-    }
-  }
+  // 注：この表示枠(アーティファクト)は外部通信(fetch/script)を全て遮断するため、
+  // Web検索・天気・写真OCR等のネットを使う機能は動作しません（削除済み）。
   await runTurn(display, modelContent, file ? {name:file.name, kind:file.kind} : null);
-}
-
-// 無料・キー不要・CORS対応のWikipedia(日本語)で調べる。
-// 通常のfetchは表示枠で遮断されることがあるため、<script>タグ経由(JSONP)で取得する。
-// 外部ライブラリ読み込みと同じ仕組みなので、制限をすり抜けられる可能性がある。
-function jsonp(baseUrl, timeoutMs){
-  return new Promise((res,rej)=>{
-    const cb="__wpcb_"+Math.random().toString(36).slice(2);
-    const url=baseUrl+(baseUrl.includes("?")?"&":"?")+"callback="+cb;
-    const s=document.createElement("script");
-    let done=false;
-    const cleanup=()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); clearTimeout(tm); };
-    const tm=setTimeout(()=>{ if(!done){ done=true; cleanup(); rej(new Error("timeout")); } }, timeoutMs||9000);
-    window[cb]=(data)=>{ if(done) return; done=true; cleanup(); res(data); };
-    s.onerror=()=>{ if(!done){ done=true; cleanup(); rej(new Error("script blocked")); } };
-    s.src=url;
-    document.head.appendChild(s);
-  });
-}
-async function webLookup(query){
-  const q=(query||"").trim().slice(0,150);
-  if(!q) return null;
-  const url="https://ja.wikipedia.org/w/api.php?action=query&format=json"+
-    "&generator=search&gsrlimit=1&gsrsearch="+encodeURIComponent(q)+
-    "&prop=extracts&exintro&explaintext&redirects=1";
-  const d=await jsonp(url, 9000);
-  const pages=d && d.query && d.query.pages;
-  if(!pages) return null;
-  const k=Object.keys(pages)[0]; const p=pages[k];
-  if(!p) return null;
-  let extract=(p.extract||"").replace(/\s+/g," ").trim().slice(0,1200);
-  if(!extract) return null;
-  return { title:p.title, extract, url:"https://ja.wikipedia.org/wiki/"+encodeURIComponent((p.title||"").replace(/ /g,"_")) };
 }
 
 /* ---------- ui wiring ---------- */
@@ -971,26 +914,6 @@ resetBtn.addEventListener("click", async ()=>{
   greet(true);
 });
 
-// Webで調べる（Wikipedia）のオン/オフ
-const webBtn=document.getElementById("webBtn"), webLbl=document.getElementById("webLbl");
-function applyWebState(){
-  if(webBtn) webBtn.classList.toggle("on", webSearchOn);
-  if(webLbl) webLbl.textContent = webSearchOn ? "調べるオン" : "調べるオフ";
-}
-if(webBtn){
-  webBtn.addEventListener("click", ()=>{
-    webSearchOn=!webSearchOn;
-    applyWebState();
-    try{ window.storage.set(K_WEB, webSearchOn?"1":"0", false); }catch(e){}
-    setStatus(webSearchOn ? "🔎 これからは、わからないことはWeb（Wikipedia）で調べて答えるよ" : "Webで調べるのをやめたよ");
-    setTimeout(()=>{ const t=statusEl.textContent; if(t.indexOf("🔎")===0||t.indexOf("Webで調べる")===0) setStatus(""); }, 3500);
-  });
-}
-async function loadWebPref(){
-  try{ const v=await window.storage.get(K_WEB); webSearchOn = !!(v && v.value==="1"); }catch(e){}
-  applyWebState();
-}
-
 /* ---------- start ---------- */
 function greet(reset){
   if(history.length>0 && !reset){
@@ -1157,7 +1080,6 @@ slideMake.addEventListener("click", makeSlides);
   setState("idle");
   await loadHeaderPref();
   await loadVoicePref();
-  await loadWebPref();
   await loadMemory();
   greet(false);
   await saveMemory();
