@@ -49,7 +49,7 @@
   .brand{display:flex; flex-direction:column; line-height:1.15;}
   .brand b{font-family:"Klee One"; font-weight:600; font-size:19px; letter-spacing:.02em;}
   .brand span{font-size:11.5px; color:var(--ink-soft);}
-  .tools{margin-left:auto; display:flex; gap:8px;}
+  .tools{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; row-gap:6px; justify-content:flex-end;}
   .tool{
     border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
     border-radius:999px; padding:9px 15px; font-size:14.5px; cursor:pointer;
@@ -243,6 +243,7 @@
     </div>
     <div class="tools">
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
+      <button class="tool" id="webBtn" title="Webで調べる（Wikipedia）を切り替え">🔎 <span id="webLbl">調べるオフ</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
       <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
@@ -348,6 +349,7 @@ const K_HIST = "oshaberi:history";
 const K_SUM  = "oshaberi:summary";
 const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
 const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でおまかせ
+const K_WEB  = "oshaberi:web";  // Webで調べる（Wikipedia）のオン/オフ
 const SUMMARY_EVERY = 8; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -419,6 +421,8 @@ let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
 let pendingFile = null;  // 送信待ちの添付ファイル {name, kind, text}
+let webSearchOn = false;  // Webで調べる（Wikipedia）が有効か
+let webErrShown = false;  // ネット不可の案内を一度だけ出すための印
 
 const $ = (id)=>document.getElementById(id);
 const faceEl=$("face"), statusEl=$("status"), logEl=$("log"), mainEl=$("main");
@@ -685,7 +689,43 @@ async function send(){
       "\n\n――――――――\n【相手が送ってくれたファイル「"+file.name+"」の中身】\n"+file.text+
       "\n――――――――\n（この中身をふまえて、短くやさしく話してね。長い丸写しはしないで。）";
   }
+  // Webで調べる（オンのとき・ファイル添付が無いとき）。無料・キー不要のWikipediaを使用。
+  if(webSearchOn && text && !file){
+    setStatus("🔎 ネットで調べているよ…");
+    let web=null;
+    try{ web=await webLookup(text); }
+    catch(e){
+      if(!webErrShown){ webErrShown=true; addBubble("assistant","ごめん、今はネットにつながらないみたい。この画面の制限でWeb検索が使えないことがあるんだ。（ふだんの知識でお答えするね）"); }
+    }
+    if(web){
+      modelContent=(text)+
+        "\n\n――――――――\n【Webで調べた参考情報（Wikipedia「"+web.title+"」より）】\n"+web.extract+
+        "\n出典: "+web.url+
+        "\n――――――――\n（この参考をもとに、相手の質問へやさしく短く答えてね。Wikipediaで調べたことだと一言そえて。質問と関係なさそうなら無視していいよ。確かでないことは断定しないでね。）";
+    }
+  }
   await runTurn(display, modelContent, file ? {name:file.name, kind:file.kind} : null);
+}
+
+// 無料・キー不要・CORS対応のWikipedia(日本語)で調べる。
+async function webLookup(query){
+  const q=(query||"").trim().slice(0,150);
+  if(!q) return null;
+  const api="https://ja.wikipedia.org/w/api.php";
+  const sUrl=api+"?action=query&format=json&origin=*&list=search&srlimit=1&srsearch="+encodeURIComponent(q);
+  const sr=await fetch(sUrl); if(!sr.ok) throw new Error("search "+sr.status);
+  const sd=await sr.json();
+  const hit=sd && sd.query && sd.query.search && sd.query.search[0];
+  if(!hit) return null;
+  const title=hit.title;
+  const eUrl=api+"?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&redirects=1&titles="+encodeURIComponent(title);
+  const er=await fetch(eUrl); if(!er.ok) throw new Error("extract "+er.status);
+  const ed=await er.json();
+  const pages=ed && ed.query && ed.query.pages;
+  let extract=""; if(pages){ const k=Object.keys(pages)[0]; extract=(pages[k]&&pages[k].extract)||""; }
+  extract=extract.replace(/\s+/g," ").trim().slice(0,1200);
+  if(!extract) return null;
+  return { title, extract, url:"https://ja.wikipedia.org/wiki/"+encodeURIComponent(title.replace(/ /g,"_")) };
 }
 
 /* ---------- ui wiring ---------- */
@@ -912,6 +952,26 @@ resetBtn.addEventListener("click", async ()=>{
   greet(true);
 });
 
+// Webで調べる（Wikipedia）のオン/オフ
+const webBtn=document.getElementById("webBtn"), webLbl=document.getElementById("webLbl");
+function applyWebState(){
+  if(webBtn) webBtn.classList.toggle("on", webSearchOn);
+  if(webLbl) webLbl.textContent = webSearchOn ? "調べるオン" : "調べるオフ";
+}
+if(webBtn){
+  webBtn.addEventListener("click", ()=>{
+    webSearchOn=!webSearchOn;
+    applyWebState();
+    try{ window.storage.set(K_WEB, webSearchOn?"1":"0", false); }catch(e){}
+    setStatus(webSearchOn ? "🔎 これからは、わからないことはWeb（Wikipedia）で調べて答えるよ" : "Webで調べるのをやめたよ");
+    setTimeout(()=>{ const t=statusEl.textContent; if(t.indexOf("🔎")===0||t.indexOf("Webで調べる")===0) setStatus(""); }, 3500);
+  });
+}
+async function loadWebPref(){
+  try{ const v=await window.storage.get(K_WEB); webSearchOn = !!(v && v.value==="1"); }catch(e){}
+  applyWebState();
+}
+
 /* ---------- start ---------- */
 function greet(reset){
   if(history.length>0 && !reset){
@@ -1078,6 +1138,7 @@ slideMake.addEventListener("click", makeSlides);
   setState("idle");
   await loadHeaderPref();
   await loadVoicePref();
+  await loadWebPref();
   await loadMemory();
   greet(false);
   await saveMemory();
