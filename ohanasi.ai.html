@@ -1058,14 +1058,14 @@ function setStandby(on){
   applyStandbyState();
   try{ window.storage.set(K_STBY, on?"1":"0", false); }catch(e){}
   if(on){
-    if(!SR){ setStandby(false); showVoiceHelp("この環境は音声認識に非対応（iPhoneのSafariは未対応のことが多い）"); return; }
+    if(!SR){ setStandby(false); standbyHelp(); return; }
     if(!standbyRecog) standbyRecog=buildStandbyRecog();
     setStatus("🎙️ 待受をオンにしたよ。話しかけてね");
     standbyTryStart();
-    // マイクが起動しない（枠の制限）場合は数秒で諦めて案内
+    // マイクが起動しない（iPhone Safari非対応や枠の制限）場合は数秒で諦めて案内
     clearTimeout(standbyWatch);
     standbyWatch=setTimeout(()=>{
-      if(standbyOn && !standbyActive){ setStandby(false); showVoiceHelp(inFrame?"アプリの表示枠がマイクを許可していない可能性":"マイクが起動しない"); }
+      if(standbyOn && !standbyActive){ setStandby(false); standbyHelp(); }
     }, 3000);
     // 反応が終わったら自動で聞き直す見張り役
     if(!setStandby._loop){ setStandby._loop=setInterval(()=>{ standbyTryStart(); }, 1200); }
@@ -1076,6 +1076,16 @@ function setStandby(on){
     standbyActive=false; standbyStarting=false;
     if((statusEl.textContent||"").indexOf("🎙️")===0) setStatus("");
   }
+}
+let standbyHelpShown=false;
+function standbyHelp(){
+  if(standbyHelpShown) return; standbyHelpShown=true;
+  addBubble("assistant",
+    "ごめんね、この端末では「待受（ハンズフリー）」が使えないみたい。\n"+
+    "iPhoneのSafariは、Webアプリからのマイクの聞き取りに対応していないんだ（アプリやネットのせいではなく、iPhone側の仕組みなの）。\n\n"+
+    "でも、声で入力するならこれが確実だよ：\n"+
+    "①下の入力欄をタップ → ②キーボードの🎤（マイク）を押す → ③話すと文字になる → ④送るボタンを押す。\n"+
+    "これなら、声で話して送れるよ。");
 }
 if(standbyBtn){ standbyBtn.addEventListener("click", ()=> setStandby(!standbyOn)); }
 
