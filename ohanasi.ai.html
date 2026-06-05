@@ -1009,7 +1009,7 @@ micBtn.addEventListener("click", startListening);
      その場合は動かないので、キーボードの🎤入力を案内する。 */
 const standbyBtn=document.getElementById("standbyBtn");
 const standbyLbl=document.getElementById("standbyLbl");
-let standbyOn=false, standbyRecog=null, standbyActive=false, standbyStarting=false, standbyWatch=null;
+let standbyOn=false, standbyRecog=null, standbyActive=false, standbyStarting=false, standbyWatch=null, standbyFails=0;
 
 function applyStandbyState(){
   if(standbyBtn) standbyBtn.classList.toggle("on", standbyOn);
@@ -1020,7 +1020,7 @@ function speakingNow(){ return !!(window.speechSynthesis && speechSynthesis.spea
 function buildStandbyRecog(){
   const r=new SR();
   r.lang="ja-JP"; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
-  r.onstart=()=>{ standbyActive=true; standbyStarting=false; if(standbyOn) setStatus("🎙️ 待受中…（話しかけてね）"); };
+  r.onstart=()=>{ standbyActive=true; standbyStarting=false; standbyFails=0; clearTimeout(standbyWatch); if(standbyOn) setStatus("🎙️ 待受中…（話しかけてね）"); };
   r.onresult=(e)=>{
     let finalChunk="", interim="";
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -1040,18 +1040,32 @@ function buildStandbyRecog(){
     const er=(e&&e.error)||"";
     standbyActive=false; standbyStarting=false;
     if(er==="not-allowed"||er==="service-not-allowed"){
-      setStandby(false); showVoiceHelp("マイクの許可が下りなかった: "+er);
+      setStandby(false); standbyHelp();
     }
-    // no-speech / aborted などは watchdog が再開する
+    // no-speech / aborted などは見張り役が自動で再開する
   };
   r.onend=()=>{ standbyActive=false; standbyStarting=false; };
   return r;
 }
+// 聞き取りを開始する。AIが話している/処理中のあいだは始めない（ここでは失敗扱いにしない）。
 function standbyTryStart(){
   if(!standbyOn || standbyActive || standbyStarting) return;
-  if(busy || speakingNow()) return;     // 反応中は待つ
-  try{ standbyStarting=true; standbyRecog.start(); }
-  catch(e){ standbyStarting=false; }    // すでに動作中などは無視
+  if(busy || speakingNow()) return;     // 反応中は待つだけ
+  try{
+    standbyStarting=true;
+    clearTimeout(standbyWatch);
+    // 実際に開始(onstart)しなければ「この端末では聞き取り不可」と判断する見張り
+    standbyWatch=setTimeout(()=>{
+      if(standbyStarting && !standbyActive){
+        standbyStarting=false;          // 詰まり防止：必ず解除（無反応バグの対策）
+        standbyFails++;
+        if(standbyFails>=2){ setStandby(false); standbyHelp(); } // 2回ダメなら諦めて案内
+      }
+    }, 3500);
+    standbyRecog.start();
+  }catch(e){
+    standbyStarting=false; clearTimeout(standbyWatch); // 既に動作中など：次の見張りで再試行
+  }
 }
 function setStandby(on){
   standbyOn=on;
@@ -1060,15 +1074,11 @@ function setStandby(on){
   if(on){
     if(!SR){ setStandby(false); standbyHelp(); return; }
     if(!standbyRecog) standbyRecog=buildStandbyRecog();
+    standbyFails=0;
     setStatus("🎙️ 待受をオンにしたよ。話しかけてね");
     standbyTryStart();
-    // マイクが起動しない（iPhone Safari非対応や枠の制限）場合は数秒で諦めて案内
-    clearTimeout(standbyWatch);
-    standbyWatch=setTimeout(()=>{
-      if(standbyOn && !standbyActive){ setStandby(false); standbyHelp(); }
-    }, 3000);
-    // 反応が終わったら自動で聞き直す見張り役
-    if(!setStandby._loop){ setStandby._loop=setInterval(()=>{ standbyTryStart(); }, 1200); }
+    // AIが話し終わったら自動で聞き直す見張り役（1.2秒ごと）
+    if(!setStandby._loop){ setStandby._loop=setInterval(standbyTryStart, 1200); }
   }else{
     clearTimeout(standbyWatch);
     if(setStandby._loop){ clearInterval(setStandby._loop); setStandby._loop=null; }
