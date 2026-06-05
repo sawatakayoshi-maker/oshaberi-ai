@@ -456,6 +456,7 @@ async function loadHeaderPref(){
 
 /* ---------- TTS ---------- */
 let jaVoice=null;
+let ttsUnlocked=false;
 function loadVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
   const ja=vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
@@ -477,8 +478,23 @@ if(window.speechSynthesis){
   loadVoices();
   speechSynthesis.onvoiceschanged=loadVoices;
 }
+// iPhone/Safari対策：音声は「最初のユーザー操作」がないと鳴らせない。
+// 画面に最初に触れた瞬間に、無音の発話を一度流して音声機能を“解錠”する。
+function unlockTTS(){
+  if(ttsUnlocked || !window.speechSynthesis) return;
+  ttsUnlocked=true;
+  try{
+    const u=new SpeechSynthesisUtterance(" ");
+    u.volume=0; u.lang="ja-JP";
+    speechSynthesis.speak(u);
+    speechSynthesis.resume();
+  }catch(e){}
+  loadVoices();
+  ["pointerdown","touchend","click","keydown"].forEach(ev=>document.removeEventListener(ev, unlockTTS));
+}
+["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev, unlockTTS, {passive:true}));
 function speak(text){
-  if(!ttsEnabled || !window.speechSynthesis){ return; }
+  if(!ttsEnabled || !window.speechSynthesis || !text){ return; }
   try{
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
@@ -487,6 +503,7 @@ function speak(text){
     u.onstart=()=>setState("speaking");
     u.onend=()=>setState("idle");
     u.onerror=()=>setState("idle");
+    speechSynthesis.resume();   // iOSでは一時停止状態になることがあるため再開してから話す
     speechSynthesis.speak(u);
   }catch(e){ setState("idle"); }
 }
@@ -660,19 +677,48 @@ function readAsText(f){
 // 写真の文字を読み取る（OCR）。AIは画像を見られないので、ブラウザ内で
 // Tesseract.js を使って写真の中の「文字」をテキストに起こす。
 // ※写真に写っている物・風景の理解はできない（それはビジョンAI＝高機能版が必要）。
+// 写真を一度キャンバスに描き直して、形式（iPhoneのHEIC等）をそろえ、
+// 大きすぎる写真は縮小して読み取りを速く・安定させる。
+function normalizeImage(f){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(f);
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+        if(!w||!h){ URL.revokeObjectURL(url); return res(url); }
+        const scale=Math.min(1, 2200/Math.max(w,h));
+        const cw=Math.max(1,Math.round(w*scale)), ch=Math.max(1,Math.round(h*scale));
+        const cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+        cv.getContext("2d").drawImage(img,0,0,cw,ch);
+        URL.revokeObjectURL(url);
+        res(cv.toDataURL("image/png"));
+      }catch(e){ URL.revokeObjectURL(url); res(url); }
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("写真を開けなかった（形式が対応外かも）")); };
+    img.src=url;
+  });
+}
 async function ocrImage(f){
   if(typeof Tesseract==="undefined"){
-    throw new Error("写真を読む機能を準備できなかった（ネットの制限かも）");
+    throw new Error("写真を読む機能を読み込めなかった（ネットの制限かも）");
   }
+  setStatus("写真を準備中…");
+  const src=await normalizeImage(f);
   setStatus("写真の文字を読み取ってるよ…（少し時間がかかるよ）");
-  const worker=await Tesseract.createWorker("jpn+eng", 1, {
-    workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js",
-    corePath:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
-    langPath:"https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0",
-    logger:m=>{ if(m && m.status==="recognizing text"){ setStatus("写真を読み取り中… "+Math.round((m.progress||0)*100)+"%"); } }
-  });
+  let worker;
   try{
-    const { data:{ text } }=await worker.recognize(f);
+    worker=await Tesseract.createWorker("jpn+eng", 1, {
+      workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js",
+      corePath:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
+      langPath:"https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0",
+      logger:m=>{ if(m && m.status==="recognizing text"){ setStatus("写真を読み取り中… "+Math.round((m.progress||0)*100)+"%"); } }
+    });
+  }catch(e){
+    throw new Error("文字認識エンジンを準備できなかった（"+((e&&e.message)||e)+"）");
+  }
+  try{
+    const { data:{ text } }=await worker.recognize(src);
     return (text||"").replace(/\n{3,}/g,"\n\n").trim();
   } finally {
     try{ await worker.terminate(); }catch(e){}
