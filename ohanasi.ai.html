@@ -245,6 +245,7 @@
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
       <button class="tool" id="standbyBtn" title="話しかけたら反応する待受モード（マイクボタン不要）">🎙️ <span id="standbyLbl">待受オフ</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
+      <button class="tool" id="noteBtn" title="ずっと覚えておくメモ">📝 メモ</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
       <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
     </div>
@@ -308,6 +309,18 @@
   </div>
   <div class="status" id="status">　</div>
 
+  <div class="modal" id="noteModal" hidden>
+    <div class="modal-card">
+      <div class="modal-title">📝 ずっと覚えておくメモ</div>
+      <textarea id="noteText" rows="6" placeholder="ここに書いたことは、これからずっと覚えています。&#10;例）わたしの名前は〇〇。孫は△△と□□。膝が悪い。甘いものが好き。朝はゆっくり話したい。"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="noteCancel">閉じる</button>
+        <button class="btn-main" id="noteSave">保存する</button>
+      </div>
+      <div class="modal-note" id="noteHint">※ここに書いた内容は毎回かならずAIに伝わります。消したいときは空にして保存してね。</div>
+    </div>
+  </div>
+
   <div class="modal" id="slideModal" hidden>
     <div class="modal-card">
       <div class="modal-title">📊 スライドを作る</div>
@@ -350,6 +363,7 @@ const K_SUM  = "oshaberi:summary";
 const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
 const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でおまかせ
 const K_STBY = "oshaberi:standby";// 待受（ハンズフリー）モードのオン/オフ
+const K_NOTE = "oshaberi:note";  // ずっと覚えておくメモ
 const SUMMARY_EVERY = 5; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -417,6 +431,7 @@ const GUARD_NOTE = "\n\n【今回の注意：重要な相談かもしれませ�
 
 let history = [];        // {role, content}
 let memorySummary = "";  // 長期記憶（要約）
+let persistentNote = ""; // ずっと覚えておくメモ（本人が登録・毎回必ずAIに渡す）
 let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
@@ -651,7 +666,9 @@ async function runTurn(displayText, modelContent, file){
 
   setState("thinking"); setStatus("…考えてるよ");
 
-  let system = SYSTEM_PROMPT + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
+  let system = SYSTEM_PROMPT
+    + (persistentNote ? "\n\n【ずっと覚えておくこと（本人が登録した大切な情報。常に踏まえて話すこと）】\n"+persistentNote : "")
+    + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
   if(needsExpertGuard(displayText)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
   let msgs = history.slice(-16).map(m=>({role:m.role, content:m.content}));
   if(modelContent){ msgs[msgs.length-1].content = modelContent; }
@@ -1111,6 +1128,28 @@ slideBtn.addEventListener("click",()=>{ slideModal.hidden=false; setTimeout(()=>
 slideCancel.addEventListener("click",()=>{ slideModal.hidden=true; });
 slideModal.addEventListener("click",(e)=>{ if(e.target===slideModal) slideModal.hidden=true; });
 
+/* ---------- ずっと覚えておくメモ ---------- */
+const noteBtn=document.getElementById("noteBtn");
+const noteModal=document.getElementById("noteModal");
+const noteText=document.getElementById("noteText");
+const noteSave=document.getElementById("noteSave");
+const noteCancel=document.getElementById("noteCancel");
+const NOTE_MAX=1500;
+function openNote(){ noteText.value=persistentNote||""; noteModal.hidden=false; setTimeout(()=>noteText.focus(),50); }
+if(noteBtn) noteBtn.addEventListener("click", openNote);
+if(noteCancel) noteCancel.addEventListener("click", ()=>{ noteModal.hidden=true; });
+if(noteModal) noteModal.addEventListener("click",(e)=>{ if(e.target===noteModal) noteModal.hidden=true; });
+if(noteSave) noteSave.addEventListener("click", async ()=>{
+  persistentNote=(noteText.value||"").trim().slice(0,NOTE_MAX);
+  try{ await window.storage.set(K_NOTE, persistentNote, false); }catch(e){}
+  noteModal.hidden=true;
+  setStatus(persistentNote ? "メモを覚えたよ。これからずっと忘れないね" : "メモを空にしたよ");
+  setTimeout(()=>{ const t=statusEl.textContent; if(t.indexOf("メモを")===0) setStatus(""); }, 3000);
+});
+async function loadNotePref(){
+  try{ const v=await window.storage.get(K_NOTE); if(v && v.value) persistentNote=v.value; }catch(e){}
+}
+
 const SLIDE_SYS = `あなたはプレゼン資料の構成作成者です。次の依頼に基づき、PowerPointスライドの構成をJSONだけで出力してください。
 出力はJSONのみ。前後に説明文やコードブロック記号(\`\`\`)を絶対に付けないこと。
 スキーマ:
@@ -1180,6 +1219,7 @@ slideMake.addEventListener("click", makeSlides);
   setState("idle");
   await loadHeaderPref();
   await loadVoicePref();
+  await loadNotePref();
   await loadMemory();
   greet(false);
   await saveMemory();
