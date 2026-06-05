@@ -228,6 +228,7 @@
 </style>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <header>
@@ -277,7 +278,7 @@
 
   <footer>
     <div class="quickbar" id="quickbar">
-      <button class="qbtn" id="fileBtn" type="button" title="文章ファイルやPDFを読み込んでAIに渡す">📎 ファイルを読み込む</button>
+      <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真を読み込む</button>
     </div>
     <input type="file" id="fileInput" hidden>
     <div class="pending" id="pending" hidden></div>
@@ -585,11 +586,13 @@ $("hdrHideBtn").addEventListener("click", ()=> setHeaderHidden(true));
 $("hdrShowBtn").addEventListener("click", ()=> setHeaderHidden(false));
 
 /* ===================================================================
-   ファイル読み込み機能
-   端末の中だけで完結（外部通信なし）。文章ファイルやPDFから文字を
-   取り出して、その内容をAIに渡して読んでもらう。
-   ※AIはテキスト専用なので、写真・画像・スキャンしただけのPDFの
-     「見た目」は理解できない（文字データが入ったファイルのみ対応）。
+   ファイル・写真読み込み機能
+   文章ファイル / PDF / 写真の中の「文字」を取り出して、その内容を
+   AIに渡して読んでもらう。
+   - 文章ファイル・PDF: 端末内で文字抽出（pdf.js）
+   - 写真・画像: ブラウザ内OCR（Tesseract.js）で文字を読み取る
+   ※AIはテキスト専用。写真に写っている物・風景そのものの理解はできない
+     （それにはビジョンAI＝高機能版が必要）。
    =================================================================== */
 const fileBtn=$("fileBtn"), fileInput=$("fileInput"), pendingEl=$("pending");
 const FILE_MAX = 16000; // AIに渡す文字数の上限（長すぎ防止）
@@ -654,11 +657,32 @@ function readAsText(f){
     r.readAsText(f);
   });
 }
+// 写真の文字を読み取る（OCR）。AIは画像を見られないので、ブラウザ内で
+// Tesseract.js を使って写真の中の「文字」をテキストに起こす。
+// ※写真に写っている物・風景の理解はできない（それはビジョンAI＝高機能版が必要）。
+async function ocrImage(f){
+  if(typeof Tesseract==="undefined"){
+    throw new Error("写真を読む機能を準備できなかった（ネットの制限かも）");
+  }
+  setStatus("写真の文字を読み取ってるよ…（少し時間がかかるよ）");
+  const worker=await Tesseract.createWorker("jpn+eng", 1, {
+    workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js",
+    corePath:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
+    langPath:"https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0",
+    logger:m=>{ if(m && m.status==="recognizing text"){ setStatus("写真を読み取り中… "+Math.round((m.progress||0)*100)+"%"); } }
+  });
+  try{
+    const { data:{ text } }=await worker.recognize(f);
+    return (text||"").replace(/\n{3,}/g,"\n\n").trim();
+  } finally {
+    try{ await worker.terminate(); }catch(e){}
+  }
+}
 async function extractFileText(f){
   const isImage = /^image\//.test(f.type) ||
     /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(f.name);
   if(isImage){
-    throw new Error("写真・画像の中身は読めないんだ。文字が入った書類やPDFを送ってね");
+    return await ocrImage(f);
   }
   if(f.type==="application/pdf" || /\.pdf$/i.test(f.name)){
     return await extractPdfText(f);
@@ -668,19 +692,22 @@ async function extractFileText(f){
 }
 
 const PDF_TIP = "\n\nもしPDFがうまく読めないときは、PDFを開いて文章を選んでコピーし、下の入力欄に貼り付けて送ってね。それなら確実に読めるよ。";
+const IMG_TIP = "\n\n写真は、文字が大きくはっきり写っていると読みやすいよ。明るいところで、文字の面を真上から撮り直すとうまくいきやすいよ。";
 fileBtn.addEventListener("click", ()=>{ if(!busy) fileInput.click(); });
 fileInput.addEventListener("change", async ()=>{
   const f=fileInput.files && fileInput.files[0];
   fileInput.value="";
   if(!f) return;
   const isPdf = f.type==="application/pdf" || /\.pdf$/i.test(f.name);
+  const isImage = /^image\//.test(f.type) || /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(f.name);
   setStatus("…ファイルを読んでるよ");
   try{
     let text=await extractFileText(f);
     if(!text || !text.trim()){
-      addBubble("assistant", isPdf
-        ? "このPDFからは文字を取り出せなかった…。写真をスキャンしただけのPDF（中身が画像）かもしれないね。"+PDF_TIP
-        : "このファイルからは文字を読み取れなかった…。テキストファイルかPDFを試してみてね。");
+      addBubble("assistant",
+        isImage ? "この写真からは文字を読み取れなかった…。"+IMG_TIP :
+        isPdf   ? "このPDFからは文字を取り出せなかった…。写真をスキャンしただけのPDF（中身が画像）かもしれないね。"+PDF_TIP :
+                  "このファイルからは文字を読み取れなかった…。テキストファイルかPDFを試してみてね。");
       setStatus(""); return;
     }
     let truncated=false;
@@ -692,7 +719,7 @@ fileInput.addEventListener("change", async ()=>{
     setTimeout(()=>{ if(statusEl.textContent.indexOf("読めたよ")===0) setStatus(""); }, 4000);
   }catch(e){
     const reason=(e && e.message) ? e.message : String(e);
-    addBubble("assistant","ごめん、ファイルを読めなかった…。\n（"+reason+"）"+(isPdf?PDF_TIP:""));
+    addBubble("assistant","ごめん、ファイルを読めなかった…。\n（"+reason+"）"+(isPdf?PDF_TIP:isImage?IMG_TIP:""));
     setStatus("");
   }
 });
