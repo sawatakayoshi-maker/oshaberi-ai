@@ -497,17 +497,21 @@ function loadVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
   const ja=vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
   if(!ja.length){ jaVoice=null; return; }
-  const prefer=["o-ren","oren","kyoko","sara","haruka","ayumi","nanami","mizuki","google","premium","enhanced","siri"]; // O-ren を最優先、なければ従来の女性・高品質寄りにフォールバック（表記ゆれ対応でハイフン有無の両方を残す）
-  const avoid=["otoya","hattori","ichiro","daniel"]; // 男性ボイスは避ける
-  let best=ja[0], bestScore=-1;
-  for(const v of ja){
+  // 流暢さ重視で選ぶ：高品質(enhanced/premium/neural)やネット系を最優先、
+  // 次に自然な女性ボイス。男性ボイスは避ける。
+  function score(v){
     const n=(v.name||"").toLowerCase();
     let s=0;
-    if(avoid.some(a=>n.includes(a))) s-=5;
-    prefer.forEach((pp,i)=>{ if(n.includes(pp)) s+=12-i; });
-    if(/female|女性/.test(n)) s+=3;
-    if(s>bestScore){ bestScore=s; best=v; }
+    if(/(otoya|hattori|ichiro|daniel|男性|male)/.test(n)) s-=10;
+    if(v.localService===false) s+=6;                                  // ネット系＝高品質寄り
+    if(/(enhanced|premium|neural|natural|高品質|siri)/.test(n)) s+=8;  // 高品質バリアント
+    ["o-ren","oren","kyoko","mizuki","nanami","haruka","ayumi","sara","google"]
+      .forEach((p,i)=>{ if(n.includes(p)) s+=6-i*0.4; });
+    if(/(female|女性)/.test(n)) s+=2;
+    return s;
   }
+  let best=ja[0], bestScore=-Infinity;
+  for(const v of ja){ const s=score(v); if(s>bestScore){ bestScore=s; best=v; } }
   jaVoice=best;
 }
 if(window.speechSynthesis){
@@ -533,17 +537,23 @@ function speak(text){
   if(!ttsEnabled || !window.speechSynthesis || !text){ return; }
   try{
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang="ja-JP"; if(jaVoice) u.voice=jaVoice;
-    u.rate=0.95; u.pitch=1.05;  // 少しゆっくり・落ち着いたトーン（年配の方が聞き取りやすいように）
     setState("speaking");        // 口パク開始（音声イベントを待たずに動かす）
     const stop=()=>setState("idle");
-    u.onend=stop; u.onerror=stop;
     // 保険：読み上げ時間の目安が過ぎたら口を止める（onendが来ない環境対策）
     clearTimeout(speak._t);
-    speak._t=setTimeout(stop, Math.min(30000, 1800 + text.length*110));
+    speak._t=setTimeout(stop, Math.min(60000, 2000 + text.length*110));
+    // 文ごとに区切ると、自然な間が入り、長文でも途切れにくく流暢に聞こえる。
+    const parts = text.replace(/\s+/g," ").match(/[^。．！？!?\n]+[。．！？!?]?/g) || [text];
+    parts.forEach((part, i)=>{
+      const t=part.trim(); if(!t) return;
+      const u=new SpeechSynthesisUtterance(t);
+      u.lang="ja-JP"; if(jaVoice) u.voice=jaVoice;
+      u.rate=1.0; u.pitch=1.0;   // 自然な話速・トーン
+      if(i===parts.length-1) u.onend=stop;
+      u.onerror=stop;
+      speechSynthesis.speak(u);
+    });
     speechSynthesis.resume();   // iOSでは一時停止状態になることがあるため再開してから話す
-    speechSynthesis.speak(u);
   }catch(e){ setState("idle"); }
 }
 
