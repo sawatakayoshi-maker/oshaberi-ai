@@ -530,21 +530,36 @@ function loadVoices(){
 function populateVoiceSelect(ja){
   const sel=document.getElementById("voiceSel");
   if(!sel) return;
-  if(!ja || ja.length<=1){ sel.hidden=true; return; }  // 選べる声が無ければ隠す
-  sel.hidden=false;
   const cur = voicePref || "auto";
+  if(!ja || ja.length<1){
+    // 端末が声の一覧を返さない場合（iPhoneの表示枠でよくある）。
+    // 一覧は作れないが、メニュー自体は出して状況を伝える。
+    sel.hidden=false;
+    sel.innerHTML="";
+    const o0=document.createElement("option"); o0.value="auto"; o0.textContent="声：おまかせ（端末の標準）"; sel.appendChild(o0);
+    const o1=document.createElement("option"); o1.value="auto"; o1.disabled=true; o1.textContent="（声の一覧を取得できません）"; sel.appendChild(o1);
+    sel.value="auto";
+    return;
+  }
+  sel.hidden=false;
   sel.innerHTML="";
-  const opt0=document.createElement("option"); opt0.value="auto"; opt0.textContent="声：おまかせ"; sel.appendChild(opt0);
+  const opt0=document.createElement("option"); opt0.value="auto"; opt0.textContent="声：おまかせ（自動）"; sel.appendChild(opt0);
   ja.forEach(v=>{
     const o=document.createElement("option"); o.value=v.name;
-    o.textContent="声："+v.name;
+    o.textContent="声："+v.name+(v.localService===false?"（高音質）":"");
     sel.appendChild(o);
   });
   sel.value = (cur!=="auto" && ja.some(v=>v.name===cur)) ? cur : "auto";
 }
+// iPhone等では getVoices() が最初は空で、操作後に遅れて埋まることがある。
+// 何度か読み込み直して、声が出そろったらメニューを更新する。
+function refreshVoicesSoon(){
+  [150,500,1200,2500,4500].forEach(ms=>setTimeout(loadVoices, ms));
+}
 if(window.speechSynthesis){
   loadVoices();
   speechSynthesis.onvoiceschanged=loadVoices;
+  refreshVoicesSoon();
 }
 // iPhone/Safari対策：音声は「最初のユーザー操作」がないと鳴らせない。
 // 画面に最初に触れた瞬間に、無音の発話を一度流して音声機能を“解錠”する。
@@ -558,6 +573,7 @@ function unlockTTS(){
     speechSynthesis.resume();
   }catch(e){}
   loadVoices();
+  refreshVoicesSoon();   // 解錠後に声が出そろうことがあるので読み込み直す
   ["pointerdown","touchend","click","keydown"].forEach(ev=>document.removeEventListener(ev, unlockTTS));
 }
 ["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev, unlockTTS, {passive:true}));
@@ -865,6 +881,7 @@ voiceBtn.addEventListener("click",()=>{
     // モード/音量、または表示枠の制限が原因。
     ttsUnlocked=true;
     loadVoices();
+    refreshVoicesSoon();
     speak("こんにちは。わたしの声、聞こえてるかな？");
   } else if(window.speechSynthesis){
     speechSynthesis.cancel(); setState("idle");
