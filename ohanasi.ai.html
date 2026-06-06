@@ -220,6 +220,8 @@
   .modal-card{background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:18px; width:100%; max-width:460px; box-shadow:var(--shadow);}
   .modal-title{font-family:"Klee One"; font-size:17px; margin-bottom:10px; color:var(--ink);}
   .modal-card textarea{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; padding:10px; font-family:inherit; font-size:15px; line-height:1.6; resize:vertical; background:#fffdf8; color:var(--ink); outline:none;}
+  .modal-card input[type=text],.modal-card input[type=number]{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; padding:10px; font-family:inherit; font-size:15px; background:#fffdf8; color:var(--ink); outline:none;}
+  .credit{max-width:680px; margin:4px auto 0; font-size:11px; color:var(--ink-soft); text-align:center;}
   .modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
   .btn-ghost{border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:inherit; font-size:14px;}
   .btn-main{border:none; background:var(--accent); color:#fff; border-radius:999px; padding:9px 20px; cursor:pointer; font-family:inherit; font-size:14px;}
@@ -252,6 +254,7 @@
       <button class="tool" id="standbyBtn" title="話しかけたら反応する待受モード（マイクボタン不要）">🎙️ <span id="standbyLbl">待受オフ</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
       <button class="tool" id="noteBtn" title="ずっと覚えておくメモ">📝 メモ</button>
+      <button class="tool" id="vvBtn" title="VOICEVOX（高品質な声）の設定">⚙️ 声設定</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
       <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
     </div>
@@ -328,6 +331,27 @@
     </div>
   </div>
 
+  <div class="modal" id="vvModal" hidden>
+    <div class="modal-card">
+      <div class="modal-title">⚙️ VOICEVOX（高品質な声）の設定</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:15px;margin-bottom:10px;">
+        <input type="checkbox" id="vvEnabled"> VOICEVOXで話す（使えないときは自動で端末の声）
+      </label>
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:4px;">エンジンのURL</div>
+      <input type="text" id="vvUrl" placeholder="http://127.0.0.1:50021">
+      <div style="font-size:13px;color:var(--ink-soft);margin:10px 0 4px;">話者ID（VOICEVOX Nemoの番号）</div>
+      <input type="number" id="vvSpeaker" placeholder="0">
+      <div style="font-size:13px;color:var(--ink-soft);margin:10px 0 4px;">クレジット表記</div>
+      <input type="text" id="vvCredit" placeholder="VOICEVOX Nemo">
+      <div class="modal-actions">
+        <button class="btn-ghost" id="vvCancel">閉じる</button>
+        <button class="btn-ghost" id="vvTest">テスト再生</button>
+        <button class="btn-main" id="vvSave">保存する</button>
+      </div>
+      <div class="modal-note" id="vvHint">VOICEVOXエンジン（無料）に接続して話します。パソコンでVOICEVOXを起動して使うか、Web版に組み込む用です。iPhoneのClaude表示枠では通信が遮断されるため鳴らず、自動で端末の声になります。<br>音声の利用には「VOICEVOX:キャラ名」等のクレジット表示が必要です（下に表示されます）。</div>
+    </div>
+  </div>
+
   <div class="modal" id="slideModal" hidden>
     <div class="modal-card">
       <div class="modal-title">📊 スライドを作る</div>
@@ -366,6 +390,7 @@
       </button>
     </div>
     <div class="hint">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</div>
+    <div class="credit" id="vvCreditLine" hidden></div>
   </footer>
 
 <script>
@@ -377,6 +402,7 @@ const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でお�
 const K_STBY = "oshaberi:standby";// 待受（ハンズフリー）モードのオン/オフ
 const K_NOTE = "oshaberi:note";  // ずっと覚えておくメモ
 const K_AVATAR = "oshaberi:avatar"; // アバターの種類（photoF/photoM/illust）
+const K_VV   = "oshaberi:voicevox"; // VOICEVOX設定（有効/URL/話者/クレジット）
 const SUMMARY_EVERY = 5; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -449,6 +475,8 @@ let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
 let pendingFile = null;  // 送信待ちの添付ファイル {name, kind, text}
+// VOICEVOX(Nemo)設定。enabledのとき優先し、失敗時は端末の声へ。
+let vvCfg = { enabled:false, url:"http://127.0.0.1:50021", speaker:0, credit:"VOICEVOX Nemo" };
 
 const $ = (id)=>document.getElementById(id);
 const faceEl=$("face"), statusEl=$("status"), logEl=$("log"), mainEl=$("main");
@@ -645,13 +673,12 @@ function unlockTTS(){
   ["pointerdown","touchend","click","keydown"].forEach(ev=>document.removeEventListener(ev, unlockTTS));
 }
 ["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev, unlockTTS, {passive:true}));
-function speak(text){
-  if(!ttsEnabled || !window.speechSynthesis || !text){ return; }
+// 端末の声（ブラウザのspeechSynthesis）で読み上げる（従来の処理）。
+function browserSpeak(text){
+  if(!window.speechSynthesis){ setState("idle"); return; }
   try{
     speechSynthesis.cancel();
-    setState("speaking");        // 口パク開始（音声イベントを待たずに動かす）
     const stop=()=>setState("idle");
-    // 保険：読み上げ時間の目安が過ぎたら口を止める（onendが来ない環境対策）
     clearTimeout(speak._t);
     speak._t=setTimeout(stop, Math.min(60000, 2000 + text.length*110));
     // 文ごとに区切ると、自然な間が入り、長文でも途切れにくく流暢に聞こえる。
@@ -667,6 +694,41 @@ function speak(text){
     });
     speechSynthesis.resume();   // iOSでは一時停止状態になることがあるため再開してから話す
   }catch(e){ setState("idle"); }
+}
+// VOICEVOX(Nemo)で読み上げる。エンジン（既定 http://127.0.0.1:50021）に
+// 接続して音声を合成・再生。失敗したら端末の声にフォールバックする。
+// ※この音声は外部通信が必要。アーティファクト表示枠は通信遮断のため鳴らない。
+let vvAudio=null;
+async function voicevoxSpeak(text){
+  const base=(vvCfg.url||"").replace(/\/+$/,"");
+  const sp=encodeURIComponent(vvCfg.speaker);
+  const q=await fetch(base+"/audio_query?speaker="+sp+"&text="+encodeURIComponent(text),{method:"POST"});
+  if(!q.ok) throw new Error("audio_query "+q.status);
+  const query=await q.json();
+  const s=await fetch(base+"/synthesis?speaker="+sp,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(query)});
+  if(!s.ok) throw new Error("synthesis "+s.status);
+  const blob=await s.blob();
+  const url=URL.createObjectURL(blob);
+  try{ if(vvAudio) vvAudio.pause(); }catch(e){}
+  vvAudio=new Audio(url);
+  const stop=()=>{ setState("idle"); try{ URL.revokeObjectURL(url); }catch(e){} };
+  vvAudio.onended=stop; vvAudio.onerror=stop;
+  clearTimeout(speak._t); speak._t=setTimeout(stop, Math.min(120000, 4000+text.length*160));
+  await vvAudio.play();
+}
+function stopSpeaking(){
+  try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+  try{ if(vvAudio){ vvAudio.pause(); vvAudio.currentTime=0; } }catch(e){}
+  clearTimeout(speak._t);
+}
+function speak(text){
+  if(!ttsEnabled || !text){ return; }
+  setState("speaking");   // 口パク開始（どの音源でも動かす）
+  if(vvCfg.enabled){
+    voicevoxSpeak(text).catch((e)=>{ console.warn("VOICEVOX失敗→端末の声へ:", e&&e.message); browserSpeak(text); });
+  }else{
+    browserSpeak(text);
+  }
 }
 
 /* ---------- API（Claude.aiアーティファクト公式API / テキスト専用・APIキー不要） ---------- */
@@ -955,8 +1017,8 @@ voiceBtn.addEventListener("click",()=>{
     loadVoices();
     refreshVoicesSoon();
     speak("こんにちは。わたしの声、聞こえてるかな？");
-  } else if(window.speechSynthesis){
-    speechSynthesis.cancel(); setState("idle");
+  } else {
+    stopSpeaking(); setState("idle");
   }
 });
 
@@ -1208,6 +1270,58 @@ async function loadNotePref(){
   try{ const v=await window.storage.get(K_NOTE); if(v && v.value) persistentNote=v.value; }catch(e){}
 }
 
+/* ---------- VOICEVOX 設定 ---------- */
+const vvBtn=document.getElementById("vvBtn"), vvModal=document.getElementById("vvModal");
+const vvEnabledEl=document.getElementById("vvEnabled"), vvUrlEl=document.getElementById("vvUrl"),
+      vvSpeakerEl=document.getElementById("vvSpeaker"), vvCreditEl=document.getElementById("vvCredit"),
+      vvSave=document.getElementById("vvSave"), vvCancel=document.getElementById("vvCancel"),
+      vvTest=document.getElementById("vvTest"), vvCreditLine=document.getElementById("vvCreditLine"),
+      vvHintEl=document.getElementById("vvHint");
+function applyVVCredit(){
+  if(!vvCreditLine) return;
+  if(vvCfg.enabled && vvCfg.credit){ vvCreditLine.hidden=false; vvCreditLine.textContent="音声: "+vvCfg.credit; }
+  else { vvCreditLine.hidden=true; vvCreditLine.textContent=""; }
+}
+function openVV(){
+  if(!vvModal) return;
+  vvEnabledEl.checked=!!vvCfg.enabled;
+  vvUrlEl.value=vvCfg.url||"";
+  vvSpeakerEl.value=(vvCfg.speaker!=null?vvCfg.speaker:0);
+  vvCreditEl.value=vvCfg.credit||"";
+  vvModal.hidden=false;
+}
+function readVVForm(){
+  vvCfg.enabled=!!vvEnabledEl.checked;
+  vvCfg.url=(vvUrlEl.value||"").trim()||"http://127.0.0.1:50021";
+  vvCfg.speaker=parseInt(vvSpeakerEl.value,10); if(isNaN(vvCfg.speaker)) vvCfg.speaker=0;
+  vvCfg.credit=(vvCreditEl.value||"").trim()||"VOICEVOX Nemo";
+}
+if(vvBtn) vvBtn.addEventListener("click", openVV);
+if(vvCancel) vvCancel.addEventListener("click", ()=>{ vvModal.hidden=true; });
+if(vvModal) vvModal.addEventListener("click",(e)=>{ if(e.target===vvModal) vvModal.hidden=true; });
+if(vvSave) vvSave.addEventListener("click", async ()=>{
+  readVVForm();
+  try{ await window.storage.set(K_VV, JSON.stringify(vvCfg), false); }catch(e){}
+  applyVVCredit();
+  vvModal.hidden=true;
+  setStatus(vvCfg.enabled?"VOICEVOXで話す設定にしたよ":"VOICEVOXをオフにしたよ");
+  setTimeout(()=>{ if((statusEl.textContent||"").indexOf("VOICEVOX")===0) setStatus(""); },3000);
+});
+if(vvTest) vvTest.addEventListener("click", async ()=>{
+  readVVForm();
+  if(vvHintEl) vvHintEl.textContent="…テスト中（つながらない場合は数秒で失敗します）";
+  try{
+    await voicevoxSpeak("こんにちは。これはボイスボックスのテストです。");
+    if(vvHintEl) vvHintEl.textContent="鳴りました！この声でお話しします。";
+  }catch(e){
+    if(vvHintEl) vvHintEl.textContent="つながりませんでした（"+((e&&e.message)||e)+"）。この環境では通信できないか、VOICEVOXエンジンが起動していない可能性があります。";
+  }
+});
+async function loadVVPref(){
+  try{ const v=await window.storage.get(K_VV); if(v && v.value){ const o=JSON.parse(v.value); if(o&&typeof o==="object") vvCfg=Object.assign(vvCfg,o); } }catch(e){}
+  applyVVCredit();
+}
+
 const SLIDE_SYS = `あなたはプレゼン資料の構成作成者です。次の依頼に基づき、PowerPointスライドの構成をJSONだけで出力してください。
 出力はJSONのみ。前後に説明文やコードブロック記号(\`\`\`)を絶対に付けないこと。
 スキーマ:
@@ -1279,6 +1393,7 @@ slideMake.addEventListener("click", makeSlides);
   await loadVoicePref();
   await loadNotePref();
   await loadAvatarPref();
+  await loadVVPref();
   await loadMemory();
   greet(false);
   await saveMemory();
