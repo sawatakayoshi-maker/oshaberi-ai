@@ -181,7 +181,11 @@
   }
   .send:hover{background:var(--accent-deep);}
   .send:disabled{opacity:.45; cursor:default; box-shadow:none;}
-  .hint{max-width:680px; margin:6px auto 0; font-size:11px; color:var(--ink-soft); text-align:center;}
+  .hint{max-width:680px; margin:6px auto 0; font-size:11px; color:var(--ink-soft); text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .hint[hidden]{display:none;}
+  .hint-text{flex:0 1 auto;}
+  .hint-x{flex:0 0 auto; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; font-size:13px; line-height:1; padding:2px 4px; opacity:.6;}
+  .hint-x:hover{opacity:1; color:var(--accent-deep);}
   .filenote{font-size:11.5px; line-height:1.45; color:var(--ink-soft); text-align:left;}
 
   /* ---- attach ---- */
@@ -291,6 +295,11 @@
   </header>
 
   <button id="hdrShowBtn" title="メニューを表示する">☰ メニュー</button>
+
+  <div class="botbar">
+    <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真</button>
+    <span class="filenote">文字（テキスト）部分のみ読み込みできます。<br>※写真・画像の見た目や図・絵の内容は読めません。</span>
+  </div>
 
   <div class="stage">
     <div class="avatar-wrap" id="avatarWrap">
@@ -410,11 +419,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
       </button>
     </div>
-    <div class="botbar">
-      <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真</button>
-      <span class="filenote">文字（テキスト）部分のみ読み込みできます。<br>※写真・画像の見た目や図・絵の内容は読めません。</span>
-    </div>
-    <div class="hint">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</div>
+    <div class="hint" id="hintBar"><span class="hint-text">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</span><button class="hint-x" id="hintClose" type="button" title="このヒントを隠す">✕</button></div>
     <div class="credit" id="vvCreditLine" hidden></div>
   </footer>
 
@@ -428,6 +433,7 @@ const K_STBY = "oshaberi:standby";// 待受（ハンズフリー）モードの�
 const K_NOTE = "oshaberi:note";  // ずっと覚えておくメモ
 const K_AVATAR = "oshaberi:avatar"; // アバターの種類（photoF/photoM/illust）
 const K_LANG = "oshaberi:lang";    // 表示・会話の言語（ja/en/ko/th/vi）
+const K_HINT = "oshaberi:hint";    // 下部ヒントの表示/非表示
 const K_SETBAR = "oshaberi:setbar"; // 設定バー（音声・見た目）の開閉
 const K_VV   = "oshaberi:voicevox"; // VOICEVOX設定（有効/URL/話者/クレジット）
 const SUMMARY_EVERY = 5; // ユーザー発言が何回たまったら記憶要約を更新するか
@@ -551,7 +557,7 @@ function applyI18n(){
   if(as && as.options.length>=3){ as.options[0].textContent=t.avF; as.options[1].textContent=t.avM; as.options[2].textContent=t.avI; }
   const fb=document.getElementById("fileBtn"); if(fb) fb.textContent="📎 "+t.file;
   const fn=document.querySelector(".filenote"); if(fn) fn.innerHTML = t.fnote1+"<br>"+t.fnote2;
-  setTxt(".hint", t.hint);
+  setTxt(".hint-text", t.hint);
 }
 // VOICEVOX(Nemo)設定。enabledのとき優先し、失敗時は端末の声へ。
 let vvCfg = { enabled:false, url:"http://127.0.0.1:50021", speaker:0, credit:"VOICEVOX Nemo" };
@@ -641,6 +647,16 @@ if(langSel) langSel.addEventListener("change", ()=>{
 async function loadLangPref(){
   try{ const v=await window.storage.get(K_LANG); if(v && v.value) appLang=v.value; }catch(e){}
   applyLangUI();
+}
+
+/* ---------- 下部ヒントの表示/非表示 ---------- */
+const hintBar=document.getElementById("hintBar"), hintClose=document.getElementById("hintClose");
+if(hintClose) hintClose.addEventListener("click", ()=>{
+  if(hintBar) hintBar.hidden=true;
+  try{ window.storage.set(K_HINT, "0", false); }catch(e){}
+});
+async function loadHintPref(){
+  try{ const v=await window.storage.get(K_HINT); if(hintBar && v && v.value==="0") hintBar.hidden=true; }catch(e){}
 }
 
 /* ---------- rendering ---------- */
@@ -1533,6 +1549,7 @@ slideMake.addEventListener("click", makeSlides);
   setState("idle");
   await loadHeaderPref();
   await loadLangPref();
+  await loadHintPref();
   await loadNotePref();
   await loadAvatarPref();
   await loadVVPref();
