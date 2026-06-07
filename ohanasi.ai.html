@@ -82,10 +82,11 @@
 
   /* ---- Avatar stage ---- */
   .stage{
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center; gap:14px;
     padding:6px 10px 2px; position:relative;
   }
-  .avatar-wrap{position:relative; width:116px; height:116px;}
+  .avatar-side{ display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:48%; }
+  .avatar-wrap{position:relative; width:116px; height:116px; flex:0 0 auto;}
   .halo{
     position:absolute; inset:-10px; border-radius:50%;
     background:radial-gradient(circle at 50% 40%, rgba(201,104,61,.22), rgba(201,104,61,0) 70%);
@@ -183,6 +184,8 @@
   .send:disabled{opacity:.45; cursor:default; box-shadow:none;}
   .hint{max-width:680px; margin:6px auto 0; font-size:11px; color:var(--ink-soft); text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;}
   .hint[hidden]{display:none;}
+  .hinttoggle{max-width:680px; margin:6px auto 0; display:flex; justify-content:center;}
+  #hintToggle.on{background:var(--accent); border-color:var(--accent); color:#fff;}
   .hint-text{flex:0 1 auto;}
   .hint-x{flex:0 0 auto; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; font-size:13px; line-height:1; padding:2px 4px; opacity:.6;}
   .hint-x:hover{opacity:1; color:var(--accent-deep);}
@@ -296,11 +299,6 @@
 
   <button id="hdrShowBtn" title="メニューを表示する">☰ メニュー</button>
 
-  <div class="botbar">
-    <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真</button>
-    <span class="filenote">文字（テキスト）部分のみ読み込みできます。<br>※写真・画像の見た目や図・絵の内容は読めません。</span>
-  </div>
-
   <div class="stage">
     <div class="avatar-wrap" id="avatarWrap">
       <div class="halo"></div>
@@ -354,6 +352,10 @@
         <img class="avatar-photo" id="avatarImg" alt="" hidden>
       </div>
       <div class="dots"><i></i><i></i><i></i></div>
+    </div>
+    <div class="avatar-side">
+      <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真</button>
+      <span class="filenote">文字（テキスト）部分のみ読み込みできます。<br>※写真・画像の見た目や図・絵の内容は読めません。</span>
     </div>
   </div>
   <div class="status" id="status">　</div>
@@ -419,7 +421,8 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
       </button>
     </div>
-    <div class="hint" id="hintBar"><span class="hint-text">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</span><button class="hint-x" id="hintClose" type="button" title="このヒントを隠す">✕</button></div>
+    <div class="hinttoggle"><button class="qbtn" id="hintToggle" type="button">ⓘ ヒント</button></div>
+    <div class="hint" id="hintBar"><span class="hint-text">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</span></div>
     <div class="credit" id="vvCreditLine" hidden></div>
   </footer>
 
@@ -533,11 +536,11 @@ const PLACEHOLDER = {
 };
 // 画面の文字（UI）の各言語訳
 const I18N = {
-  ja:{appName:"はなしあい",tagline:"きみの話し相手 · 前回の続きも覚えてるよ",voiceOn:"声オン",voiceOff:"声オフ",standbyOn:"待受オン",standbyOff:"待受オフ",note:"メモ",voiceSet:"声設定",reset:"記憶を消す",hide:"かくす",show:"☰ メニュー",avF:"👩 女性（声:Kyoko）",avM:"👨 男性（声:Otoya）",avI:"🎨 女性イラスト（声:Kyoko）",file:"ファイル・写真",fnote1:"文字（テキスト）部分のみ読み込みできます。",fnote2:"※写真・画像の見た目や図・絵の内容は読めません。",hint:"このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。",copyAll:"全部コピー",copy:"コピー",resetConfirm:"これまでの会話の記憶を消すよ。いい?"},
-  en:{appName:"Chat Friend",tagline:"Your chat companion · I remember our last talk",voiceOn:"Voice On",voiceOff:"Voice Off",standbyOn:"Listening",standbyOff:"Hands-free",note:"Memo",voiceSet:"Voice",reset:"Clear memory",hide:"Hide",show:"☰ Menu",avF:"👩 Woman (Kyoko)",avM:"👨 Man (Otoya)",avI:"🎨 Woman illus. (Kyoko)",file:"File / Photo",fnote1:"Only the text part can be read.",fnote2:"*Photo/image looks and figures cannot be read.",hint:"This app runs inside this chat. For serious worries, please also reach out to someone you trust or a professional.",copyAll:"Copy all",copy:"Copy",resetConfirm:"Erase the saved conversation memory. OK?"},
-  ko:{appName:"이야기 친구",tagline:"당신의 이야기 친구 · 지난 이야기도 기억해요",voiceOn:"소리 켜짐",voiceOff:"소리 꺼짐",standbyOn:"대기 켜짐",standbyOff:"대기 꺼짐",note:"메모",voiceSet:"음성설정",reset:"기억 지우기",hide:"숨기기",show:"☰ 메뉴",avF:"👩 여성 (Kyoko)",avM:"👨 남성 (Otoya)",avI:"🎨 여성 일러스트 (Kyoko)",file:"파일·사진",fnote1:"글자(텍스트) 부분만 읽을 수 있어요.",fnote2:"※사진·이미지의 모습이나 그림 내용은 읽을 수 없어요.",hint:"이 앱은 이 채팅 안에서 동작합니다. 힘든 고민은 신뢰할 수 있는 사람이나 전문 상담 창구에도 기대 주세요.",copyAll:"전체 복사",copy:"복사",resetConfirm:"지금까지의 대화 기억을 지울게요. 괜찮나요?"},
-  th:{appName:"เพื่อนคุย",tagline:"เพื่อนคุยของคุณ · จำเรื่องคราวก่อนได้ด้วยนะ",voiceOn:"เสียง เปิด",voiceOff:"เสียง ปิด",standbyOn:"กำลังฟัง",standbyOff:"แฮนด์ฟรี",note:"บันทึก",voiceSet:"ตั้งค่าเสียง",reset:"ลบความจำ",hide:"ซ่อน",show:"☰ เมนู",avF:"👩 ผู้หญิง (Kyoko)",avM:"👨 ผู้ชาย (Otoya)",avI:"🎨 ผู้หญิงการ์ตูน (Kyoko)",file:"ไฟล์·รูป",fnote1:"อ่านได้เฉพาะส่วนที่เป็นตัวอักษร (ข้อความ) เท่านั้น",fnote2:"※ไม่สามารถอ่านภาพถ่าย รูปภาพ หรือเนื้อหาของรูปได้",hint:"แอปนี้ทำงานในแชทนี้ หากมีเรื่องกังวลหนักใจ โปรดพึ่งพาคนที่ไว้ใจหรือผู้เชี่ยวชาญด้วยนะคะ",copyAll:"คัดลอกทั้งหมด",copy:"คัดลอก",resetConfirm:"จะลบความจำการสนทนาที่ผ่านมานะคะ ตกลงไหม?"},
-  vi:{appName:"Bạn trò chuyện",tagline:"Người bạn trò chuyện · Mình nhớ cả lần trước",voiceOn:"Bật tiếng",voiceOff:"Tắt tiếng",standbyOn:"Đang nghe",standbyOff:"Rảnh tay",note:"Ghi nhớ",voiceSet:"Giọng nói",reset:"Xóa trí nhớ",hide:"Ẩn",show:"☰ Menu",avF:"👩 Nữ (Kyoko)",avM:"👨 Nam (Otoya)",avI:"🎨 Nữ hoạt hình (Kyoko)",file:"Tệp / Ảnh",fnote1:"Chỉ đọc được phần chữ (văn bản).",fnote2:"*Không đọc được hình ảnh, ảnh chụp hay nội dung tranh/hình.",hint:"Ứng dụng chạy trong cuộc trò chuyện này. Khi có lo lắng nghiêm trọng, hãy nhờ người bạn tin tưởng hoặc chuyên gia nhé.",copyAll:"Sao chép tất cả",copy:"Sao chép",resetConfirm:"Sẽ xóa trí nhớ cuộc trò chuyện trước đây. Bạn đồng ý chứ?"}
+  ja:{appName:"はなしあい",tagline:"きみの話し相手 · 前回の続きも覚えてるよ",voiceOn:"声オン",voiceOff:"声オフ",standbyOn:"待受オン",standbyOff:"待受オフ",note:"メモ",voiceSet:"声設定",reset:"記憶を消す",hide:"かくす",show:"☰ メニュー",avF:"👩 女性（声:Kyoko）",avM:"👨 男性（声:Otoya）",avI:"🎨 女性イラスト（声:Kyoko）",file:"ファイル・写真",fnote1:"文字（テキスト）部分のみ読み込みできます。",fnote2:"※写真・画像の見た目や図・絵の内容は読めません。",hint:"このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。",copyAll:"全部コピー",copy:"コピー",tips:"ヒント",resetConfirm:"これまでの会話の記憶を消すよ。いい?"},
+  en:{appName:"Chat Friend",tagline:"Your chat companion · I remember our last talk",voiceOn:"Voice On",voiceOff:"Voice Off",standbyOn:"Listening",standbyOff:"Hands-free",note:"Memo",voiceSet:"Voice",reset:"Clear memory",hide:"Hide",show:"☰ Menu",avF:"👩 Woman (Kyoko)",avM:"👨 Man (Otoya)",avI:"🎨 Woman illus. (Kyoko)",file:"File / Photo",fnote1:"Only the text part can be read.",fnote2:"*Photo/image looks and figures cannot be read.",hint:"This app runs inside this chat. For serious worries, please also reach out to someone you trust or a professional.",copyAll:"Copy all",copy:"Copy",tips:"Tips",resetConfirm:"Erase the saved conversation memory. OK?"},
+  ko:{appName:"이야기 친구",tagline:"당신의 이야기 친구 · 지난 이야기도 기억해요",voiceOn:"소리 켜짐",voiceOff:"소리 꺼짐",standbyOn:"대기 켜짐",standbyOff:"대기 꺼짐",note:"메모",voiceSet:"음성설정",reset:"기억 지우기",hide:"숨기기",show:"☰ 메뉴",avF:"👩 여성 (Kyoko)",avM:"👨 남성 (Otoya)",avI:"🎨 여성 일러스트 (Kyoko)",file:"파일·사진",fnote1:"글자(텍스트) 부분만 읽을 수 있어요.",fnote2:"※사진·이미지의 모습이나 그림 내용은 읽을 수 없어요.",hint:"이 앱은 이 채팅 안에서 동작합니다. 힘든 고민은 신뢰할 수 있는 사람이나 전문 상담 창구에도 기대 주세요.",copyAll:"전체 복사",copy:"복사",tips:"도움말",resetConfirm:"지금까지의 대화 기억을 지울게요. 괜찮나요?"},
+  th:{appName:"เพื่อนคุย",tagline:"เพื่อนคุยของคุณ · จำเรื่องคราวก่อนได้ด้วยนะ",voiceOn:"เสียง เปิด",voiceOff:"เสียง ปิด",standbyOn:"กำลังฟัง",standbyOff:"แฮนด์ฟรี",note:"บันทึก",voiceSet:"ตั้งค่าเสียง",reset:"ลบความจำ",hide:"ซ่อน",show:"☰ เมนู",avF:"👩 ผู้หญิง (Kyoko)",avM:"👨 ผู้ชาย (Otoya)",avI:"🎨 ผู้หญิงการ์ตูน (Kyoko)",file:"ไฟล์·รูป",fnote1:"อ่านได้เฉพาะส่วนที่เป็นตัวอักษร (ข้อความ) เท่านั้น",fnote2:"※ไม่สามารถอ่านภาพถ่าย รูปภาพ หรือเนื้อหาของรูปได้",hint:"แอปนี้ทำงานในแชทนี้ หากมีเรื่องกังวลหนักใจ โปรดพึ่งพาคนที่ไว้ใจหรือผู้เชี่ยวชาญด้วยนะคะ",copyAll:"คัดลอกทั้งหมด",copy:"คัดลอก",tips:"คำแนะนำ",resetConfirm:"จะลบความจำการสนทนาที่ผ่านมานะคะ ตกลงไหม?"},
+  vi:{appName:"Bạn trò chuyện",tagline:"Người bạn trò chuyện · Mình nhớ cả lần trước",voiceOn:"Bật tiếng",voiceOff:"Tắt tiếng",standbyOn:"Đang nghe",standbyOff:"Rảnh tay",note:"Ghi nhớ",voiceSet:"Giọng nói",reset:"Xóa trí nhớ",hide:"Ẩn",show:"☰ Menu",avF:"👩 Nữ (Kyoko)",avM:"👨 Nam (Otoya)",avI:"🎨 Nữ hoạt hình (Kyoko)",file:"Tệp / Ảnh",fnote1:"Chỉ đọc được phần chữ (văn bản).",fnote2:"*Không đọc được hình ảnh, ảnh chụp hay nội dung tranh/hình.",hint:"Ứng dụng chạy trong cuộc trò chuyện này. Khi có lo lắng nghiêm trọng, hãy nhờ người bạn tin tưởng hoặc chuyên gia nhé.",copyAll:"Sao chép tất cả",copy:"Sao chép",tips:"Gợi ý",resetConfirm:"Sẽ xóa trí nhớ cuộc trò chuyện trước đây. Bạn đồng ý chứ?"}
 };
 function tt(key){ return (I18N[appLang]||I18N.ja)[key]; }
 function applyI18n(){
@@ -558,6 +561,7 @@ function applyI18n(){
   const fb=document.getElementById("fileBtn"); if(fb) fb.textContent="📎 "+t.file;
   const fn=document.querySelector(".filenote"); if(fn) fn.innerHTML = t.fnote1+"<br>"+t.fnote2;
   setTxt(".hint-text", t.hint);
+  const htb=document.getElementById("hintToggle"); if(htb) htb.textContent="ⓘ "+t.tips;
 }
 // VOICEVOX(Nemo)設定。enabledのとき優先し、失敗時は端末の声へ。
 let vvCfg = { enabled:false, url:"http://127.0.0.1:50021", speaker:0, credit:"VOICEVOX Nemo" };
@@ -650,13 +654,20 @@ async function loadLangPref(){
 }
 
 /* ---------- 下部ヒントの表示/非表示 ---------- */
-const hintBar=document.getElementById("hintBar"), hintClose=document.getElementById("hintClose");
-if(hintClose) hintClose.addEventListener("click", ()=>{
-  if(hintBar) hintBar.hidden=true;
-  try{ window.storage.set(K_HINT, "0", false); }catch(e){}
+const hintBar=document.getElementById("hintBar"), hintToggle=document.getElementById("hintToggle");
+function applyHint(show){
+  if(hintBar) hintBar.hidden=!show;
+  if(hintToggle) hintToggle.classList.toggle("on", !!show);
+}
+if(hintToggle) hintToggle.addEventListener("click", ()=>{
+  const show = hintBar ? hintBar.hidden : true;   // 今隠れているなら表示する
+  applyHint(show);
+  try{ window.storage.set(K_HINT, show?"1":"0", false); }catch(e){}
 });
 async function loadHintPref(){
-  try{ const v=await window.storage.get(K_HINT); if(hintBar && v && v.value==="0") hintBar.hidden=true; }catch(e){}
+  let show=true;
+  try{ const v=await window.storage.get(K_HINT); if(v && v.value==="0") show=false; }catch(e){}
+  applyHint(show);
 }
 
 /* ---------- rendering ---------- */
