@@ -809,6 +809,8 @@ async function loadHeaderPref(){
 /* ---------- TTS（声はアバターの性別で決定：男性=Otoya／女性=Kyoko） ---------- */
 let jaVoice=null;
 let ttsUnlocked=false;
+// 男性っぽい音声名のパターン（日本語・主要言語の代表的な男性音声）。
+const MALE_NAME_RE=/(otoya|hattori|ichiro|男性|male|daniel|alex|fred|aaron|reed|rishi|gordon|thomas|yannick|diego|jorge|xander|maged|yuri|lee)/i;
 function jaVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
   return vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
@@ -904,13 +906,18 @@ function browserSpeak(text){
     const lang=effLang(text);
     const bcp=LANG_BCP[lang]||"ja-JP";
     const voice=(lang==="ja") ? jaVoice : pickVoiceForLang(lang);
+    // 男性アバターなのに端末に男性音声が無い（女性声しか無い）ときは、
+    // 声を低くして“男性らしく”鳴らす。男性音声があればそのまま使う。
+    const wantMale=(avatarType==="photoM");
+    const voiceIsMale = voice && MALE_NAME_RE.test((voice.name||"").toLowerCase());
+    const pitch = (wantMale && !voiceIsMale) ? 0.6 : 1.0;
     // 文ごとに区切ると自然な間が入り、長文でも途切れにくい（日本語・英語の区切り両対応）。
     const parts = text.replace(/\s+/g," ").match(/[^。．.！？!?\n]+[。．.！？!?]?/g) || [text];
     parts.forEach((part, i)=>{
       const t=part.trim(); if(!t) return;
       const u=new SpeechSynthesisUtterance(t);
       u.lang=bcp; if(voice) u.voice=voice;
-      u.rate=1.0; u.pitch=1.0;   // 自然な話速・トーン
+      u.rate=1.0; u.pitch=pitch;   // 自然な話速・トーン（男性は声を低く）
       if(i===parts.length-1) u.onend=stop;
       u.onerror=stop;
       speechSynthesis.speak(u);
