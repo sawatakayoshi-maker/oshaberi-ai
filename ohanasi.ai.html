@@ -2,7 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="おしゃべりAI" />
 <title>おしゃべりAI — 話し相手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -171,7 +175,7 @@
   .send:hover{background:var(--accent-deep);}
   .send:disabled{opacity:.45; cursor:default; box-shadow:none;}
   .hint{max-width:680px; margin:6px auto 0; font-size:11px; color:var(--ink-soft); text-align:center;}
-  .filenote{max-width:680px; margin:4px auto 0; font-size:11.5px; line-height:1.5; color:var(--ink-soft); text-align:center;}
+  .filenote{font-size:11.5px; line-height:1.45; color:var(--ink-soft); text-align:left;}
 
   /* ---- attach ---- */
   .composer{padding:6px 6px 6px 6px;}
@@ -198,7 +202,8 @@
   .row.me .bubble .attach-chip{background:#fff;}
 
   /* ---- 下部バー（ファイル） ---- */
-  .botbar{max-width:680px; margin:6px auto 0; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .botbar{max-width:680px; margin:6px auto 0; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;}
+  .botbar #fileBtn{flex:0 0 auto;}
   .qbtn{
     border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
     border-radius:999px; padding:7px 14px; font-family:inherit; font-size:13.5px;
@@ -392,8 +397,8 @@
     </div>
     <div class="botbar">
       <button class="qbtn" id="fileBtn" type="button" title="文章ファイル・PDF・写真（文字）を読み込んでAIに渡す">📎 ファイル・写真</button>
+      <span class="filenote">文字（テキスト）部分のみ読み込みできます。<br>※写真・画像の見た目や図・絵の内容は読めません。</span>
     </div>
-    <div class="filenote">ファイル・写真は「文字（テキスト）」部分のみ読み込めます。<br>※写真や画像の見た目、絵・図の内容は読み取れません。</div>
     <div class="hint">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</div>
     <div class="credit" id="vvCreditLine" hidden></div>
   </footer>
@@ -531,11 +536,13 @@ function setAvatar(type){
 }
 if(avatarSel) avatarSel.addEventListener("change", ()=>{
   setAvatar(avatarSel.value);
-  // 操作の中で声を出す（iPhoneで鳴りやすい）＋新しい声をすぐ確認できる
   ttsUnlocked=true; refreshVoicesSoon();
+  // 声の一覧が遅れて出ることがあるので、少し待ってから選び直して発声する
   if(ttsEnabled){
-    if(!window.speechSynthesis){ }
-    setTimeout(()=> speak(avatarType==="photoM" ? "こんにちは。ぼくの声で話すね。" : "こんにちは。わたしの声で話すね。"), 60);
+    setTimeout(()=>{
+      loadVoices();   // この時点の最新の一覧でOtoya/Kyokoを選び直す
+      speak(avatarType==="photoM" ? "こんにちは。ぼくの声で話すね。" : "こんにちは。わたしの声で話すね。");
+    }, 550);
   }
 });
 async function loadAvatarPref(){
