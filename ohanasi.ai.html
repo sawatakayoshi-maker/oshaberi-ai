@@ -662,6 +662,37 @@ function unlockTTS(){
 }
 ["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev, unlockTTS, {passive:true}));
 // 端末の声（ブラウザのspeechSynthesis）で読み上げる（従来の処理）。
+// 文章の言語をざっくり判定（ネット不要）。読み上げる声と言語コードを合わせるため。
+function detectLang(t){
+  if(!t) return "ja";
+  if(/[぀-ヿ]/.test(t)) return "ja";   // ひらがな・カタカナ→日本語
+  if(/[가-힯]/.test(t)) return "ko";   // ハングル→韓国語
+  if(/[฀-๿]/.test(t)) return "th";   // タイ文字
+  if(/[Ѐ-ӿ]/.test(t)) return "ru";   // キリル→ロシア語
+  if(/[؀-ۿ]/.test(t)) return "ar";   // アラビア文字
+  if(/[ăâđêôơưà-ỹ]/i.test(t))  return "vi";   // ベトナム語の記号
+  if(/[一-鿿]/.test(t)) return "zh";   // 漢字のみ→中国語
+  return "en";                                  // それ以外のラテン文字→英語扱い
+}
+const LANG_BCP={ja:"ja-JP",en:"en-US",zh:"zh-CN",ko:"ko-KR",th:"th-TH",ru:"ru-RU",ar:"ar-SA",vi:"vi-VN"};
+// 指定言語に合う声を選ぶ。アバターの性別ヒントも反映。
+function pickVoiceForLang(lang){
+  const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  const match=vs.filter(v=> (v.lang||"").toLowerCase().replace("_","-").startsWith(lang));
+  if(!match.length) return null;
+  const male=(avatarType==="photoM");
+  const maleRe=/(otoya|hattori|male|男性|daniel|alex|fred|aaron|reed|rishi|gordon|thomas|yannick|diego|jorge|male)/i;
+  const femaleRe=/(kyoko|female|女性|samantha|karen|moira|tessa|victoria|ava|allison|fiona|mei-?jia|ting-?ting|sin-?ji|yuna|paulina|monica|amelie|anna)/i;
+  let best=match[0], bs=-Infinity;
+  for(const v of match){
+    const n=(v.name||"").toLowerCase(); let s=0;
+    if(v.localService===false) s+=2;
+    if(/(enhanced|premium|neural|高品質)/.test(n)) s+=3;
+    if(male && maleRe.test(n)) s+=5; else if(!male && femaleRe.test(n)) s+=5;
+    if(s>bs){ bs=s; best=v; }
+  }
+  return best;
+}
 function browserSpeak(text){
   if(!window.speechSynthesis){ setState("idle"); return; }
   try{
@@ -669,12 +700,16 @@ function browserSpeak(text){
     const stop=()=>setState("idle");
     clearTimeout(speak._t);
     speak._t=setTimeout(stop, Math.min(60000, 2000 + text.length*110));
-    // 文ごとに区切ると、自然な間が入り、長文でも途切れにくく流暢に聞こえる。
-    const parts = text.replace(/\s+/g," ").match(/[^。．！？!?\n]+[。．！？!?]?/g) || [text];
+    // 返事の言語を判定し、その言語の声・言語コードで読む（多言語対応）
+    const lang=detectLang(text);
+    const bcp=LANG_BCP[lang]||"ja-JP";
+    const voice=(lang==="ja") ? jaVoice : pickVoiceForLang(lang);
+    // 文ごとに区切ると自然な間が入り、長文でも途切れにくい（日本語・英語の区切り両対応）。
+    const parts = text.replace(/\s+/g," ").match(/[^。．.！？!?\n]+[。．.！？!?]?/g) || [text];
     parts.forEach((part, i)=>{
       const t=part.trim(); if(!t) return;
       const u=new SpeechSynthesisUtterance(t);
-      u.lang="ja-JP"; if(jaVoice) u.voice=jaVoice;
+      u.lang=bcp; if(voice) u.voice=voice;
       u.rate=1.0; u.pitch=1.0;   // 自然な話速・トーン
       if(i===parts.length-1) u.onend=stop;
       u.onerror=stop;
@@ -712,7 +747,8 @@ function stopSpeaking(){
 function speak(text){
   if(!ttsEnabled || !text){ return; }
   setState("speaking");   // 口パク開始（どの音源でも動かす）
-  if(vvCfg.enabled){
+  // VOICEVOXは日本語専用。日本語のときだけ使い、他言語は端末の声（その言語）で読む。
+  if(vvCfg.enabled && detectLang(text)==="ja"){
     voicevoxSpeak(text).catch((e)=>{ console.warn("VOICEVOX失敗→端末の声へ:", e&&e.message); browserSpeak(text); });
   }else{
     browserSpeak(text);
