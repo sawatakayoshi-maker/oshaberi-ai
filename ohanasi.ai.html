@@ -263,6 +263,13 @@
     <div class="tools">
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
       <button class="tool" id="standbyBtn" title="話しかけたら反応する待受モード（マイクボタン不要）">🎙️ <span id="standbyLbl">待受オフ</span></button>
+      <select class="toolsel" id="langSel" title="言語を選ぶ / Language">
+        <option value="ja">🗨 日本語</option>
+        <option value="en">🗨 English</option>
+        <option value="ko">🗨 한국어</option>
+        <option value="th">🗨 ไทย</option>
+        <option value="vi">🗨 Tiếng Việt</option>
+      </select>
       <select class="toolsel" id="avatarSel" title="人物（見た目と声）を選ぶ">
         <option value="photoF">👩 女性（声:Kyoko）</option>
         <option value="photoM">👨 男性（声:Otoya）</option>
@@ -412,6 +419,7 @@ const K_VOICE= "oshaberi:voice";// えらんだ声（名前）。"auto" でお�
 const K_STBY = "oshaberi:standby";// 待受（ハンズフリー）モードのオン/オフ
 const K_NOTE = "oshaberi:note";  // ずっと覚えておくメモ
 const K_AVATAR = "oshaberi:avatar"; // アバターの種類（photoF/photoM/illust）
+const K_LANG = "oshaberi:lang";    // 表示・会話の言語（ja/en/ko/th/vi）
 const K_SETBAR = "oshaberi:setbar"; // 設定バー（音声・見た目）の開閉
 const K_VV   = "oshaberi:voicevox"; // VOICEVOX設定（有効/URL/話者/クレジット）
 const SUMMARY_EVERY = 5; // ユーザー発言が何回たまったら記憶要約を更新するか
@@ -486,6 +494,29 @@ let ttsEnabled = true;
 let busy = false;
 let userTurns = 0;
 let pendingFile = null;  // 送信待ちの添付ファイル {name, kind, text}
+let appLang = "ja";      // 言語（ja/en/ko/th/vi）
+const LANG_NAMES = { en:"English", ko:"Korean (한국어)", th:"Thai (ภาษาไทย)", vi:"Vietnamese (Tiếng Việt)" };
+const GREET = {
+  ja:"やっほー、来てくれてありがとう。わたしはきみの話し相手だよ。今日はどんな気分？ どんなことでも、ゆっくり話してね。",
+  en:"Hi! Thanks for coming. I'm your chat companion. How are you today? Tell me anything — take your time.",
+  ko:"안녕하세요! 와 주셔서 고마워요. 저는 당신의 이야기 친구예요. 오늘 기분은 어떠세요? 무엇이든 천천히 이야기해 주세요.",
+  th:"สวัสดีค่ะ! ขอบคุณที่แวะมานะคะ ฉันเป็นเพื่อนคุยของคุณค่ะ วันนี้เป็นอย่างไรบ้างคะ? เล่าอะไรก็ได้ ค่อย ๆ เล่านะคะ",
+  vi:"Xin chào! Cảm ơn bạn đã ghé qua. Mình là người bạn trò chuyện của bạn. Hôm nay bạn thế nào? Cứ kể bất cứ điều gì, từ từ thôi nhé."
+};
+const GREET_BACK = {
+  ja:"おかえり! また話せてうれしいな。前回の続きでも、新しい話でも、どっちでもいいよ。",
+  en:"Welcome back! I'm glad to talk again. We can continue or start something new.",
+  ko:"다시 오셨네요! 또 이야기할 수 있어서 기뻐요. 이어서 해도, 새 이야기도 좋아요.",
+  th:"ยินดีต้อนรับกลับมาค่ะ! ดีใจที่ได้คุยอีกครั้ง จะคุยต่อหรือเริ่มเรื่องใหม่ก็ได้นะคะ",
+  vi:"Mừng bạn quay lại! Mình rất vui được trò chuyện tiếp. Kể tiếp hay bắt đầu chuyện mới đều được nhé."
+};
+const PLACEHOLDER = {
+  ja:"ここに話したいことを書いてね…",
+  en:"Type what you'd like to talk about…",
+  ko:"이야기하고 싶은 것을 적어 주세요…",
+  th:"พิมพ์สิ่งที่อยากคุยได้เลยค่ะ…",
+  vi:"Hãy viết điều bạn muốn trò chuyện…"
+};
 // VOICEVOX(Nemo)設定。enabledのとき優先し、失敗時は端末の声へ。
 let vvCfg = { enabled:false, url:"http://127.0.0.1:50021", speaker:0, credit:"VOICEVOX Nemo" };
 
@@ -550,6 +581,28 @@ async function loadAvatarPref(){
   if(avatarSel) avatarSel.value=avatarType;
   loadVoices();
   renderAvatar();
+}
+
+/* ---------- 言語選択（日本語/英語/韓国語/タイ語/ベトナム語） ---------- */
+const langSel=document.getElementById("langSel");
+function applyLangUI(){
+  if(langSel) langSel.value=appLang;
+  if(inputEl && PLACEHOLDER[appLang]) inputEl.placeholder=PLACEHOLDER[appLang];
+}
+if(langSel) langSel.addEventListener("change", ()=>{
+  appLang=langSel.value||"ja";
+  try{ window.storage.set(K_LANG, appLang, false); }catch(e){}
+  applyLangUI();
+  ttsUnlocked=true; refreshVoicesSoon();
+  // 新しい言語であいさつ（操作の中なのでiPhoneでも声が出やすい）
+  const hi=GREET[appLang]||GREET.ja;
+  history.push({role:"assistant", content:hi});
+  addBubble("assistant", hi);
+  setTimeout(()=>{ loadVoices(); speak(hi); }, 450);
+});
+async function loadLangPref(){
+  try{ const v=await window.storage.get(K_LANG); if(v && v.value) appLang=v.value; }catch(e){}
+  applyLangUI();
 }
 
 /* ---------- rendering ---------- */
@@ -803,6 +856,9 @@ async function runTurn(displayText, modelContent, file){
   let system = SYSTEM_PROMPT
     + (persistentNote ? "\n\n【ずっと覚えておくこと（本人が登録した大切な情報。常に踏まえて話すこと）】\n"+persistentNote : "")
     + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
+  if(LANG_NAMES[appLang]){  // 選択言語があれば、その言語で返すよう指示
+    system += "\n\n[IMPORTANT] Reply in "+LANG_NAMES[appLang]+", warmly and briefly. If the user clearly writes in another language, match that language instead.";
+  }
   if(needsExpertGuard(displayText)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
   let msgs = history.slice(-16).map(m=>({role:m.role, content:m.content}));
   if(modelContent){ msgs[msgs.length-1].content = modelContent; }
@@ -1057,16 +1113,17 @@ resetBtn.addEventListener("click", async ()=>{
 
 /* ---------- start ---------- */
 function greet(reset){
+  const lang = GREET[appLang] ? appLang : "ja";
   if(history.length>0 && !reset){
     // 過去の会話を復元表示
     for(const m of history){ addBubble(m.role, m.content); }
-    addDivider("ここから続き");
-    const back="おかえり! また話せてうれしいな。前回の続きでも、新しい話でも、どっちでもいいよ。";
+    addDivider("———");
+    const back=GREET_BACK[lang]||GREET_BACK.ja;
     history.push({role:"assistant", content:back});
     addBubble("assistant", back);
     speak(back);
   }else{
-    const hi="やっほー、来てくれてありがとう。わたしはきみの話し相手だよ。今日はどんな気分? どんなことでも、ゆっくり話してね。";
+    const hi=GREET[lang]||GREET.ja;
     history.push({role:"assistant", content:hi});
     addBubble("assistant", hi);
     speak(hi);
@@ -1402,6 +1459,7 @@ slideMake.addEventListener("click", makeSlides);
 (async function init(){
   setState("idle");
   await loadHeaderPref();
+  await loadLangPref();
   await loadNotePref();
   await loadAvatarPref();
   await loadVVPref();
