@@ -1065,6 +1065,13 @@ function getPdfLib(){
       window.pdfjsLib.GlobalWorkerOptions.workerSrc=
         "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     }catch(e){}
+    // 想定内の警告（フォント解析・fakeWorker・標準フォント取得失敗など）は
+    // エラー以外を抑制し、コンソールを汚さないようにする。
+    try{
+      if(window.pdfjsLib.VerbosityLevel && typeof window.pdfjsLib.setVerbosityLevel==="function"){
+        window.pdfjsLib.setVerbosityLevel(window.pdfjsLib.VerbosityLevel.ERRORS);
+      }
+    }catch(e){}
     getPdfLib._init=true;
   }
   return window.pdfjsLib;
@@ -1072,20 +1079,36 @@ function getPdfLib(){
 async function extractPdfText(f){
   const lib=getPdfLib();
   const buf=await f.arrayBuffer();
-  const pdf=await lib.getDocument({
-    data:buf,
-    isEvalSupported:false,      // CSPでevalが禁止でも動くように
-    disableFontFace:true,
-    useWorkerFetch:false
-  }).promise;
-  const max=Math.min(pdf.numPages, 40);
-  let out="";
-  for(let i=1;i<=max;i++){
-    const page=await pdf.getPage(i);
-    const tc=await page.getTextContent();
-    out+=tc.items.map(it=>it.str).join(" ")+"\n";
+  // pdf.js は想定内の警告を console.log("Warning: ...") / ("Info: ...") で出す。
+  // テキスト抽出には支障がないので、抽出中だけ既知の警告ログを抑制する
+  // （restore は finally で必ず行い、本当のエラーは隠さない）。
+  const origLog=console.log;
+  console.log=function(){
+    try{
+      const m=arguments[0];
+      if(typeof m==="string" && /^(Warning|Info):/.test(m)) return;
+    }catch(e){}
+    return origLog.apply(console, arguments);
+  };
+  try{
+    const pdf=await lib.getDocument({
+      data:buf,
+      isEvalSupported:false,      // CSPでevalが禁止でも動くように
+      disableFontFace:true,
+      useWorkerFetch:false,
+      verbosity:(lib.VerbosityLevel ? lib.VerbosityLevel.ERRORS : 0)  // 警告を抑制（エラーのみ）
+    }).promise;
+    const max=Math.min(pdf.numPages, 40);
+    let out="";
+    for(let i=1;i<=max;i++){
+      const page=await pdf.getPage(i);
+      const tc=await page.getTextContent();
+      out+=tc.items.map(it=>it.str).join(" ")+"\n";
+    }
+    return out.trim();
+  } finally {
+    console.log=origLog;
   }
-  return out.trim();
 }
 // テキスト読み出し（f.text() が無い古いブラウザ向けに FileReader でも対応）
 function readAsText(f){
