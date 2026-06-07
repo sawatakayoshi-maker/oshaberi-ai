@@ -141,10 +141,17 @@
   }
   .row.me .mini{background:var(--sage);}
   .bubble{
-    padding:13px 16px; border-radius:16px; max-width:80%;
+    position:relative;
+    padding:13px 16px 24px; border-radius:16px; max-width:80%;
     font-size:18px; line-height:1.85; white-space:pre-wrap; word-break:break-word;
     box-shadow:0 2px 8px rgba(90,60,30,.07); animation:pop .25s ease;
   }
+  .copybtn{
+    position:absolute; right:6px; bottom:4px;
+    border:none; background:transparent; cursor:pointer;
+    font-size:14px; line-height:1; padding:2px 4px; opacity:.5; transition:.15s;
+  }
+  .copybtn:hover{opacity:1;}
   @keyframes pop{from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none}}
   .row.ai .bubble{background:var(--bubble-ai); border:1px solid var(--line); border-bottom-left-radius:5px;}
   .row.me .bubble{background:var(--bubble-me); border-bottom-right-radius:5px;}
@@ -277,6 +284,7 @@
       </select>
       <button class="tool" id="noteBtn" title="ずっと覚えておくメモ">📝 メモ</button>
       <button class="tool" id="vvBtn" title="VOICEVOX（高品質な声）の設定">⚙️ 声設定</button>
+      <button class="tool" id="copyAllBtn" title="会話を全部コピー">📋 全部コピー</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
       <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
     </div>
@@ -519,11 +527,11 @@ const PLACEHOLDER = {
 };
 // 画面の文字（UI）の各言語訳
 const I18N = {
-  ja:{appName:"はなしあい",tagline:"きみの話し相手 · 前回の続きも覚えてるよ",voiceOn:"声オン",voiceOff:"声オフ",standbyOn:"待受オン",standbyOff:"待受オフ",note:"メモ",voiceSet:"声設定",reset:"記憶を消す",hide:"かくす",show:"☰ メニュー",avF:"👩 女性（声:Kyoko）",avM:"👨 男性（声:Otoya）",avI:"🎨 女性イラスト（声:Kyoko）",file:"ファイル・写真",fnote1:"文字（テキスト）部分のみ読み込みできます。",fnote2:"※写真・画像の見た目や図・絵の内容は読めません。",hint:"このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。",resetConfirm:"これまでの会話の記憶を消すよ。いい?"},
-  en:{appName:"Chat Friend",tagline:"Your chat companion · I remember our last talk",voiceOn:"Voice On",voiceOff:"Voice Off",standbyOn:"Listening",standbyOff:"Hands-free",note:"Memo",voiceSet:"Voice",reset:"Clear memory",hide:"Hide",show:"☰ Menu",avF:"👩 Woman (Kyoko)",avM:"👨 Man (Otoya)",avI:"🎨 Woman illus. (Kyoko)",file:"File / Photo",fnote1:"Only the text part can be read.",fnote2:"*Photo/image looks and figures cannot be read.",hint:"This app runs inside this chat. For serious worries, please also reach out to someone you trust or a professional.",resetConfirm:"Erase the saved conversation memory. OK?"},
-  ko:{appName:"이야기 친구",tagline:"당신의 이야기 친구 · 지난 이야기도 기억해요",voiceOn:"소리 켜짐",voiceOff:"소리 꺼짐",standbyOn:"대기 켜짐",standbyOff:"대기 꺼짐",note:"메모",voiceSet:"음성설정",reset:"기억 지우기",hide:"숨기기",show:"☰ 메뉴",avF:"👩 여성 (Kyoko)",avM:"👨 남성 (Otoya)",avI:"🎨 여성 일러스트 (Kyoko)",file:"파일·사진",fnote1:"글자(텍스트) 부분만 읽을 수 있어요.",fnote2:"※사진·이미지의 모습이나 그림 내용은 읽을 수 없어요.",hint:"이 앱은 이 채팅 안에서 동작합니다. 힘든 고민은 신뢰할 수 있는 사람이나 전문 상담 창구에도 기대 주세요.",resetConfirm:"지금까지의 대화 기억을 지울게요. 괜찮나요?"},
-  th:{appName:"เพื่อนคุย",tagline:"เพื่อนคุยของคุณ · จำเรื่องคราวก่อนได้ด้วยนะ",voiceOn:"เสียง เปิด",voiceOff:"เสียง ปิด",standbyOn:"กำลังฟัง",standbyOff:"แฮนด์ฟรี",note:"บันทึก",voiceSet:"ตั้งค่าเสียง",reset:"ลบความจำ",hide:"ซ่อน",show:"☰ เมนู",avF:"👩 ผู้หญิง (Kyoko)",avM:"👨 ผู้ชาย (Otoya)",avI:"🎨 ผู้หญิงการ์ตูน (Kyoko)",file:"ไฟล์·รูป",fnote1:"อ่านได้เฉพาะส่วนที่เป็นตัวอักษร (ข้อความ) เท่านั้น",fnote2:"※ไม่สามารถอ่านภาพถ่าย รูปภาพ หรือเนื้อหาของรูปได้",hint:"แอปนี้ทำงานในแชทนี้ หากมีเรื่องกังวลหนักใจ โปรดพึ่งพาคนที่ไว้ใจหรือผู้เชี่ยวชาญด้วยนะคะ",resetConfirm:"จะลบความจำการสนทนาที่ผ่านมานะคะ ตกลงไหม?"},
-  vi:{appName:"Bạn trò chuyện",tagline:"Người bạn trò chuyện · Mình nhớ cả lần trước",voiceOn:"Bật tiếng",voiceOff:"Tắt tiếng",standbyOn:"Đang nghe",standbyOff:"Rảnh tay",note:"Ghi nhớ",voiceSet:"Giọng nói",reset:"Xóa trí nhớ",hide:"Ẩn",show:"☰ Menu",avF:"👩 Nữ (Kyoko)",avM:"👨 Nam (Otoya)",avI:"🎨 Nữ hoạt hình (Kyoko)",file:"Tệp / Ảnh",fnote1:"Chỉ đọc được phần chữ (văn bản).",fnote2:"*Không đọc được hình ảnh, ảnh chụp hay nội dung tranh/hình.",hint:"Ứng dụng chạy trong cuộc trò chuyện này. Khi có lo lắng nghiêm trọng, hãy nhờ người bạn tin tưởng hoặc chuyên gia nhé.",resetConfirm:"Sẽ xóa trí nhớ cuộc trò chuyện trước đây. Bạn đồng ý chứ?"}
+  ja:{appName:"はなしあい",tagline:"きみの話し相手 · 前回の続きも覚えてるよ",voiceOn:"声オン",voiceOff:"声オフ",standbyOn:"待受オン",standbyOff:"待受オフ",note:"メモ",voiceSet:"声設定",reset:"記憶を消す",hide:"かくす",show:"☰ メニュー",avF:"👩 女性（声:Kyoko）",avM:"👨 男性（声:Otoya）",avI:"🎨 女性イラスト（声:Kyoko）",file:"ファイル・写真",fnote1:"文字（テキスト）部分のみ読み込みできます。",fnote2:"※写真・画像の見た目や図・絵の内容は読めません。",hint:"このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。",copyAll:"全部コピー",copy:"コピー",resetConfirm:"これまでの会話の記憶を消すよ。いい?"},
+  en:{appName:"Chat Friend",tagline:"Your chat companion · I remember our last talk",voiceOn:"Voice On",voiceOff:"Voice Off",standbyOn:"Listening",standbyOff:"Hands-free",note:"Memo",voiceSet:"Voice",reset:"Clear memory",hide:"Hide",show:"☰ Menu",avF:"👩 Woman (Kyoko)",avM:"👨 Man (Otoya)",avI:"🎨 Woman illus. (Kyoko)",file:"File / Photo",fnote1:"Only the text part can be read.",fnote2:"*Photo/image looks and figures cannot be read.",hint:"This app runs inside this chat. For serious worries, please also reach out to someone you trust or a professional.",copyAll:"Copy all",copy:"Copy",resetConfirm:"Erase the saved conversation memory. OK?"},
+  ko:{appName:"이야기 친구",tagline:"당신의 이야기 친구 · 지난 이야기도 기억해요",voiceOn:"소리 켜짐",voiceOff:"소리 꺼짐",standbyOn:"대기 켜짐",standbyOff:"대기 꺼짐",note:"메모",voiceSet:"음성설정",reset:"기억 지우기",hide:"숨기기",show:"☰ 메뉴",avF:"👩 여성 (Kyoko)",avM:"👨 남성 (Otoya)",avI:"🎨 여성 일러스트 (Kyoko)",file:"파일·사진",fnote1:"글자(텍스트) 부분만 읽을 수 있어요.",fnote2:"※사진·이미지의 모습이나 그림 내용은 읽을 수 없어요.",hint:"이 앱은 이 채팅 안에서 동작합니다. 힘든 고민은 신뢰할 수 있는 사람이나 전문 상담 창구에도 기대 주세요.",copyAll:"전체 복사",copy:"복사",resetConfirm:"지금까지의 대화 기억을 지울게요. 괜찮나요?"},
+  th:{appName:"เพื่อนคุย",tagline:"เพื่อนคุยของคุณ · จำเรื่องคราวก่อนได้ด้วยนะ",voiceOn:"เสียง เปิด",voiceOff:"เสียง ปิด",standbyOn:"กำลังฟัง",standbyOff:"แฮนด์ฟรี",note:"บันทึก",voiceSet:"ตั้งค่าเสียง",reset:"ลบความจำ",hide:"ซ่อน",show:"☰ เมนู",avF:"👩 ผู้หญิง (Kyoko)",avM:"👨 ผู้ชาย (Otoya)",avI:"🎨 ผู้หญิงการ์ตูน (Kyoko)",file:"ไฟล์·รูป",fnote1:"อ่านได้เฉพาะส่วนที่เป็นตัวอักษร (ข้อความ) เท่านั้น",fnote2:"※ไม่สามารถอ่านภาพถ่าย รูปภาพ หรือเนื้อหาของรูปได้",hint:"แอปนี้ทำงานในแชทนี้ หากมีเรื่องกังวลหนักใจ โปรดพึ่งพาคนที่ไว้ใจหรือผู้เชี่ยวชาญด้วยนะคะ",copyAll:"คัดลอกทั้งหมด",copy:"คัดลอก",resetConfirm:"จะลบความจำการสนทนาที่ผ่านมานะคะ ตกลงไหม?"},
+  vi:{appName:"Bạn trò chuyện",tagline:"Người bạn trò chuyện · Mình nhớ cả lần trước",voiceOn:"Bật tiếng",voiceOff:"Tắt tiếng",standbyOn:"Đang nghe",standbyOff:"Rảnh tay",note:"Ghi nhớ",voiceSet:"Giọng nói",reset:"Xóa trí nhớ",hide:"Ẩn",show:"☰ Menu",avF:"👩 Nữ (Kyoko)",avM:"👨 Nam (Otoya)",avI:"🎨 Nữ hoạt hình (Kyoko)",file:"Tệp / Ảnh",fnote1:"Chỉ đọc được phần chữ (văn bản).",fnote2:"*Không đọc được hình ảnh, ảnh chụp hay nội dung tranh/hình.",hint:"Ứng dụng chạy trong cuộc trò chuyện này. Khi có lo lắng nghiêm trọng, hãy nhờ người bạn tin tưởng hoặc chuyên gia nhé.",copyAll:"Sao chép tất cả",copy:"Sao chép",resetConfirm:"Sẽ xóa trí nhớ cuộc trò chuyện trước đây. Bạn đồng ý chứ?"}
 };
 function tt(key){ return (I18N[appLang]||I18N.ja)[key]; }
 function applyI18n(){
@@ -535,6 +543,7 @@ function applyI18n(){
   const sl=document.getElementById("standbyLbl"); if(sl) sl.textContent = (typeof standbyOn!=="undefined" && standbyOn) ? t.standbyOn : t.standbyOff;
   const nb=document.getElementById("noteBtn"); if(nb) nb.textContent="📝 "+t.note;
   const vb=document.getElementById("vvBtn"); if(vb) vb.textContent="⚙️ "+t.voiceSet;
+  const cab=document.getElementById("copyAllBtn"); if(cab) cab.textContent="📋 "+t.copyAll;
   const rb=document.getElementById("resetBtn"); if(rb) rb.textContent="🧹 "+t.reset;
   const hb=document.getElementById("hdrHideBtn"); if(hb) hb.textContent="🔼 "+t.hide;
   const sb=document.getElementById("hdrShowBtn"); if(sb) sb.textContent=t.show;
@@ -635,6 +644,17 @@ async function loadLangPref(){
 }
 
 /* ---------- rendering ---------- */
+// テキストをクリップボードにコピー（失敗時はexecCommandにフォールバック）
+async function copyText(t){
+  if(!t) return false;
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(t); return true; } }catch(e){}
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=t; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.top="-1000px"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok=document.execCommand("copy"); ta.remove(); return ok;
+  }catch(e){ return false; }
+}
 function addBubble(role, text, file){
   const row=document.createElement("div");
   row.className="row "+(role==="user"?"me":"ai");
@@ -653,6 +673,17 @@ function addBubble(role, text, file){
     b.appendChild(chip);
   }
   if(text){ const tx=document.createElement("div"); tx.textContent=text; b.appendChild(tx); }
+  if(text){
+    const cb=document.createElement("button");
+    cb.className="copybtn"; cb.type="button"; cb.textContent="📋"; cb.title=tt("copy");
+    cb.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const ok=await copyText(text);
+      cb.textContent = ok ? "✓" : "✗";
+      setTimeout(()=>{ cb.textContent="📋"; }, 1200);
+    });
+    b.appendChild(cb);
+  }
   row.appendChild(mini); row.appendChild(b);
   logEl.appendChild(row);
   mainEl.scrollTop=mainEl.scrollHeight;
@@ -1138,6 +1169,19 @@ resetBtn.addEventListener("click", async ()=>{
   history=[]; memorySummary=""; userTurns=0;
   logEl.innerHTML="";
   greet(true);
+});
+
+// 会話を全部コピー
+const copyAllBtn=document.getElementById("copyAllBtn");
+if(copyAllBtn) copyAllBtn.addEventListener("click", async ()=>{
+  const youLbl = appLang==="ja"?"あなた": appLang==="ko"?"나": appLang==="th"?"คุณ": appLang==="vi"?"Bạn":"You";
+  const aiLbl  = (I18N[appLang]||I18N.ja).appName;
+  const lines = history.filter(m=>m && m.content)
+    .map(m=>(m.role==="user"?youLbl:aiLbl)+": "+m.content);
+  const ok = await copyText(lines.join("\n\n"));
+  const old = copyAllBtn.textContent;
+  copyAllBtn.textContent = ok ? "✓" : "✗";
+  setTimeout(()=>{ copyAllBtn.textContent = "📋 "+tt("copyAll"); }, 1200);
 });
 
 /* ---------- start ---------- */
