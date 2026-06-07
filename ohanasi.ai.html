@@ -517,6 +517,33 @@ const PLACEHOLDER = {
   th:"พิมพ์สิ่งที่อยากคุยได้เลยค่ะ…",
   vi:"Hãy viết điều bạn muốn trò chuyện…"
 };
+// 画面の文字（UI）の各言語訳
+const I18N = {
+  ja:{appName:"はなしあい",tagline:"きみの話し相手 · 前回の続きも覚えてるよ",voiceOn:"声オン",voiceOff:"声オフ",standbyOn:"待受オン",standbyOff:"待受オフ",note:"メモ",voiceSet:"声設定",reset:"記憶を消す",hide:"かくす",show:"☰ メニュー",avF:"👩 女性（声:Kyoko）",avM:"👨 男性（声:Otoya）",avI:"🎨 女性イラスト（声:Kyoko）",file:"ファイル・写真",fnote1:"文字（テキスト）部分のみ読み込みできます。",fnote2:"※写真・画像の見た目や図・絵の内容は読めません。",hint:"このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。",resetConfirm:"これまでの会話の記憶を消すよ。いい?"},
+  en:{appName:"Chat Friend",tagline:"Your chat companion · I remember our last talk",voiceOn:"Voice On",voiceOff:"Voice Off",standbyOn:"Listening",standbyOff:"Hands-free",note:"Memo",voiceSet:"Voice",reset:"Clear memory",hide:"Hide",show:"☰ Menu",avF:"👩 Woman (Kyoko)",avM:"👨 Man (Otoya)",avI:"🎨 Woman illus. (Kyoko)",file:"File / Photo",fnote1:"Only the text part can be read.",fnote2:"*Photo/image looks and figures cannot be read.",hint:"This app runs inside this chat. For serious worries, please also reach out to someone you trust or a professional.",resetConfirm:"Erase the saved conversation memory. OK?"},
+  ko:{appName:"이야기 친구",tagline:"당신의 이야기 친구 · 지난 이야기도 기억해요",voiceOn:"소리 켜짐",voiceOff:"소리 꺼짐",standbyOn:"대기 켜짐",standbyOff:"대기 꺼짐",note:"메모",voiceSet:"음성설정",reset:"기억 지우기",hide:"숨기기",show:"☰ 메뉴",avF:"👩 여성 (Kyoko)",avM:"👨 남성 (Otoya)",avI:"🎨 여성 일러스트 (Kyoko)",file:"파일·사진",fnote1:"글자(텍스트) 부분만 읽을 수 있어요.",fnote2:"※사진·이미지의 모습이나 그림 내용은 읽을 수 없어요.",hint:"이 앱은 이 채팅 안에서 동작합니다. 힘든 고민은 신뢰할 수 있는 사람이나 전문 상담 창구에도 기대 주세요.",resetConfirm:"지금까지의 대화 기억을 지울게요. 괜찮나요?"},
+  th:{appName:"เพื่อนคุย",tagline:"เพื่อนคุยของคุณ · จำเรื่องคราวก่อนได้ด้วยนะ",voiceOn:"เสียง เปิด",voiceOff:"เสียง ปิด",standbyOn:"กำลังฟัง",standbyOff:"แฮนด์ฟรี",note:"บันทึก",voiceSet:"ตั้งค่าเสียง",reset:"ลบความจำ",hide:"ซ่อน",show:"☰ เมนู",avF:"👩 ผู้หญิง (Kyoko)",avM:"👨 ผู้ชาย (Otoya)",avI:"🎨 ผู้หญิงการ์ตูน (Kyoko)",file:"ไฟล์·รูป",fnote1:"อ่านได้เฉพาะส่วนที่เป็นตัวอักษร (ข้อความ) เท่านั้น",fnote2:"※ไม่สามารถอ่านภาพถ่าย รูปภาพ หรือเนื้อหาของรูปได้",hint:"แอปนี้ทำงานในแชทนี้ หากมีเรื่องกังวลหนักใจ โปรดพึ่งพาคนที่ไว้ใจหรือผู้เชี่ยวชาญด้วยนะคะ",resetConfirm:"จะลบความจำการสนทนาที่ผ่านมานะคะ ตกลงไหม?"},
+  vi:{appName:"Bạn trò chuyện",tagline:"Người bạn trò chuyện · Mình nhớ cả lần trước",voiceOn:"Bật tiếng",voiceOff:"Tắt tiếng",standbyOn:"Đang nghe",standbyOff:"Rảnh tay",note:"Ghi nhớ",voiceSet:"Giọng nói",reset:"Xóa trí nhớ",hide:"Ẩn",show:"☰ Menu",avF:"👩 Nữ (Kyoko)",avM:"👨 Nam (Otoya)",avI:"🎨 Nữ hoạt hình (Kyoko)",file:"Tệp / Ảnh",fnote1:"Chỉ đọc được phần chữ (văn bản).",fnote2:"*Không đọc được hình ảnh, ảnh chụp hay nội dung tranh/hình.",hint:"Ứng dụng chạy trong cuộc trò chuyện này. Khi có lo lắng nghiêm trọng, hãy nhờ người bạn tin tưởng hoặc chuyên gia nhé.",resetConfirm:"Sẽ xóa trí nhớ cuộc trò chuyện trước đây. Bạn đồng ý chứ?"}
+};
+function tt(key){ return (I18N[appLang]||I18N.ja)[key]; }
+function applyI18n(){
+  const t=I18N[appLang]||I18N.ja;
+  const setTxt=(sel,v)=>{ const e=document.querySelector(sel); if(e) e.textContent=v; };
+  setTxt(".brand b", t.appName);
+  setTxt(".brand span", t.tagline);
+  if(typeof voiceLbl!=="undefined" && voiceLbl) voiceLbl.textContent = ttsEnabled ? t.voiceOn : t.voiceOff;
+  const sl=document.getElementById("standbyLbl"); if(sl) sl.textContent = (typeof standbyOn!=="undefined" && standbyOn) ? t.standbyOn : t.standbyOff;
+  const nb=document.getElementById("noteBtn"); if(nb) nb.textContent="📝 "+t.note;
+  const vb=document.getElementById("vvBtn"); if(vb) vb.textContent="⚙️ "+t.voiceSet;
+  const rb=document.getElementById("resetBtn"); if(rb) rb.textContent="🧹 "+t.reset;
+  const hb=document.getElementById("hdrHideBtn"); if(hb) hb.textContent="🔼 "+t.hide;
+  const sb=document.getElementById("hdrShowBtn"); if(sb) sb.textContent=t.show;
+  const as=document.getElementById("avatarSel");
+  if(as && as.options.length>=3){ as.options[0].textContent=t.avF; as.options[1].textContent=t.avM; as.options[2].textContent=t.avI; }
+  const fb=document.getElementById("fileBtn"); if(fb) fb.textContent="📎 "+t.file;
+  const fn=document.querySelector(".filenote"); if(fn) fn.innerHTML = t.fnote1+"<br>"+t.fnote2;
+  setTxt(".hint", t.hint);
+}
 // VOICEVOX(Nemo)設定。enabledのとき優先し、失敗時は端末の声へ。
 let vvCfg = { enabled:false, url:"http://127.0.0.1:50021", speaker:0, credit:"VOICEVOX Nemo" };
 
@@ -588,6 +615,8 @@ const langSel=document.getElementById("langSel");
 function applyLangUI(){
   if(langSel) langSel.value=appLang;
   if(inputEl && PLACEHOLDER[appLang]) inputEl.placeholder=PLACEHOLDER[appLang];
+  applyI18n();   // ボタンなど画面の文字も選択言語に
+  document.documentElement.lang = appLang;
 }
 if(langSel) langSel.addEventListener("change", ()=>{
   appLang=langSel.value||"ja";
@@ -1084,7 +1113,7 @@ fileInput.addEventListener("change", async ()=>{
 voiceBtn.addEventListener("click",()=>{
   ttsEnabled=!ttsEnabled;
   voiceBtn.classList.toggle("on", ttsEnabled);
-  voiceLbl.textContent = ttsEnabled ? "声オン" : "声オフ";
+  voiceLbl.textContent = ttsEnabled ? tt("voiceOn") : tt("voiceOff");
   if(ttsEnabled){
     if(!window.speechSynthesis){
       setStatus("ごめん、この画面では音声が使えないみたい");
@@ -1104,7 +1133,7 @@ voiceBtn.addEventListener("click",()=>{
 
 // 声を選ぶメニュー：選ぶと保存して、その声でテスト発声する
 resetBtn.addEventListener("click", async ()=>{
-  if(!confirm("これまでの会話の記憶を消すよ。いい?")) return;
+  if(!confirm(tt("resetConfirm"))) return;
   await clearMemory();
   history=[]; memorySummary=""; userTurns=0;
   logEl.innerHTML="";
@@ -1209,7 +1238,7 @@ let standbyOn=false, standbyRecog=null, standbyActive=false, standbyStarting=fal
 
 function applyStandbyState(){
   if(standbyBtn) standbyBtn.classList.toggle("on", standbyOn);
-  if(standbyLbl) standbyLbl.textContent = standbyOn ? "待受オン" : "待受オフ";
+  if(standbyLbl) standbyLbl.textContent = standbyOn ? tt("standbyOn") : tt("standbyOff");
 }
 function speakingNow(){ return !!(window.speechSynthesis && speechSynthesis.speaking); }
 
