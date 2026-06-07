@@ -96,6 +96,7 @@
   @keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-.6deg)}}
   .avatar-svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .avatar-photo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-svg[hidden], .avatar-photo[hidden]{ display:none; }
   /* 写真モード：縦長のポートレート */
   .avatar-wrap.photo{ width:148px; height:185px; }
   .avatar-wrap.photo .face{ width:148px; height:185px; border-radius:20px; }
@@ -526,7 +527,15 @@ function setAvatar(type){
   loadVoices();   // 性別に合わせて声（Otoya/Kyoko）も切り替える
   renderAvatar();
 }
-if(avatarSel) avatarSel.addEventListener("change", ()=> setAvatar(avatarSel.value));
+if(avatarSel) avatarSel.addEventListener("change", ()=>{
+  setAvatar(avatarSel.value);
+  // 操作の中で声を出す（iPhoneで鳴りやすい）＋新しい声をすぐ確認できる
+  ttsUnlocked=true; refreshVoicesSoon();
+  if(ttsEnabled){
+    if(!window.speechSynthesis){ }
+    setTimeout(()=> speak(avatarType==="photoM" ? "こんにちは。ぼくの声で話すね。" : "こんにちは。わたしの声で話すね。"), 60);
+  }
+});
 async function loadAvatarPref(){
   try{ const v=await window.storage.get(K_AVATAR); if(v && v.value) avatarType=v.value; }catch(e){}
   if(avatarSel) avatarSel.value=avatarType;
