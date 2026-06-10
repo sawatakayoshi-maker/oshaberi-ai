@@ -52,11 +52,23 @@
   .tools{margin-left:auto; display:flex; gap:8px;}
   .tool{
     border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
-    border-radius:999px; padding:7px 12px; font-size:12.5px; cursor:pointer;
-    font-family:inherit; display:flex; align-items:center; gap:6px; transition:.18s;
+    border-radius:999px; padding:9px 15px; font-size:14.5px; cursor:pointer;
+    font-family:inherit; display:flex; align-items:center; gap:7px; transition:.18s;
   }
   .tool:hover{border-color:var(--accent); color:var(--accent-deep);}
   .tool.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+
+  /* ---- header show/hide toggle ---- */
+  body.header-hidden header{ display:none; }
+  #hdrShowBtn{
+    position:fixed; top:calc(8px + env(safe-area-inset-top)); right:14px; z-index:20;
+    display:none; align-items:center; gap:7px;
+    border:1px solid var(--line); background:#fffdf8; color:var(--ink-soft);
+    border-radius:999px; padding:9px 15px; font-size:14.5px; cursor:pointer;
+    font-family:inherit; box-shadow:var(--shadow);
+  }
+  #hdrShowBtn:hover{border-color:var(--accent); color:var(--accent-deep);}
+  body.header-hidden #hdrShowBtn{ display:inline-flex; }
 
   /* ---- Avatar stage ---- */
   .stage{
@@ -104,14 +116,14 @@
   .row{display:flex; gap:9px; align-items:flex-end;}
   .row.me{flex-direction:row-reverse;}
   .mini{
-    width:30px; height:30px; border-radius:50%; flex:0 0 auto;
+    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
     background:var(--accent); color:#fff; display:grid; place-items:center;
-    font-size:14px; font-family:"Klee One";
+    font-size:16px; font-family:"Klee One";
   }
   .row.me .mini{background:var(--sage);}
   .bubble{
-    padding:11px 14px; border-radius:16px; max-width:78%;
-    font-size:15px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
+    padding:13px 16px; border-radius:16px; max-width:80%;
+    font-size:18px; line-height:1.85; white-space:pre-wrap; word-break:break-word;
     box-shadow:0 2px 8px rgba(90,60,30,.07); animation:pop .25s ease;
   }
   @keyframes pop{from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none}}
@@ -132,12 +144,12 @@
   }
   textarea{
     flex:1; border:none; outline:none; resize:none; background:transparent;
-    font-family:inherit; font-size:15px; line-height:1.5; color:var(--ink);
-    max-height:120px; padding:8px 0;
+    font-family:inherit; font-size:18px; line-height:1.6; color:var(--ink);
+    max-height:140px; padding:9px 0;
   }
   textarea::placeholder{color:#b6a892;}
   .send{
-    flex:0 0 auto; width:42px; height:42px; border:none; border-radius:50%;
+    flex:0 0 auto; width:50px; height:50px; border:none; border-radius:50%;
     background:var(--accent); color:#fff; cursor:pointer; display:grid; place-items:center;
     transition:.18s; box-shadow:0 4px 12px rgba(201,104,61,.4);
   }
@@ -148,7 +160,7 @@
   /* ---- attach ---- */
   .composer{padding:6px 6px 6px 6px;}
   .attach{
-    flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+    flex:0 0 auto; width:46px; height:46px; border-radius:50%;
     border:1px solid var(--line); background:#fffdf8; cursor:pointer;
     display:grid; place-items:center; transition:.18s;
   }
@@ -197,7 +209,7 @@
   .dl-link:hover{filter:brightness(.95);}
 
   /* ---- mic ---- */
-  .mic{flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:#fffdf8; cursor:pointer; display:grid; place-items:center; transition:.18s;}
+  .mic{flex:0 0 auto; width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:#fffdf8; cursor:pointer; display:grid; place-items:center; transition:.18s;}
   .mic:hover{border-color:var(--accent); background:#fff5ec;}
   .mic.on{background:var(--accent); border-color:var(--accent); animation:micpulse 1.2s ease-in-out infinite;}
   .mic.on svg rect{fill:#fff;}
@@ -216,8 +228,11 @@
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
+      <button class="tool" id="hdrHideBtn" title="この上のメニューを隠す">🔼 かくす</button>
     </div>
   </header>
+
+  <button id="hdrShowBtn" title="メニューを表示する">☰ メニュー</button>
 
   <div class="stage">
     <div class="avatar-wrap" id="avatarWrap">
@@ -250,18 +265,13 @@
   </main>
 
   <footer>
-    <div class="pending" id="pending" hidden></div>
     <div class="composer">
-      <input type="file" id="file" accept="image/*,application/pdf" hidden>
-      <button class="attach" id="attachBtn" title="画像・PDFを添付">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3l7.8-7.8" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
       <button class="mic" id="micBtn" title="声で話す">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#a44e2a"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="#a44e2a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
       </button>
       <textarea id="input" rows="1" placeholder="ここに話したいことを書いてね…"></textarea>
       <button class="send" id="send" title="送る" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l15-7-4 7 4 7-15-7z" fill="#fff"/></svg>
       </button>
     </div>
     <div class="hint">このアプリはこのチャット内で動いています。深刻な悩みのときは、信頼できる人や専門の窓口にも頼ってね。</div>
@@ -271,6 +281,7 @@
 const MODEL = "claude-sonnet-4-20250514";
 const K_HIST = "oshaberi:history";
 const K_SUM  = "oshaberi:summary";
+const K_UI   = "oshaberi:ui";   // 画面の表示設定（ヘッダーの表示/非表示など）
 const SUMMARY_EVERY = 8; // ユーザー発言が何回たまったら記憶要約を更新するか
 
 const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユーザーにとって「気軽に話せる友達」のような存在でいてください。
@@ -281,6 +292,14 @@ const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユー
 【聞く姿勢】
 話すより聞くことを優先します（聞く7割・話す3割）。返答は短めにし、相手の話を受け止め、「〜って感じなんだね」のように言い換えて返します。決めつけず、「そのとき、どう思った?」のように問いを返します。アドバイスは、相手が求めてから伝えます。
 
+【年配の方への話し方】
+相手は年配の方かもしれません。次のことを大切にしてください。
+・一文を短く、ゆっくり話す。一度にたくさんのことを言わない。
+・専門用語やカタカナ言葉、難しい言い回しを避け、やさしい言葉で話す。
+・急かさない。返事をせかさず、相手のペースを待つ。
+・大事なことは、いやがられない範囲でやさしく繰り返してよい。
+・あくまで聞き役に徹する。自分の話を長々とせず、相手の話をていねいに受け止める。
+
 【教えるときの切り替え】
 相手が何かを知りたい・教えてほしいときは、口調を優しく丁寧に切り替えます。難しい言葉を避け、わかりやすく、急かさずに説明します。
 
@@ -289,10 +308,44 @@ const SYSTEM_PROMPT = `あなたは、悩みを聞く相談相手です。ユー
 ・「こうすべき」と説教しない。相手を評価したり責めたりしない。
 ・相手が自分を傷つけそうな深刻な状態に見えるときは、無理に解決しようとせず、信頼できる人や専門の窓口に相談することをやさしく勧める。
 
+【重要な話題（医療・お金・重要な判断）】
+医療・健康、お金・投資・契約・法律・相続など、重要な判断に関わる相談については、具体的な助言や断定（例:「この薬を飲んだほうがいい」「この投資をすべき」「契約していい」など）をしないでください。相手の気持ちや不安はあたたかく受け止めたうえで、「わたしには正しく判断できないから」と正直に伝え、その分野の適切な専門家（医師・薬剤師・弁護士・金融の窓口など）や、信頼できるご家族への相談をやさしく勧めます。そのうえで、話したい気持ちはいつでも聞くよ、と会話自体は続けてください。
+
 【記憶】
 これまでの会話の要約が「これまでの記憶」として渡されることがあります。それを覚えている前提で、自然に「この前話してたあれ、どうなった?」のように触れてかまいません。ただし、相手が話していないことを勝手に決めつけないでください。
 
-返答は日本語で、短めに、自然な会話のテンポを保ってください。`;
+返答は基本は日本語で、短めに、自然な会話のテンポを保ってください。ただし、相手が日本語以外の言語（英語など）で話しかけてきたときは、その同じ言語に合わせて、同じようにやさしく短く返してください。`;
+
+/* ---------- 安全ガード（重要な話題は専門家へ） ----------
+   過剰反応を避けるため「重要トピック語」と「助言を求めるサイン」が
+   両方そろったときだけ発動する。雑談中の軽い言及（例「お金がないなあ」）
+   では発動しない。 */
+const GUARD_TOPICS = [
+  // 医療・健康
+  "病気","症状","薬","診断","治療","痛い","痛み","がん","癌","持病","血圧","認知症","うつ","手術","入院","検査",
+  // お金・投資
+  "投資","株","儲","借金","ローン","保険","年金","相続","送金","振込","詐欺","資産","名義",
+  // 重要な判断
+  "契約","法律","弁護士","遺言","訴訟","離婚","保証人","署名",
+  // 多言語（英語など / 小文字で照合）
+  "medicine","medication","diagnos","symptom","cancer","disease","surgery","blood pressure","dementia","depress",
+  "invest","stock","loan","debt","insurance","pension","inheritance","scam","fraud","mortgage",
+  "contract","lawsuit","lawyer","attorney","divorce","testament"
+];
+const GUARD_ASK = [
+  // 日本語：明確に助言・判断を求めるサイン
+  "どうすれば","どうしたら","どうしよう","した方がいい","したほうがいい","やめた方","やめたほうが","方がいい","ほうがいい","べき","教えて","相談","どう思う","いいかな","いいですか","大丈夫かな","選べば","決めれば","おすすめ","どっちがいい","どれがいい","買うべき","飲んでいい","飲んでも",
+  // 多言語（英語など / 小文字で照合）
+  "should i","what should","how do i","how can i","do you think","is it ok","is it safe","recommend","advice","advise","what would you","help me decide","better to"
+];
+function needsExpertGuard(t){
+  if(!t) return false;
+  const low = t.toLowerCase();
+  const hasTopic = GUARD_TOPICS.some(k => t.includes(k) || low.includes(k));
+  if(!hasTopic) return false;                       // 重要トピック語が無ければ発動しない
+  return GUARD_ASK.some(k => t.includes(k) || low.includes(k)); // 助言サインがあって初めて発動
+}
+const GUARD_NOTE = "\n\n【今回の注意：重要な相談かもしれません】\n今回の相手の発言は、医療・健康、お金・投資、契約・法律・相続などの重要な判断に関する相談を含んでいる可能性があります。この場合は、具体的な助言・指示・断定（例：飲むべき／買うべき／契約していい など）は絶対にしないでください。相手の気持ちや不安はあたたかく受け止めたうえで、『わたしには正しく判断できないから』と正直に伝え、その分野の専門家（医師・薬剤師・弁護士・金融の窓口など）や、信頼できるご家族にやさしく相談を勧めてください。そのうえで『話したい気持ちはいつでも聞くよ』と、会話自体は続けてください。冷たくならず、短く、やさしく。相手の言語に合わせて返してください。";
 
 let history = [];        // {role, content}
 let memorySummary = "";  // 長期記憶（要約）
@@ -371,13 +424,25 @@ async function clearMemory(){
   try{ await window.storage.delete(K_SUM); }catch(e){}
 }
 
+/* ---------- ヘッダーの表示/非表示 ---------- */
+function applyHeaderHidden(hidden){
+  document.body.classList.toggle("header-hidden", !!hidden);
+}
+async function setHeaderHidden(hidden){
+  applyHeaderHidden(hidden);
+  try{ await window.storage.set(K_UI, hidden ? "1" : "0", false); }catch(e){}
+}
+async function loadHeaderPref(){
+  try{ const v=await window.storage.get(K_UI); applyHeaderHidden(v && v.value==="1"); }catch(e){}
+}
+
 /* ---------- TTS ---------- */
 let jaVoice=null;
 function loadVoices(){
   const vs=window.speechSynthesis ? speechSynthesis.getVoices() : [];
   const ja=vs.filter(v=>v.lang && v.lang.toLowerCase().startsWith("ja"));
   if(!ja.length){ jaVoice=null; return; }
-  const prefer=["kyoko","o-ren","oren","sara","haruka","ayumi","nanami","mizuki","google","premium","enhanced","siri"]; // 女性・高品質寄りを優先
+  const prefer=["o-ren","oren","kyoko","sara","haruka","ayumi","nanami","mizuki","google","premium","enhanced","siri"]; // O-ren を最優先、なければ従来の女性・高品質寄りにフォールバック（表記ゆれ対応でハイフン有無の両方を残す）
   const avoid=["otoya","hattori","ichiro","daniel"]; // 男性ボイスは避ける
   let best=ja[0], bestScore=-1;
   for(const v of ja){
@@ -400,7 +465,7 @@ function speak(text){
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
     u.lang="ja-JP"; if(jaVoice) u.voice=jaVoice;
-    u.rate=1.08; u.pitch=1.3;  // 少し流暢・トーン高め
+    u.rate=0.95; u.pitch=1.05;  // 少しゆっくり・落ち着いたトーン（年配の方が聞き取りやすいように）
     u.onstart=()=>setState("speaking");
     u.onend=()=>setState("idle");
     u.onerror=()=>setState("idle");
@@ -408,16 +473,22 @@ function speak(text){
   }catch(e){ setState("idle"); }
 }
 
-/* ---------- API ---------- */
+/* ---------- API（Claude.aiアーティファクト公式API / テキスト専用・APIキー不要） ---------- */
 async function callClaude(messages, system){
-  const res=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ model:MODEL, max_tokens:1024, system, messages })
-  });
-  if(!res.ok){ let detail=""; try{ detail=await res.text(); }catch(e){} throw new Error("API "+res.status+(detail?(": "+detail.slice(0,180)):"")); }
-  const data=await res.json();
-  return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  if(!(window.claude && typeof window.claude.complete === "function")){
+    throw new Error("この環境ではAIに接続できません。Claude.ai のアーティファクトとして開いてください。");
+  }
+  // window.claude.complete はテキスト1本のプロンプトを受け取る。system と会話を1つの文字列にまとめる。
+  let prompt = "";
+  if(system) prompt += system + "\n\n";
+  for(const m of messages){
+    const role = (m.role === "assistant") ? "Assistant" : "Human";
+    const content = (typeof m.content === "string") ? m.content : "";
+    prompt += role + ": " + content + "\n\n";
+  }
+  prompt += "Assistant:";
+  const out = await window.claude.complete(prompt);
+  return (out || "").replace(/^\s*Assistant:\s*/i, "").trim();
 }
 
 async function refreshSummary(){
@@ -433,31 +504,19 @@ async function refreshSummary(){
 /* ---------- send flow ---------- */
 async function send(){
   const text=inputEl.value.trim();
-  if((!text && !pendingFile) || busy) return;
+  if(!text || busy) return;
   busy=true; sendEl.disabled=true;
   inputEl.value=""; autoGrow();
 
-  const sentFile = pendingFile;
-  addBubble("user", text, sentFile);
-  const histText = text || (sentFile ? (sentFile.kind==="image" ? "(画像を添付)" : "(PDFを添付)") : "");
-  history.push({role:"user", content:histText});
+  addBubble("user", text);
+  history.push({role:"user", content:text});
   userTurns++;
-  pendingFile=null; renderPending();
 
   setState("thinking"); setStatus("…考えてるよ");
 
-  const system = SYSTEM_PROMPT + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
+  let system = SYSTEM_PROMPT + (memorySummary ? "\n\n【これまでの記憶】\n"+memorySummary : "");
+  if(needsExpertGuard(text)){ system += GUARD_NOTE; }  // 重要な相談のときは専門家・家族への相談を促す方針に倒す
   let msgs = history.slice(-16);
-  if(sentFile){
-    const blocks=[];
-    if(sentFile.kind==="image"){
-      blocks.push({type:"image", source:{type:"base64", media_type:sentFile.mediaType, data:sentFile.base64}});
-    }else{
-      blocks.push({type:"document", source:{type:"base64", media_type:"application/pdf", data:sentFile.base64}});
-    }
-    blocks.push({type:"text", text: text || "この内容について、いっしょに見て話そう。"});
-    msgs = msgs.slice(0,-1).concat([{role:"user", content:blocks}]);
-  }
 
   try{
     const reply = await callClaude(msgs, system) || "ごめん、うまく言葉が出てこなかった。もう一度言ってもらえる?";
@@ -471,70 +530,21 @@ async function send(){
     const msg = (err && err.message) ? err.message : "原因不明";
     console.error("callClaude failed:", err);
     setState("idle"); setStatus("接続エラー: "+msg);
-    addBubble("assistant", "うまくつながらなかったみたい…。\n（接続エラー: "+msg+"）\n\n※このアプリのAIは、外部の応答サービスに接続して動きます。今いる環境がその接続に対応していない可能性があります。パソコンのブラウザ版 Claude.ai で開くと動くことがあります。");
+    addBubble("assistant", "うまくつながらなかったみたい…。\n（"+msg+"）\n\n※このアプリは Claude.ai のアーティファクトとして開くと動きます。");
   }finally{
-    busy=false; sendEl.disabled = (inputEl.value.trim()==="" && !pendingFile);
+    busy=false; sendEl.disabled = (inputEl.value.trim()==="");
   }
 }
 
 /* ---------- ui wiring ---------- */
 function autoGrow(){ inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,120)+"px"; }
-inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy; });
+inputEl.addEventListener("input",()=>{ autoGrow(); sendEl.disabled=(inputEl.value.trim()==="")||busy; });
 
-/* ---------- file attach ---------- */
-let pendingFile=null;
-const fileEl=document.getElementById("file");
-const attachBtn=document.getElementById("attachBtn");
-const pendingEl=document.getElementById("pending");
-function readFileDataUrl(file){
-  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error("読み込み失敗")); r.readAsDataURL(file); });
-}
-function renderPending(){
-  pendingEl.innerHTML="";
-  if(!pendingFile){ pendingEl.hidden=true; return; }
-  pendingEl.hidden=false;
-  const chip=document.createElement("div"); chip.className="attach-chip";
-  if(pendingFile.kind==="image"){ const im=document.createElement("img"); im.src=pendingFile.dataUrl; chip.appendChild(im); }
-  else{ const dc=document.createElement("div"); dc.className="doc"; dc.textContent="📄"; chip.appendChild(dc); }
-  const nm=document.createElement("span"); nm.className="nm"; nm.textContent=pendingFile.name; chip.appendChild(nm);
-  const x=document.createElement("button"); x.className="rm"; x.textContent="×"; x.title="取り消し";
-  x.onclick=()=>{ pendingFile=null; fileEl.value=""; renderPending(); sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy; };
-  chip.appendChild(x);
-  pendingEl.appendChild(chip);
-}
-attachBtn.addEventListener("click",()=>{ if(!busy) fileEl.click(); });
-async function acceptFile(f){
-  if(!f) return;
-  const isImg=f.type.startsWith("image/");
-  const isPdf=f.type==="application/pdf";
-  if(!isImg && !isPdf){ alert("画像かPDFを選んでね。"); fileEl.value=""; return; }
-  if(f.size > 8*1024*1024){ alert("ファイルが大きすぎるよ（8MBまで）。"); fileEl.value=""; return; }
-  try{
-    const dataUrl=await readFileDataUrl(f);
-    pendingFile={ name:f.name, kind:isImg?"image":"pdf", mediaType:f.type, base64:dataUrl.split(",")[1], dataUrl };
-    renderPending();
-    sendEl.disabled = busy;
-  }catch(e){ alert("ファイルを読み込めなかったよ。"); fileEl.value=""; }
-}
-fileEl.addEventListener("change", ()=>{ const f=fileEl.files && fileEl.files[0]; if(f) acceptFile(f); });
-
-/* ---------- drag & drop ---------- */
-const dropMask=document.createElement("div");
-dropMask.id="dropMask";
-dropMask.innerHTML='<div class="dm-inner">📎 ここにドロップして添付（画像・PDF）</div>';
-document.body.appendChild(dropMask);
-let dragDepth=0;
-window.addEventListener("dragenter",(e)=>{ e.preventDefault(); if(busy) return; dragDepth++; dropMask.classList.add("show"); });
-window.addEventListener("dragover",(e)=>{ e.preventDefault(); });
-window.addEventListener("dragleave",(e)=>{ e.preventDefault(); dragDepth--; if(dragDepth<=0){ dragDepth=0; dropMask.classList.remove("show"); } });
-window.addEventListener("drop",(e)=>{
-  e.preventDefault(); dragDepth=0; dropMask.classList.remove("show");
-  if(busy) return;
-  const f=e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if(f) acceptFile(f);
-});
 inputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
 sendEl.addEventListener("click", send);
+
+$("hdrHideBtn").addEventListener("click", ()=> setHeaderHidden(true));
+$("hdrShowBtn").addEventListener("click", ()=> setHeaderHidden(false));
 
 voiceBtn.addEventListener("click",()=>{
   ttsEnabled=!ttsEnabled;
@@ -602,7 +612,7 @@ function startListening(){
         if(r.isFinal) finalText+=r[0].transcript; else interim+=r[0].transcript;
       }
       inputEl.value=(finalText+interim); autoGrow();
-      sendEl.disabled=(inputEl.value.trim()===""&&!pendingFile)||busy;
+      sendEl.disabled=(inputEl.value.trim()==="")||busy;
     };
     recog.onerror=(e)=>{
       clearTimeout(startWatch); listening=false; micBtn.classList.remove("on");
@@ -715,6 +725,7 @@ slideMake.addEventListener("click", makeSlides);
 
 (async function init(){
   setState("idle");
+  await loadHeaderPref();
   await loadMemory();
   greet(false);
   await saveMemory();
