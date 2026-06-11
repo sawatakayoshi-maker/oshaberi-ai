@@ -44,6 +44,151 @@ document.querySelectorAll('[data-tbd-link]').forEach(el=>{
   el.addEventListener('click',e=>e.preventDefault());
 });
 
+/* ============================================================
+   会社情報を config.js から全ページへ自動反映
+   （管理者は config.js だけ編集すればOK）
+   ============================================================ */
+const S = window.SITE || {};
+function telHref(n){ return 'tel:'+String(n||'').replace(/[^0-9+]/g,''); }
+/* data-site="キー名" の要素にテキストを流し込む */
+document.querySelectorAll('[data-site]').forEach(el=>{
+  const key=el.getAttribute('data-site');
+  if(key==='tel-link'){ if(S.tel){ el.setAttribute('href',telHref(S.tel)); } return; }
+  if(key==='mail-link'){ if(S.email){ el.setAttribute('href','mailto:'+S.email); } return; }
+  if(key==='address-full'){ el.textContent=(S.postal?S.postal+'　':'')+(S.address||''); return; }
+  if(S[key]!=null && S[key]!=='') el.textContent=S[key];
+});
+/* tel: で始まるリンクは config の番号で統一（表記ゆれ防止） */
+if(S.tel){
+  document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.setAttribute('href',telHref(S.tel)));
+}
+/* フッターの年号を自動更新（©表記の「西暦」を最新に） */
+document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
+
+/* ===== Instagram / 地図リンクの自動有効化 ===== */
+(function(){
+  const ig=document.querySelector('[data-ig]');
+  if(ig){
+    if(S.instagramUrl){ ig.setAttribute('href',S.instagramUrl); ig.removeAttribute('aria-disabled'); ig.target='_blank'; ig.rel='noopener'; ig.textContent='Instagramをフォロー'; }
+  }
+  const mapWrap=document.querySelector('[data-map]');
+  if(mapWrap && S.mapEmbed){
+    mapWrap.innerHTML='<iframe title="所在地の地図" src="'+S.mapEmbed+'" width="100%" height="100%" style="border:0;min-height:inherit;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>';
+    mapWrap.style.padding='0';mapWrap.style.border='0';
+  }
+})();
+
+/* ===== canonical / og:url を公開URLから自動設定（SEO） ===== */
+(function(){
+  if(!S.siteUrl) return;
+  const base=S.siteUrl.replace(/\/+$/,'');
+  const url=base+'/'+here;
+  let c=document.querySelector('link[rel="canonical"]');
+  if(!c){ c=document.createElement('link'); c.rel='canonical'; document.head.appendChild(c); }
+  c.href=url;
+  let og=document.querySelector('meta[property="og:url"]');
+  if(!og){ og=document.createElement('meta'); og.setAttribute('property','og:url'); document.head.appendChild(og); }
+  og.content=url;
+})();
+
+/* ============================================================
+   構造化データ（JSON-LD / 地域ビジネス）を自動生成
+   → Google検索・地図での見え方を改善（ローカルSEO）
+   ============================================================ */
+(function(){
+  try{
+    const ld={
+      "@context":"https://schema.org",
+      "@type":"GeneralContractor",
+      "name":S.companyName||"株式会社パイプラント",
+      "telephone":S.tel||"",
+      "faxNumber":S.fax||"",
+      "url":S.siteUrl||location.origin,
+      "areaServed":"福井県",
+      "parentOrganization":S.group||"",
+      "address":{
+        "@type":"PostalAddress",
+        "postalCode":(S.postal||"").replace(/[^0-9-]/g,''),
+        "addressRegion":"福井県",
+        "addressLocality":"坂井市",
+        "streetAddress":(S.address||"").replace(/^福井県坂井市/,'')
+      },
+      "description":"高圧ガス・化学プラントの配管設備工事から次世代エネルギー『水素』まで。設計・製作・施工を一貫対応。"
+    };
+    if(S.email) ld.email=S.email;
+    if(S.instagramUrl) ld.sameAs=[S.instagramUrl];
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify(ld);
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ============================================================
+   トップへ戻るボタン（全ページ自動挿入）
+   ============================================================ */
+(function(){
+  const btn=document.createElement('button');
+  btn.className='to-top';btn.id='toTop';btn.setAttribute('aria-label','ページ上部へ戻る');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(btn);
+  addEventListener('scroll',()=>btn.classList.toggle('show',scrollY>600));
+  btn.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+})();
+
+/* ============================================================
+   モバイル固定アクションバー（電話／お問い合わせ）
+   → スマホで常に「電話・相談」へ到達でき、問い合わせ率を高める
+   ============================================================ */
+(function(){
+  const bar=document.createElement('div');
+  bar.className='mobile-cta';
+  bar.innerHTML=
+    '<a class="mc-tel" href="'+telHref(S.tel||'0776-51-9550')+'">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>'+
+      '電話する</a>'+
+    '<a class="mc-contact" href="contact.html">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16v12H7l-3 3V4z" stroke-linejoin="round"/></svg>'+
+      'お問い合わせ</a>';
+  document.body.appendChild(bar);
+})();
+
+/* ============================================================
+   お問い合わせフォーム（contact.html）の送信処理
+   formEndpoint があればそこへ送信、無ければメール送信に切替
+   ============================================================ */
+(function(){
+  const form=document.getElementById('contactForm');
+  if(!form) return;
+  const status=document.getElementById('formStatus');
+  function say(msg,ok){ if(status){ status.textContent=msg; status.className='form-status'+(ok?' ok':' err'); } }
+  form.addEventListener('submit',async (e)=>{
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    const data=new FormData(form);
+    /* 送信先が未設定なら、メールソフトを開く方式にフォールバック */
+    if(!S.formEndpoint){
+      const to=S.email||'';
+      const subj=encodeURIComponent('【お問い合わせ】'+(data.get('name')||''));
+      const body=encodeURIComponent(
+        'お名前：'+(data.get('name')||'')+'\n'+
+        'ご連絡先：'+(data.get('contact')||'')+'\n'+
+        'ご用件：'+(data.get('topic')||'')+'\n\n'+
+        (data.get('message')||''));
+      if(to){ window.location.href='mailto:'+to+'?subject='+subj+'&body='+body;
+        say('メールソフトを開きました。内容をご確認のうえ送信してください。',true); }
+      else { say('現在フォーム送信先が未設定です。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+      return;
+    }
+    try{
+      say('送信しています…',true);
+      const res=await fetch(S.formEndpoint,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+      if(res.ok){ form.reset(); say('送信しました。ありがとうございます。担当者よりご連絡いたします。',true); }
+      else { say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+    }catch(err){ say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+  });
+})();
+
 /* ===== SCENARIO CHATBOT（全ページに自動挿入） ===== */
 const PHONE="0776-51-9550";
 const tree={
@@ -245,5 +390,18 @@ function openPanel(){
 function closePanel(){cbPanel.classList.remove('open');cbLaunch.style.display='';}
 cbLaunch.addEventListener('click',openPanel);
 cbClose.addEventListener('click',closePanel);
+
+/* ESCキー：チャット／モバイルメニューを閉じる */
+document.addEventListener('keydown',(e)=>{
+  if(e.key!=='Escape')return;
+  if(cbPanel.classList.contains('open'))closePanel();
+  if(navLinks&&navLinks.classList.contains('show'))navLinks.classList.remove('show');
+});
+/* チャットの外側タップで閉じる */
+document.addEventListener('click',(e)=>{
+  if(!cbPanel.classList.contains('open'))return;
+  if(cbPanel.contains(e.target)||cbLaunch.contains(e.target))return;
+  closePanel();
+});
 
 })();

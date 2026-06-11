@@ -13,6 +13,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="assets/style.css" />
+<meta name="theme-color" content="#0B2942" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Ccircle cx=%2720%27 cy=%2720%27 r=%2719%27 fill=%27%230B2942%27 stroke=%27%23E8923A%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 14h10a5 5 0 0 1 5 5 5 5 0 0 1-5 5H11%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%272.4%27 stroke-linecap=%27round%27/%3E%3Ccircle cx=%2729%27 cy=%2719%27 r=%272.4%27 fill=%27%23E8923A%27/%3E%3C/svg%3E" />
 </head>
 <body>
 <a class="skip" href="#main">本文へスキップ</a>
@@ -32,6 +36,7 @@
     <nav class="nav-links" id="navlinks">
       <a class="lk" href="about.html">私たちについて</a>
       <a class="lk" href="business.html">事業内容</a>
+      <a class="lk" href="works.html">施工事例</a>
       <a class="lk" href="hydrogen.html">水素への挑戦</a>
       <a class="lk" href="clients.html">発注をお考えの方へ</a>
       <a class="lk" href="recruit.html">採用情報</a>
@@ -72,15 +77,54 @@
   </div>
 </section>
 
-<!-- ===== フォーム（準備中） ===== -->
+<!-- ===== フォーム ===== -->
 <section class="company">
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow">FORM</span>
       <h2 class="sec-title">お問い合わせフォーム</h2>
-      <p class="lead">フォームは現在準備中です。<span class="tbd">後日差し替え</span>　それまでは、お電話（0776-51-9550）またはFAX（0776-51-9551）にてご連絡ください。</p>
+      <p class="lead">下記フォームよりお気軽にお問い合わせください。内容を確認のうえ、担当者よりご連絡いたします。</p>
     </div>
-    <div class="ph-img reveal" style="min-height:240px">お問い合わせフォームを後日設置<br>（お名前／ご連絡先／ご用件：工事のご相談・お見積り・採用・その他）</div>
+    <form class="form-card reveal" id="contactForm" novalidate>
+      <div class="form-row">
+        <label for="f-name">お名前 <span class="req">必須</span></label>
+        <input type="text" id="f-name" name="name" required autocomplete="name" placeholder="例：福井 太郎" />
+      </div>
+      <div class="form-row">
+        <label for="f-company">会社名・団体名</label>
+        <input type="text" id="f-company" name="company" autocomplete="organization" placeholder="例：株式会社〇〇" />
+      </div>
+      <div class="form-row">
+        <label for="f-contact">ご連絡先（電話番号またはメール） <span class="req">必須</span></label>
+        <input type="text" id="f-contact" name="contact" required placeholder="例：0776-00-0000／taro@example.com" />
+      </div>
+      <div class="form-row">
+        <label for="f-topic">ご用件 <span class="req">必須</span></label>
+        <select id="f-topic" name="topic" required>
+          <option value="">選択してください</option>
+          <option>工事のご相談・お見積り</option>
+          <option>定期保全・メンテナンス</option>
+          <option>水素設備について</option>
+          <option>採用について</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="f-message">お問い合わせ内容 <span class="req">必須</span></label>
+        <textarea id="f-message" name="message" required placeholder="ご相談内容、現場の所在地、ご希望時期などをご記入ください。"></textarea>
+      </div>
+      <label class="form-privacy">
+        <input type="checkbox" id="f-privacy" required />
+        <span>入力内容を、お問い合わせ対応の目的で利用することに同意します。<span class="req">必須</span></span>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">送信する
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="form-status" id="formStatus" role="status" aria-live="polite"></span>
+      </div>
+      <p class="form-note">※ 送信がうまくいかない場合は、お電話（<a data-site="tel-link" href="tel:0776-51-9550" style="color:var(--teal);font-weight:700">0776-51-9550</a>）でも承ります。</p>
+    </form>
   </div>
 </section>
 
@@ -90,9 +134,9 @@
     <div class="sec-head reveal">
       <span class="eyebrow">ACCESS</span>
       <h2 class="sec-title">アクセス</h2>
-      <p class="lead">〒919-0411　福井県坂井市春江町藤鷲塚37-18</p>
+      <p class="lead"><span data-site="address-full">〒919-0411　福井県坂井市春江町藤鷲塚37-18</span></p>
     </div>
-    <div class="ph-img reveal" style="min-height:300px">地図を後日挿入<br>（Googleマップ埋め込み）</div>
+    <div class="ph-img reveal" data-map style="min-height:300px">地図を後日挿入<br>（config.js に地図URLを設定すると自動表示）</div>
   </div>
 </section>
 
@@ -128,6 +172,7 @@
       <nav class="ft-links">
         <a href="about.html">私たちについて</a>
         <a href="business.html">事業内容</a>
+        <a href="works.html">施工事例</a>
         <a href="hydrogen.html">水素への挑戦</a>
         <a href="clients.html">発注をお考えの方へ</a>
         <a href="recruit.html">採用情報</a>
@@ -135,10 +180,11 @@
         <a href="contact.html">お問い合わせ</a>
       </nav>
     </div>
-    <div class="ft-copy">© 株式会社パイプラント（ナカテックグループ）　福井県坂井市春江町藤鷲塚37-18 ／ TEL 0776-51-9550</div>
+    <div class="ft-copy">© <span data-year>2026</span> 株式会社パイプラント（ナカテックグループ）　福井県坂井市春江町藤鷲塚37-18 ／ TEL 0776-51-9550</div>
   </div>
 </footer>
 
+<script src="assets/config.js"></script>
 <script src="assets/site.js"></script>
 </body>
 </html>

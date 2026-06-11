@@ -395,8 +395,86 @@ footer.ft{background:#08202f;color:#9fb4c4;padding:46px 0 30px;font-size:.86rem;
 .typing span:nth-child(3){animation-delay:.4s;}
 @keyframes blink{0%,60%,100%{opacity:.25;}30%{opacity:1;}}
 
+/* ===== トップへ戻るボタン ===== */
+.to-top{
+  position:fixed;left:22px;bottom:22px;z-index:75;
+  width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+  background:var(--steel-800);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 22px rgba(8,32,47,.3);
+  opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:opacity .25s,transform .25s,visibility .25s,background .2s;
+}
+.to-top.show{opacity:1;visibility:visible;transform:none;}
+.to-top:hover{background:var(--teal);}
+.to-top svg{width:22px;height:22px;}
+
+/* ===== モバイル固定アクションバー ===== */
+.mobile-cta{
+  position:fixed;left:0;right:0;bottom:0;z-index:78;display:none;
+  grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  box-shadow:0 -6px 20px rgba(8,32,47,.16);
+}
+.mobile-cta a{
+  display:flex;align-items:center;justify-content:center;gap:.5em;
+  padding:.95em 1em;font-weight:700;font-size:.95rem;
+}
+.mobile-cta a svg{width:1.15em;height:1.15em;}
+.mobile-cta .mc-tel{background:var(--ember);color:#fff;}
+.mobile-cta .mc-contact{background:var(--steel-800);color:#fff;}
+
+/* ===== お問い合わせフォーム ===== */
+.form-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;max-width:760px;box-shadow:0 12px 30px rgba(15,58,95,.06);}
+.form-row{margin-bottom:18px;}
+.form-row label{display:block;font-weight:700;color:var(--steel-800);font-size:.92rem;margin-bottom:7px;}
+.form-row label .req{color:var(--ember-600);font-size:.8em;margin-left:.4em;}
+.form-row input,.form-row select,.form-row textarea{
+  width:100%;font-family:var(--jp);font-size:1rem;color:var(--ink);
+  border:1.5px solid var(--line);border-radius:11px;padding:.8em .9em;background:#fff;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{
+  outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,114,147,.12);
+}
+.form-row textarea{min-height:140px;resize:vertical;}
+.form-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:6px;}
+.form-status{font-size:.9rem;font-weight:600;min-height:1.4em;}
+.form-status.ok{color:var(--teal);}
+.form-status.err{color:var(--ember-600);}
+.form-note{font-size:.84rem;color:var(--mist);margin-top:14px;}
+.form-privacy{display:flex;gap:.6em;align-items:flex-start;font-size:.86rem;color:var(--mist);margin-bottom:18px;}
+.form-privacy input{width:auto;margin-top:.25em;flex:0 0 auto;}
+
+/* ===== 施工事例 ギャラリー ===== */
+.works-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.work{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .2s,box-shadow .2s,border-color .2s;display:flex;flex-direction:column;}
+.work:hover{transform:translateY(-5px);box-shadow:0 18px 38px rgba(15,58,95,.12);border-color:var(--teal);}
+.work .thumb{aspect-ratio:4/3;}
+.work .thumb.ph-img{border:0;border-radius:0;min-height:0;}
+.work .wbody{padding:18px 20px 22px;}
+.work .cat{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:var(--teal);font-weight:700;}
+.work h3{font-size:1.04rem;color:var(--steel-800);margin:6px 0 6px;font-weight:700;}
+.work p{font-size:.88rem;color:var(--mist);}
+.work .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.work .tags span{font-size:.72rem;background:var(--ice-2);border:1px solid var(--line);color:var(--steel-800);padding:.2em .65em;border-radius:999px;}
+
+/* ===== 数字で見る（実績ストリップ） ===== */
+.stats{background:var(--paper);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center;}
+.stat{background:var(--ice-2);border:1px solid var(--line);border-radius:16px;padding:28px 18px;}
+.stat .sv{font-family:var(--display);font-weight:900;font-size:clamp(1.8rem,4vw,2.6rem);color:var(--steel-800);line-height:1;}
+.stat .sv em{font-style:normal;color:var(--ember);font-size:.6em;margin-left:.1em;}
+.stat .sl{font-size:.86rem;color:var(--mist);margin-top:10px;}
+
 /* responsive */
 @media(max-width:880px){
+  .mobile-cta{display:grid;}
+  body{padding-bottom:56px;} /* 固定アクションバーの高さ分を確保 */
+  .works-grid{grid-template-columns:1fr 1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  /* 固定バーと重ならないよう、戻る・チャットを少し持ち上げる */
+  .to-top{bottom:74px;}
+  .cb-launch{bottom:74px;}
+  .cb-panel{bottom:74px;height:min(560px,calc(100svh - 96px));}
   .nav-links{position:fixed;inset:0 0 0 auto;width:min(300px,82vw);height:100svh;background:var(--steel-900);flex-direction:column;align-items:flex-start;justify-content:center;padding:40px;gap:1.3rem;transform:translateX(100%);transition:transform .32s ease;}
   .nav-links.show{transform:none;}
   .nav-links .nav-cta{flex-direction:column;width:100%;}
