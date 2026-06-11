@@ -22,6 +22,9 @@ window.SITE = {
   /* お問い合わせフォームの送信先（下のいずれか。空ならメール送信にフォールバック） */
   formEndpoint: "",          /* 例: Formspreeの "https://formspree.io/f/xxxx" */
 
+  /* アクセス解析（Googleアナリティクス4）。測定ID（G-XXXXXXX）を入れると自動で計測開始 */
+  gaId        : "",          /* 例: "G-XXXXXXXXXX" */
+
   /* サイトの公開URL（sitemap・OGP用。公開ドメインが決まったら設定） */
   siteUrl     : "https://www.example.co.jp"
 };

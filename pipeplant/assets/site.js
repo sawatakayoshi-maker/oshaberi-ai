@@ -124,6 +124,95 @@ document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().g
   }catch(e){}
 })();
 
+/* ===== パンくずの構造化データ（BreadcrumbList）→ 検索結果に階層表示 ===== */
+(function(){
+  const bc=document.querySelector('.breadcrumb');
+  if(!bc) return;
+  try{
+    const base=(S.siteUrl||location.origin).replace(/\/+$/,'');
+    const items=[]; let pos=1;
+    bc.querySelectorAll('a, span:not(.sep)').forEach(el=>{
+      if(el.classList.contains('sep'))return;
+      const it={"@type":"ListItem","position":pos++,"name":el.textContent.trim()};
+      const href=el.getAttribute && el.getAttribute('href');
+      if(href) it.item=base+'/'+href.replace(/^\.?\//,'');
+      items.push(it);
+    });
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":items});
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ===== FAQの構造化データ（FAQPage）→ 検索結果にQ&Aが出やすくなる ===== */
+(function(){
+  const faqs=document.querySelectorAll('details.faq');
+  if(!faqs.length) return;
+  try{
+    const qa=[];
+    faqs.forEach(d=>{
+      const q=d.querySelector('summary'); const a=d.querySelector('.ans');
+      if(!q||!a)return;
+      qa.push({"@type":"Question","name":q.textContent.trim(),
+        "acceptedAnswer":{"@type":"Answer","text":a.textContent.trim()}});
+    });
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify({"@context":"https://schema.org","@type":"FAQPage","mainEntity":qa});
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ============================================================
+   Googleアナリティクス4（config の gaId を設定したときのみ作動）
+   ============================================================ */
+(function(){
+  const id=S.gaId;
+  if(!id) return;
+  const g=document.createElement('script');
+  g.async=true;g.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(id);
+  document.head.appendChild(g);
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){dataLayer.push(arguments);};
+  gtag('js',new Date());gtag('config',id);
+})();
+
+/* ============================================================
+   お知らせ（News）を news.js から描画
+   #newsList（トップ:最新3件） / #newsListFull（一覧:全件）
+   ============================================================ */
+(function(){
+  const list=window.NEWS||[];
+  const fmt=(d)=>{ const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[1]+'.'+m[2]+'.'+m[3]:(d||''); };
+  function card(n){
+    const tag=n.tag?'<span class="ntag">'+n.tag+'</span>':'';
+    const inner='<time>'+fmt(n.date)+'</time>'+tag+
+      '<div class="ntitle">'+(n.title||'')+'</div>'+
+      (n.body?'<p class="nbody">'+n.body+'</p>':'');
+    if(n.link){
+      const ext=/^https?:/.test(n.link);
+      return '<a class="news-item" href="'+n.link+'"'+(ext?' target="_blank" rel="noopener"':'')+'>'+inner+'<span class="nar">›</span></a>';
+    }
+    return '<div class="news-item">'+inner+'</div>';
+  }
+  const top=document.getElementById('newsList');
+  if(top){ top.innerHTML=list.slice(0,3).map(card).join(''); }
+  const full=document.getElementById('newsListFull');
+  if(full){ full.innerHTML=(list.length?list.map(card).join(''):'<p class="lead">お知らせは準備中です。</p>'); }
+})();
+
+/* ===== 読み進みプログレスバー（上部） ===== */
+(function(){
+  const bar=document.createElement('div');bar.className='read-progress';document.body.appendChild(bar);
+  const upd=()=>{
+    const h=document.documentElement;
+    const max=(h.scrollHeight-h.clientHeight)||1;
+    bar.style.width=Math.min(100,(h.scrollTop/max)*100)+'%';
+  };
+  addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
+})();
+
 /* ============================================================
    トップへ戻るボタン（全ページ自動挿入）
    ============================================================ */

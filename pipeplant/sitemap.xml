@@ -8,6 +8,7 @@
   <url><loc>https://www.example.co.jp/hydrogen.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.example.co.jp/clients.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.example.co.jp/recruit.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.example.co.jp/news.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.example.co.jp/company.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://www.example.co.jp/contact.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
 </urlset>
