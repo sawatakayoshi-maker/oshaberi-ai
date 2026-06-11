@@ -48,7 +48,18 @@ document.querySelectorAll('[data-tbd-link]').forEach(el=>{
    会社情報を config.js から全ページへ自動反映
    （管理者は config.js だけ編集すればOK）
    ============================================================ */
-const S = window.SITE || {};
+/* 管理画面(admin.html)で保存した内容を localStorage から取り込み、
+   config.js の初期値に上書きする（同じ端末・ブラウザ内で反映）。 */
+window.SITE = window.SITE || {};
+try{
+  const ov=JSON.parse(localStorage.getItem('pp_site')||'null');
+  if(ov && typeof ov==='object') Object.assign(window.SITE, ov);
+}catch(e){}
+try{
+  const nv=JSON.parse(localStorage.getItem('pp_news')||'null');
+  if(Array.isArray(nv)) window.NEWS=nv;
+}catch(e){}
+const S = window.SITE;
 function telHref(n){ return 'tel:'+String(n||'').replace(/[^0-9+]/g,''); }
 /* data-site="キー名" の要素にテキストを流し込む */
 document.querySelectorAll('[data-site]').forEach(el=>{
@@ -200,6 +211,31 @@ document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().g
   if(top){ top.innerHTML=list.slice(0,3).map(card).join(''); }
   const full=document.getElementById('newsListFull');
   if(full){ full.innerHTML=(list.length?list.map(card).join(''):'<p class="lead">お知らせは準備中です。</p>'); }
+})();
+
+/* ============================================================
+   施工事例（Works）を管理画面の保存内容で描画（あれば差し替え）
+   #worksGrid に pp_works があれば上書き表示
+   ============================================================ */
+(function(){
+  const grid=document.getElementById('worksGrid');
+  if(!grid) return;
+  let works=null;
+  try{ works=JSON.parse(localStorage.getItem('pp_works')||'null'); }catch(e){}
+  if(!Array.isArray(works) || !works.length) return; // 未登録なら静的HTMLのまま
+  const esc=(s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  grid.innerHTML=works.map(w=>{
+    const thumb=w.img
+      ? '<div class="thumb" style="background:#000"><img src="'+w.img+'" alt="'+esc(w.title)+'" style="width:100%;height:100%;object-fit:cover"></div>'
+      : '<div class="thumb ph-img">施工写真</div>';
+    const tags=(w.tags||[]).map(t=>'<span>'+esc(t)+'</span>').join('');
+    return '<article class="work">'+thumb+'<div class="wbody">'+
+      (w.cat?'<span class="cat">'+esc(w.cat)+'</span>':'')+
+      '<h3>'+esc(w.title)+'</h3>'+
+      (w.desc?'<p>'+esc(w.desc)+'</p>':'')+
+      (tags?'<div class="tags">'+tags+'</div>':'')+
+      '</div></article>';
+  }).join('');
 })();
 
 /* ===== 読み進みプログレスバー（上部） ===== */
