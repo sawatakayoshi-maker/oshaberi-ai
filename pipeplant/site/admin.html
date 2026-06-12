@@ -47,6 +47,7 @@
     <div class="adm-tabs">
       <button class="adm-tab on" data-tab="site">🏢 会社情報</button>
       <button class="adm-tab" data-tab="recruit">👷 採用・SNS</button>
+      <button class="adm-tab" data-tab="crew">🚢 乗組員</button>
       <button class="adm-tab" data-tab="news">📢 お知らせ</button>
       <button class="adm-tab" data-tab="works">🏗 施工事例</button>
       <button class="adm-tab" data-tab="export">⬇ 公開用書き出し</button>
@@ -122,6 +123,32 @@
       </div>
     </section>
 
+    <!-- 乗組員（メンバー紹介） -->
+    <section class="adm-panel" id="panel-crew">
+      <div class="adm-card">
+        <h2>乗組員（メンバー紹介）の管理</h2>
+        <p class="desc">メンバー紹介ページ（members.html）の紹介パネルを編集します。<b>位置（cx・cy）が入っているメンバーは集合イラスト上でクリックできる顔</b>になり、空欄のメンバーは顔なしパネル（名前の頭文字）で表示されます。</p>
+        <div class="adm-list" id="crewItems"></div>
+      </div>
+      <div class="adm-card" id="crewForm">
+        <h2>乗組員を追加・編集</h2>
+        <div class="adm-grid2">
+          <div class="adm-field"><label>名前（愛称） <small>必須</small></label><input id="cw-name" placeholder="例）緑バンダナの兄貴" /></div>
+          <div class="adm-field"><label>役割</label><input id="cw-role" placeholder="例）プラント配管工事" /></div>
+          <div class="adm-field full"><label>ひとこと紹介 <small>省略可</small></label><textarea id="cw-msg" placeholder="例）主力の配管工事ひとすじ。後輩の面倒見の良さは船いちばん。"></textarea></div>
+          <div class="adm-field"><label>顔の位置 横 cx <small>0〜1・空欄可</small></label><input id="cw-cx" placeholder="例）0.540" inputmode="decimal" /></div>
+          <div class="adm-field"><label>顔の位置 縦 cy <small>0〜1・空欄可</small></label><input id="cw-cy" placeholder="例）0.360" inputmode="decimal" /></div>
+          <div class="adm-field"><label>切り出し幅 fw <small>省略時 0.095</small></label><input id="cw-fw" placeholder="0.095" inputmode="decimal" /></div>
+        </div>
+        <input type="hidden" id="cw-id" />
+        <div class="adm-actions">
+          <button class="adm-btn primary" id="crewAdd">＋ 追加・更新する</button>
+          <span class="adm-saved" id="crewSaved">✓ 保存しました</span>
+        </div>
+        <p class="adm-note">※ cx・cy は集合イラスト（assets/crew.png）上の顔の中心位置（左上0,0〜右下1,1の割合）。空欄のままなら顔なしパネルとして追加されます。保存内容を全員に公開するには「⬇ 公開用書き出し」から crew.js を書き出してサーバーに設置してください。</p>
+      </div>
+    </section>
+
     <!-- お知らせ -->
     <section class="adm-panel" id="panel-news">
       <div class="adm-card">
@@ -180,6 +207,7 @@
           <button class="adm-btn dark" id="expConfig">config.js を書き出し</button>
           <button class="adm-btn dark" id="expNews">news.js を書き出し</button>
           <button class="adm-btn dark" id="expWorks">works.js を書き出し</button>
+          <button class="adm-btn dark" id="expCrew">crew.js を書き出し</button>
           <button class="adm-btn ghost" id="expPreview">内容をプレビュー</button>
         </div>
         <p class="adm-note">※ works.js を使う場合は、works.html に <code>&lt;script src="assets/works.js"&gt;&lt;/script&gt;</code> の読み込み追加が必要です（設置手順書に記載）。</p>
@@ -199,6 +227,7 @@
 <!-- 公開ページと同じ初期データを読み込む -->
 <script src="assets/config.js"></script>
 <script src="assets/news.js"></script>
+<script src="assets/crew.js"></script>
 <script src="assets/admin.js"></script>
 </body>
 </html>

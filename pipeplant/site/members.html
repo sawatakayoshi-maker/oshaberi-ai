@@ -41,6 +41,7 @@
       <a class="lk" href="hydrogen.html">水素への挑戦</a>
       <a class="lk" href="clients.html">発注をお考えの方へ</a>
       <a class="lk" href="recruit.html">採用情報</a>
+      <a class="lk" href="members.html">メンバー</a>
       <a class="lk" href="company.html">会社概要</a>
       <div class="nav-cta">
         <a class="btn btn-primary" href="contact.html">工事のご相談</a>
@@ -86,7 +87,7 @@
     <div class="sec-head reveal">
       <span class="eyebrow">PROFILES</span>
       <h2 class="sec-title">ひとりずつ、ご紹介。</h2>
-      <p class="lead">顔写真は上の集合イラストから切り出して表示しています。名前・役割は管理者がこのページ内のリストで編集できます。</p>
+      <p class="lead">顔写真は上の集合イラストから切り出して表示しています。名前・役割・紹介文は管理画面（admin.html）の「🚢 乗組員」タブから編集できます。</p>
     </div>
     <div class="member-grid" id="memberGrid">
       <!-- パネルはスクリプトが CREW リストから自動生成 -->
@@ -155,59 +156,22 @@
 </footer>
 
 <script src="assets/config.js"></script>
+<script src="assets/crew.js"></script>
 <script src="assets/site.js"></script>
 <script>
 /* ============================================================
    メンバー紹介ページ
-   ★ 管理者の方へ：下の CREW リストの name / role / msg を
-     書き換えるだけで、紹介パネルと全体図の名前表示が変わります。
-   ・cx, cy … 集合イラスト上の顔の中心位置（横・縦の割合 0〜1）
-   ・fw    … 切り出す幅（イラスト幅に対する割合）
+   ★ 管理者の方へ：メンバーの追加・編集は管理画面（admin.html）の
+     「🚢 乗組員」タブから行えます（初期データは assets/crew.js）。
    ============================================================ */
 (function(){
 "use strict";
-var CREW=[
-  {id:"m01", cx:0.540, cy:0.360, fw:0.125,
-   name:"船長", role:"代表・現場統括",
-   msg:"パイプラント号の舵取り役。全員の技術と安全に責任を持ち、水素という新しい海へ船を進めます。"},
-  {id:"m02", cx:0.237, cy:0.396, fw:0.095,
-   name:"丸メガネの参謀", role:"設計担当",
-   msg:"図面がなければ船は進まない。現場のアイデアを正確な図面に落とし込みます。"},
-  {id:"m03", cx:0.290, cy:0.390, fw:0.095,
-   name:"緑バンダナの兄貴", role:"プラント配管工事",
-   msg:"主力の配管工事ひとすじ。後輩の面倒見の良さは船いちばん。"},
-  {id:"m04", cx:0.347, cy:0.363, fw:0.095,
-   name:"茶髪ロングの職人", role:"製缶加工",
-   msg:"架台も塔槽も熱交換器も。鉄を自在にかたちにする製缶のスペシャリスト。"},
-  {id:"m05", cx:0.408, cy:0.357, fw:0.095,
-   name:"白ひげの大ベテラン", role:"技能伝承役",
-   msg:"何十年も現場を見てきた生き字引。困ったときに頼られる最後の砦です。"},
-  {id:"m06", cx:0.463, cy:0.369, fw:0.095,
-   name:"黒髪ロングの溶接士", role:"溶接担当",
-   msg:"高圧水素用ステンレスの溶接もお手のもの。ビードの美しさに誇りを持っています。"},
-  {id:"m07", cx:0.625, cy:0.365, fw:0.095,
-   name:"赤ベストの力持ち", role:"現場リーダー",
-   msg:"段取り八分。資材も人も、現場のすべてを動かす頼れるリーダー。"},
-  {id:"m08", cx:0.694, cy:0.360, fw:0.095,
-   name:"青バンダナの見張り役", role:"安全管理",
-   msg:"全員が無事に帰ることがいちばんの仕事。安全のためなら船長にも物申します。"},
-  {id:"m09", cx:0.740, cy:0.393, fw:0.095,
-   name:"鎧の守り人", role:"品質管理",
-   msg:"検査の鎧に隙はなし。寸法も耐圧も、合格するまで現場を通しません。"},
-  {id:"m10", cx:0.259, cy:0.563, fw:0.095,
-   name:"前列メガネの頭脳派", role:"施工管理",
-   msg:"工程表とにらめっこしながら、職人たちが最高の仕事をできる環境を整えます。"},
-  {id:"m11", cx:0.407, cy:0.574, fw:0.095,
-   name:"赤バンダナの新人", role:"見習い（配管）",
-   msg:"未経験で乗船。先輩について毎日新しいことを覚えています。目標は一人前の配管工。"},
-  {id:"m12", cx:0.679, cy:0.560, fw:0.095,
-   name:"金髪の新入り", role:"見習い（製缶）",
-   msg:"手に職をつけたくて入社。まずは道具の名前と安全ルールから猛勉強中です。"},
-  {id:"m13", cx:0.806, cy:0.568, fw:0.095,
-   name:"紺ベストの若手", role:"機械据付",
-   msg:"ミリ単位の据付精度が自慢。次は玉掛けと重機の資格に挑戦します。"}
-];
-/* ※ 名前・役割・ひとことはサンプルです。実際のメンバーに合わせて書き換えてください。 */
+/* 初期データ(crew.js) ← 管理画面の保存内容(localStorage)があれば上書き */
+var CREW=(window.CREW||[]).slice();
+try{
+  var ov=JSON.parse(localStorage.getItem('pp_crew')||'null');
+  if(Array.isArray(ov)&&ov.length) CREW=ov;
+}catch(e){}
 
 var mapEl=document.getElementById('crewMap');
 var img=document.getElementById('crewImg');
@@ -216,11 +180,13 @@ var note=document.getElementById('crewNote');
 var AR=4/3; /* 画像の縦横比（読み込み後に実寸で更新） */
 
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function num(v,d){var n=parseFloat(v);return isFinite(n)?n:d;}
+function hasFace(m){return num(m.cx,-1)>=0 && num(m.cy,-1)>=0;}
 
 /* 顔の切り出し（CSSスプライト）：正方形パネルに cx,cy 中心・幅fw で表示 */
 function faceStyle(m){
-  var fw=m.fw, fh=fw*AR;                 /* 正方形に切り出すための高さ割合 */
-  var x0=m.cx-fw/2, y0=m.cy-fh/2;
+  var fw=num(m.fw,0.095), fh=fw*AR;
+  var x0=num(m.cx,0)-fw/2, y0=num(m.cy,0)-fh/2;
   var posX=(fw>=1)?0:x0/(1-fw)*100;
   var posY=(fh>=1)?0:y0/(1-fh)*100;
   return 'background-image:url(assets/crew.png);background-size:'+(100/fw)+'% auto;'+
@@ -228,26 +194,29 @@ function faceStyle(m){
 }
 
 function render(){
-  /* 1) 全体図の上にクリック領域（ホットスポット）を生成 */
-  CREW.forEach(function(m){
+  /* 1) 全体図の上にクリック領域（ホットスポット）を生成（顔位置のあるメンバーのみ） */
+  mapEl.querySelectorAll('.crew-hot').forEach(function(el){el.remove();});
+  CREW.filter(hasFace).forEach(function(m){
     /* クリック領域は顔の実寸に合わせて切り出し枠より少し小さく（隣と重ならないように） */
-    var hw=m.fw*0.62, hh=hw*AR;
+    var hw=num(m.fw,0.095)*0.62, hh=hw*AR;
     var a=document.createElement('a');
     a.className='crew-hot';
     a.href='#'+m.id;
     a.setAttribute('data-name',m.name);
-    a.setAttribute('aria-label',m.name+'（'+m.role+'）の紹介へ');
-    a.style.cssText='left:'+((m.cx-hw/2)*100)+'%;top:'+((m.cy-hh/2)*100)+'%;'+
+    a.setAttribute('aria-label',m.name+'（'+(m.role||'')+'）の紹介へ');
+    a.style.cssText='left:'+((num(m.cx,0)-hw/2)*100)+'%;top:'+((num(m.cy,0)-hh/2)*100)+'%;'+
                     'width:'+(hw*100)+'%;height:'+(hh*100)+'%;';
     mapEl.appendChild(a);
   });
-  /* 2) 個別紹介パネルを生成 */
+  /* 2) 個別紹介パネルを生成（顔位置が無いメンバーは頭文字アバターで表示） */
   grid.innerHTML=CREW.map(function(m){
-    return '<article class="member-card" id="'+m.id+'">'+
-      '<div class="m-face" style="'+faceStyle(m)+'" role="img" aria-label="'+esc(m.name)+'のイラスト"></div>'+
+    var face=hasFace(m)
+      ? '<div class="m-face" style="'+faceStyle(m)+'" role="img" aria-label="'+esc(m.name)+'のイラスト"></div>'
+      : '<div class="m-face m-face-blank" aria-hidden="true">'+esc(String(m.name||'？').charAt(0))+'</div>';
+    return '<article class="member-card" id="'+esc(m.id)+'">'+face+
       '<h3>'+esc(m.name)+'</h3>'+
-      '<span class="m-role">'+esc(m.role)+'</span>'+
-      '<p>'+esc(m.msg)+'</p>'+
+      (m.role?'<span class="m-role">'+esc(m.role)+'</span>':'')+
+      (m.msg?'<p>'+esc(m.msg)+'</p>':'<p class="m-empty">紹介文は準備中です。</p>')+
       '<a class="m-back" href="#crewMap">↑ 全体図にもどる</a>'+
       '</article>';
   }).join('');

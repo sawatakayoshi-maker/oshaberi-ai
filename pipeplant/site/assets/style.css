@@ -635,3 +635,24 @@ a.news-item:hover{transform:translateX(3px);box-shadow:0 12px 26px rgba(15,58,95
   .member-card{padding:18px 12px 14px;}
   .member-card .m-face{width:88px;height:88px;}
 }
+
+/* ============================================================
+   v6.2追加：トップの乗組員バナー／顔なしパネル／ナビ8項目対応
+   ============================================================ */
+.crew-home{padding:90px 0;background:#fff;}
+.crew-banner{display:block;position:relative;border-radius:20px;overflow:hidden;
+  border:1px solid var(--line);box-shadow:0 20px 44px rgba(15,58,95,.14);}
+.crew-banner img{width:100%;display:block;transition:transform .45s ease;}
+.crew-banner:hover img{transform:scale(1.02);}
+.crew-banner .crew-cap{position:absolute;left:0;right:0;bottom:0;
+  background:linear-gradient(transparent,rgba(11,41,66,.88));color:#fff;
+  font-weight:700;font-size:.95rem;text-align:center;padding:34px 20px 16px;}
+.m-face-blank{display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:2.2rem;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,var(--teal),var(--steel-700)) !important;}
+.member-card .m-empty{color:#9fb0bd;font-style:italic;}
+/* ナビ項目が8つになったため、中間幅では間隔と文字を少し詰める */
+@media(min-width:881px) and (max-width:1320px){
+  .nav-links{gap:1rem;}
+  .nav-links a.lk{font-size:.85rem;}
+}

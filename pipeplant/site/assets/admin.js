@@ -13,7 +13,7 @@
 var PASSCODE = "pipeplant";   // ← 必要に応じて変更してください
 
 var LS = {
-  site:'pp_site', news:'pp_news', works:'pp_works', auth:'pp_admin_auth'
+  site:'pp_site', news:'pp_news', works:'pp_works', crew:'pp_crew', auth:'pp_admin_auth'
 };
 function load(key, def){ try{ var v=JSON.parse(localStorage.getItem(key)||'null'); return v==null?def:v; }catch(e){ return def; } }
 function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
@@ -44,7 +44,7 @@ function initApp(){
       document.getElementById('panel-'+t.dataset.tab).classList.add('on');
     });
   });
-  initSite(); initRecruit(); initNews(); initWorks(); initExport();
+  initSite(); initRecruit(); initCrew(); initNews(); initWorks(); initExport();
 }
 
 function flash(id){ var el=document.getElementById(id); if(!el)return; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
@@ -132,6 +132,66 @@ function renderUtm(){
         function(){ b.textContent='✓ コピーしました'; setTimeout(function(){b.textContent='コピー';},1600); },
         function(){ prompt('このリンクをコピーしてください', t); });
     });
+  });
+}
+
+/* ============================================================
+   1.7) 乗組員（メンバー紹介ページのパネル）
+   ============================================================ */
+function getCrew(){
+  var c=load(LS.crew,null);
+  if(Array.isArray(c)) return c;
+  return (window.CREW||[]).map(function(m){ return Object.assign({},m); });
+}
+function initCrew(){ renderCrew(); bindCrewForm(); }
+function renderCrew(){
+  var list=getCrew(); var box=document.getElementById('crewItems');
+  if(!box) return;
+  box.innerHTML = list.length? list.map(function(m,i){
+    var pos=(m.cx!==''&&m.cx!=null&&m.cy!==''&&m.cy!=null)?('顔位置 cx '+m.cx+'／cy '+m.cy):'顔なしパネル';
+    return '<div class="adm-item"><div class="it-main"><div class="meta">'+esc(m.role||'')+'　─　'+pos+'</div>'+
+      '<b>'+esc(m.name||'')+'</b>'+(m.msg?'<p>'+esc(m.msg)+'</p>':'')+'</div>'+
+      '<div class="it-act"><button data-cwup="'+i+'">↑</button><button data-cwedit="'+i+'">編集</button><button class="del" data-cwdel="'+i+'">削除</button></div></div>';
+  }).join('') : '<p class="adm-note">乗組員はまだ登録されていません。下のフォームから追加してください。</p>';
+  box.querySelectorAll('[data-cwdel]').forEach(function(b){ b.addEventListener('click',function(){
+    if(!confirm('この乗組員を削除しますか？'))return;
+    var l=getCrew(); l.splice(+b.dataset.cwdel,1); save(LS.crew,l); renderCrew();
+  });});
+  box.querySelectorAll('[data-cwedit]').forEach(function(b){ b.addEventListener('click',function(){
+    var l=getCrew(); var m=l[+b.dataset.cwedit];
+    document.getElementById('cw-name').value=m.name||'';
+    document.getElementById('cw-role').value=m.role||'';
+    document.getElementById('cw-msg').value=m.msg||'';
+    document.getElementById('cw-cx').value=(m.cx==null?'':m.cx);
+    document.getElementById('cw-cy').value=(m.cy==null?'':m.cy);
+    document.getElementById('cw-fw').value=(m.fw==null?'':m.fw);
+    document.getElementById('cw-id').value=m.id||'';
+    l.splice(+b.dataset.cwedit,1); save(LS.crew,l); renderCrew();
+    window.scrollTo({top:document.getElementById('crewForm').offsetTop-80,behavior:'smooth'});
+  });});
+  box.querySelectorAll('[data-cwup]').forEach(function(b){ b.addEventListener('click',function(){
+    var i=+b.dataset.cwup; if(i<=0)return; var l=getCrew(); var t=l[i-1];l[i-1]=l[i];l[i]=t; save(LS.crew,l); renderCrew();
+  });});
+}
+function bindCrewForm(){
+  var btn=document.getElementById('crewAdd');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    var name=document.getElementById('cw-name').value.trim();
+    if(!name){ alert('名前（愛称）を入力してください。'); return; }
+    function numOr(v){ v=String(v).trim(); if(v==='')return ''; var n=parseFloat(v); return isFinite(n)?n:''; }
+    var item={
+      id:document.getElementById('cw-id').value.trim()||('m'+Date.now()),
+      name:name,
+      role:document.getElementById('cw-role').value.trim(),
+      msg:document.getElementById('cw-msg').value.trim(),
+      cx:numOr(document.getElementById('cw-cx').value),
+      cy:numOr(document.getElementById('cw-cy').value),
+      fw:numOr(document.getElementById('cw-fw').value)||0.095
+    };
+    var l=getCrew(); l.push(item); save(LS.crew,l);
+    ['cw-name','cw-role','cw-msg','cw-cx','cw-cy','cw-fw','cw-id'].forEach(function(id){document.getElementById(id).value='';});
+    renderCrew(); flash('crewSaved');
   });
 }
 
@@ -248,6 +308,10 @@ function initExport(){
     var body='/* news.js — 管理画面から書き出し */\nwindow.NEWS = '+JSON.stringify(getNews(),null,2)+';\n';
     download('news.js', body);
   });
+  document.getElementById('expCrew').addEventListener('click', function(){
+    var body='/* crew.js — 管理画面から書き出し */\nwindow.CREW = '+JSON.stringify(getCrew(),null,2)+';\n';
+    download('crew.js', body);
+  });
   document.getElementById('expWorks').addEventListener('click', function(){
     var body='/* works.js — 管理画面から書き出し（works.htmlで読み込んでください） */\nwindow.WORKS = '+JSON.stringify(getWorks(),null,2)+';\n';
     download('works.js', body);
@@ -256,12 +320,13 @@ function initExport(){
     var p=document.getElementById('expPrev');
     p.textContent='■ 会社情報(config.js)\n'+JSON.stringify(Object.assign({},window.SITE||{},load(LS.site,{})),null,2)+
       '\n\n■ お知らせ(news.js)\n'+JSON.stringify(getNews(),null,2)+
-      '\n\n■ 施工事例(works.js)\n'+JSON.stringify(getWorks().map(w=>({cat:w.cat,title:w.title,desc:w.desc,tags:w.tags,img:w.img?'(画像データ)':''})),null,2);
+      '\n\n■ 施工事例(works.js)\n'+JSON.stringify(getWorks().map(w=>({cat:w.cat,title:w.title,desc:w.desc,tags:w.tags,img:w.img?'(画像データ)':''})),null,2)+
+      '\n\n■ 乗組員(crew.js)\n'+JSON.stringify(getCrew(),null,2);
     p.style.display='block';
   });
   document.getElementById('clearAll').addEventListener('click', function(){
     if(!confirm('管理画面で保存した内容（会社情報・お知らせ・施工事例）をすべて消去して初期状態に戻しますか？'))return;
-    [LS.site,LS.news,LS.works].forEach(k=>localStorage.removeItem(k));
+    [LS.site,LS.news,LS.works,LS.crew].forEach(k=>localStorage.removeItem(k));
     alert('初期化しました。'); location.reload();
   });
 }
