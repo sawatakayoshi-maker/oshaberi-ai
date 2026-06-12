@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow" />
+<title>管理画面｜株式会社パイプラント</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/admin.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Ccircle cx=%2720%27 cy=%2720%27 r=%2719%27 fill=%27%230B2942%27 stroke=%27%23E8923A%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 14h10a5 5 0 0 1 5 5 5 5 0 0 1-5 5H11%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%272.4%27 stroke-linecap=%27round%27/%3E%3C/svg%3E" />
+</head>
+<body class="adm-body">
+
+<!-- ===== ログイン ===== -->
+<div class="adm-login" id="admLogin">
+  <div class="box">
+    <svg width="44" height="44" viewBox="0 0 40 40" fill="none" style="margin:0 auto"><circle cx="20" cy="20" r="19" fill="#0B2942" stroke="#E8923A" stroke-width="2"/><path d="M11 14h10a5 5 0 0 1 5 5 5 5 0 0 1-5 5H11" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="29" cy="19" r="2.4" fill="#E8923A"/></svg>
+    <h1>管理画面ログイン</h1>
+    <p>パイプラント サイト管理画面<br>パスコードを入力してください</p>
+    <input type="password" id="admPass" placeholder="パスコード" autocomplete="current-password" />
+    <div class="err" id="admErr"></div>
+    <button id="admLoginBtn">ログイン</button>
+    <p style="margin-top:14px;font-size:.78rem">初期パスコード：<b>pipeplant</b>（admin.js で変更可）</p>
+  </div>
+</div>
+
+<!-- ===== 管理アプリ ===== -->
+<div id="admApp" style="display:none">
+  <div class="adm-top">
+    <svg class="mk" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19" fill="#fff" stroke="#E8923A" stroke-width="2"/><path d="M11 14h10a5 5 0 0 1 5 5 5 5 0 0 1-5 5H11" fill="none" stroke="#0B2942" stroke-width="2.4" stroke-linecap="round"/><circle cx="29" cy="19" r="2.4" fill="#E8923A"/></svg>
+    <b>パイプラント 管理画面</b>
+    <span class="badge">ADMIN</span>
+    <span class="sp"></span>
+    <a href="index.html" target="_blank" rel="noopener"><button>サイトを表示 ↗</button></a>
+    <button id="admLogout">ログアウト</button>
+  </div>
+
+  <div class="adm-wrap">
+    <div class="adm-hint">
+      ここで保存した内容は、<b>この端末・このブラウザで開いた公開ページに即時反映</b>されます（デモ方式）。
+      他の人の画面にも反映するには、下部「公開用ファイルの書き出し」でファイルを書き出し、サーバーに設置してください。
+    </div>
+
+    <div class="adm-tabs">
+      <button class="adm-tab on" data-tab="site">🏢 会社情報</button>
+      <button class="adm-tab" data-tab="recruit">👷 採用・SNS</button>
+      <button class="adm-tab" data-tab="news">📢 お知らせ</button>
+      <button class="adm-tab" data-tab="works">🏗 施工事例</button>
+      <button class="adm-tab" data-tab="export">⬇ 公開用書き出し</button>
+    </div>
+
+    <!-- 会社情報 -->
+    <section class="adm-panel on" id="panel-site">
+      <div class="adm-card">
+        <h2>会社情報</h2>
+        <p class="desc">電話・住所・SNS・地図・フォーム送信先などを編集します。保存すると全ページに反映されます。</p>
+        <div class="adm-grid2">
+          <div class="adm-field"><label>会社名</label><input id="site-companyName" /></div>
+          <div class="adm-field"><label>所属グループ</label><input id="site-group" /></div>
+          <div class="adm-field"><label>郵便番号</label><input id="site-postal" placeholder="〒919-0411" /></div>
+          <div class="adm-field"><label>住所</label><input id="site-address" /></div>
+          <div class="adm-field"><label>電話番号</label><input id="site-tel" placeholder="0776-51-9550" /></div>
+          <div class="adm-field"><label>FAX</label><input id="site-fax" /></div>
+          <div class="adm-field full"><label>メールアドレス <small>問い合わせ受信に使用</small></label><input id="site-email" placeholder="info@example.co.jp" /></div>
+          <div class="adm-field full"><label>Instagram URL <small>入力するとサイト内で自動リンク</small></label><input id="site-instagramUrl" placeholder="https://www.instagram.com/xxxx/" /></div>
+          <div class="adm-field full"><label>TikTok URL <small>入力するとサイト内で自動リンク</small></label><input id="site-tiktokUrl" placeholder="https://www.tiktok.com/@xxxx" /></div>
+          <div class="adm-field full"><label>YouTube URL <small>入力するとサイト内で自動リンク</small></label><input id="site-youtubeUrl" placeholder="https://www.youtube.com/@xxxx" /></div>
+          <div class="adm-field full"><label>X（旧Twitter）URL <small>入力するとサイト内で自動リンク</small></label><input id="site-xUrl" placeholder="https://x.com/xxxx" /></div>
+          <div class="adm-field full"><label>サイトの公開URL <small>ドメイン取得後に入力（SNS用リンク・OGPに使用）</small></label><input id="site-siteUrl" placeholder="https://www.pipeplant.co.jp" /></div>
+          <div class="adm-field full"><label>Googleマップ 埋め込みURL <small>「共有→地図を埋め込む」のsrc</small></label><input id="site-mapEmbed" placeholder="https://www.google.com/maps/embed?..." /></div>
+          <div class="adm-field full"><label>フォーム送信先 <small>Formspree等のURL（空ならメール送信）</small></label><input id="site-formEndpoint" placeholder="https://formspree.io/f/xxxx" /></div>
+          <div class="adm-field full"><label>GA4 測定ID <small>アクセス解析（G-から始まる）</small></label><input id="site-gaId" placeholder="G-XXXXXXXXXX" /></div>
+        </div>
+        <div class="adm-actions">
+          <button class="adm-btn primary" id="siteSave">保存する</button>
+          <button class="adm-btn ghost" id="siteReset">初期値に戻す</button>
+          <span class="adm-saved" id="siteSaved">✓ 保存しました</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 採用・SNS -->
+    <section class="adm-panel" id="panel-recruit">
+      <div class="adm-card">
+        <h2>募集要項の編集</h2>
+        <p class="desc">入力した項目だけが採用ページに表示されます（空欄のままの項目は「後日掲載」と表示）。<b>「職種」と「掲載開始日」の両方が入ると、Googleしごと検索向けの求人データ（JobPosting）がページに自動で組み込まれます</b>。難しい操作は不要です。</p>
+        <div class="adm-grid2">
+          <div class="adm-field full"><label>職種 <small>例）プラント配管工（未経験可）</small></label><input id="site-recJobTitle" placeholder="プラント配管工（未経験可）" /></div>
+          <div class="adm-field"><label>雇用形態</label>
+            <select id="site-recEmployment">
+              <option value=""></option>
+              <option>正社員</option>
+              <option>契約社員</option>
+              <option>パート・アルバイト</option>
+            </select>
+          </div>
+          <div class="adm-field"><label>掲載開始日 <small>「今日の日付を入れる」で自動入力</small></label>
+            <div style="display:flex;gap:8px"><input id="site-recDatePosted" placeholder="2026-06-12" style="flex:1" /><button class="adm-btn ghost" type="button" id="recToday">今日の日付を入れる</button></div>
+          </div>
+          <div class="adm-field full"><label>給与（表示用の文章） <small>例）月給20万円〜35万円（経験・能力による）</small></label><input id="site-recSalary" placeholder="月給○○万円〜○○万円（経験・能力による）" /></div>
+          <div class="adm-field"><label>給与の下限 <small>数字のみ・月額円。例）200000</small></label><input id="site-recSalaryMin" placeholder="200000" inputmode="numeric" /></div>
+          <div class="adm-field"><label>給与の上限 <small>数字のみ・月額円。例）350000</small></label><input id="site-recSalaryMax" placeholder="350000" inputmode="numeric" /></div>
+          <div class="adm-field full"><label>勤務時間 <small>例）8:00〜17:00（休憩90分）</small></label><input id="site-recHours" /></div>
+          <div class="adm-field full"><label>休日・休暇 <small>例）日曜・祝日、第2・4土曜、年末年始 ほか</small></label><input id="site-recHolidays" /></div>
+          <div class="adm-field full"><label>福利厚生 <small>例）社会保険完備、資格取得支援、退職金制度 ほか</small></label><input id="site-recBenefits" /></div>
+          <div class="adm-field"><label>掲載終了日（任意） <small>例）2026-12-31</small></label><input id="site-recValidThrough" placeholder="2026-12-31" /></div>
+        </div>
+        <div class="adm-actions">
+          <button class="adm-btn primary" id="recSave">保存する</button>
+          <span class="adm-saved" id="recSaved">✓ 保存しました</span>
+        </div>
+        <p class="adm-note">※ 保存後、「⬇ 公開用書き出し」タブから config.js をダウンロードしてサーバーに上書きすると、全員に公開されます。</p>
+      </div>
+
+      <div class="adm-card">
+        <h2>SNSに貼る「採用ページへのリンク」をつくる</h2>
+        <p class="desc">下のリンクをコピーして、各SNSのプロフィール欄・固定投稿に貼ってください。リンクに媒体名（utm）が入っているので、<b>どのSNSから何人来たかを後で確認できます</b>（GA4設定時）。会社情報タブで「サイトの公開URL」を入力すると自動で作られます。</p>
+        <div class="adm-list" id="utmList"><p class="adm-note">先に「🏢 会社情報」タブで「サイトの公開URL」を入力・保存してください。</p></div>
+      </div>
+    </section>
+
+    <!-- お知らせ -->
+    <section class="adm-panel" id="panel-news">
+      <div class="adm-card">
+        <h2>お知らせの管理</h2>
+        <p class="desc">トップページ（最新3件）と「お知らせ」ページに表示されます。新しいものが上に並びます。</p>
+        <div class="adm-list" id="newsItems"></div>
+      </div>
+      <div class="adm-card" id="newsForm">
+        <h2>お知らせを追加</h2>
+        <div class="adm-grid2">
+          <div class="adm-field"><label>日付 <small>空なら今日</small></label><input type="date" id="nw-date" /></div>
+          <div class="adm-field"><label>種類（タグ）</label><input id="nw-tag" placeholder="お知らせ／施工事例／採用 など" /></div>
+          <div class="adm-field full"><label>見出し</label><input id="nw-title" placeholder="例：水素ステーション工事の事例を掲載しました" /></div>
+          <div class="adm-field full"><label>本文 <small>省略可</small></label><textarea id="nw-body"></textarea></div>
+          <div class="adm-field full"><label>リンク先 <small>省略可（例 works.html）</small></label><input id="nw-link" placeholder="works.html / https://..." /></div>
+        </div>
+        <div class="adm-actions">
+          <button class="adm-btn primary" id="newsAdd">＋ 追加する</button>
+          <span class="adm-saved" id="newsSaved">✓ 追加しました</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 施工事例 -->
+    <section class="adm-panel" id="panel-works">
+      <div class="adm-card">
+        <h2>施工事例の管理</h2>
+        <p class="desc">登録すると「施工事例」ページのギャラリーに反映されます（写真は自動で縮小されます）。</p>
+        <div class="adm-list" id="worksItems"></div>
+      </div>
+      <div class="adm-card">
+        <h2>施工事例を追加</h2>
+        <div class="adm-grid2">
+          <div class="adm-field"><label>カテゴリ</label><input id="wk-cat" placeholder="高圧ガス配管／水素設備 など" /></div>
+          <div class="adm-field"><label>タグ <small>カンマ区切り</small></label><input id="wk-tags" placeholder="高圧ガス, 溶接, 一貫施工" /></div>
+          <div class="adm-field full"><label>工事名（タイトル）</label><input id="wk-title" placeholder="例：高圧ガスプラント 配管製作・施工" /></div>
+          <div class="adm-field full"><label>説明</label><textarea id="wk-desc"></textarea></div>
+          <div class="adm-field full"><label>写真 <small>1枚（自動縮小）</small></label>
+            <input type="file" id="wk-img" accept="image/*" />
+            <img id="wk-prev" alt="プレビュー" style="display:none;margin-top:10px;max-width:220px;border-radius:10px;border:1px solid var(--line)" />
+          </div>
+        </div>
+        <div class="adm-actions">
+          <button class="adm-btn primary" id="worksAdd">＋ 追加する</button>
+          <span class="adm-saved" id="worksSaved">✓ 追加しました</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 書き出し -->
+    <section class="adm-panel" id="panel-export">
+      <div class="adm-card">
+        <h2>公開用ファイルの書き出し（本番反映）</h2>
+        <p class="desc">管理画面の保存内容は「この端末内」での反映です。<b>全員に公開反映</b>するには、ここで書き出したファイルをサーバーの <code>assets/</code> に上書き設置します。</p>
+        <div class="adm-actions">
+          <button class="adm-btn dark" id="expConfig">config.js を書き出し</button>
+          <button class="adm-btn dark" id="expNews">news.js を書き出し</button>
+          <button class="adm-btn dark" id="expWorks">works.js を書き出し</button>
+          <button class="adm-btn ghost" id="expPreview">内容をプレビュー</button>
+        </div>
+        <p class="adm-note">※ works.js を使う場合は、works.html に <code>&lt;script src="assets/works.js"&gt;&lt;/script&gt;</code> の読み込み追加が必要です（設置手順書に記載）。</p>
+        <pre class="adm-prev" id="expPrev" style="display:none"></pre>
+      </div>
+      <div class="adm-card">
+        <h2>初期化</h2>
+        <p class="desc">管理画面で保存した内容をすべて消去し、初期状態（config.js / news.js）に戻します。</p>
+        <div class="adm-actions">
+          <button class="adm-btn danger" id="clearAll">保存内容をすべて消去</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 公開ページと同じ初期データを読み込む -->
+<script src="assets/config.js"></script>
+<script src="assets/news.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>
