@@ -898,13 +898,15 @@ function pickVoiceForAvatar(){
   const ja=jaVoices();
   if(!ja.length){ jaVoice=null; return; }
   const male = (avatarType==="photoM");
-  const want = male ? "otoya" : "kyoko";
   const isMaleName=(n)=>/(otoya|hattori|ichiro|男性|male)/.test(n);
+  const isOren=(n)=>/(o-?ren|o ren|オーレン|おーれん)/.test(n);  // iOSの日本語女性「O-ren」
   let best=null, bestScore=-Infinity;
   for(const v of ja){
     const n=(v.name||"").toLowerCase();
     let s=0;
-    if(n.includes(want)) s+=20;                 // 目的の人物名（Otoya/Kyoko）
+    if(!male && isOren(n)) s+=22;                // 女性は O-ren を最優先
+    else if(!male && n.includes("kyoko")) s+=20; // 次点で Kyoko
+    else if(male && n.includes("otoya")) s+=20;  // 男性は Otoya
     else if(male===isMaleName(n)) s+=4;          // 性別が一致
     else s-=8;                                    // 性別が逆
     if(/(enhanced|premium|neural|高品質|siri)/.test(n)) s+=8;  // 高品質版（滑らかで流暢）
