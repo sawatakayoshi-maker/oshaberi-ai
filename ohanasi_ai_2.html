@@ -1541,6 +1541,7 @@ micBtn.addEventListener("click", startListening);
 const standbyBtn=document.getElementById("standbyBtn");
 const standbyLbl=document.getElementById("standbyLbl");
 let standbyOn=false, standbyRecog=null, standbyActive=false, standbyStarting=false, standbyWatch=null, standbyFails=0;
+let standbyAutoResume=false;  // 起動時の自動復帰中は、失敗してもオフにせず案内も出さない
 
 function applyStandbyState(){
   if(standbyBtn) standbyBtn.classList.toggle("on", standbyOn);
@@ -1575,7 +1576,7 @@ function buildStandbyRecog(){
   r.onerror=(e)=>{
     const er=(e&&e.error)||"";
     standbyActive=false; standbyStarting=false;
-    if(er==="not-allowed"||er==="service-not-allowed"){
+    if((er==="not-allowed"||er==="service-not-allowed") && !standbyAutoResume){
       setStandby(false); standbyHelp();
     }
     // no-speech / aborted などは見張り役が自動で再開する
@@ -1595,6 +1596,8 @@ function standbyTryStart(){
       if(standbyStarting && !standbyActive){
         standbyStarting=false;          // 詰まり防止：必ず解除（無反応バグの対策）
         standbyFails++;
+        // 起動時の自動復帰中は、オフにも案内もせず静かに待つ（最初の操作で許可されれば動く）
+        if(standbyAutoResume) return;
         // パソコンは初回のマイク許可に時間がかかるので、回数を多めに見てから諦める
         if(standbyFails>=(isDesktop?4:2)){ setStandby(false); standbyHelp(); }
       }
@@ -1626,6 +1629,7 @@ function setStandby(on){
 }
 let standbyHelpShown=false;
 function standbyHelp(){
+  if(standbyAutoResume) return;   // 自動復帰中は案内を出さない
   if(standbyHelpShown) return; standbyHelpShown=true;
   if(isIOS){
     addBubble("assistant",
@@ -1644,6 +1648,17 @@ function standbyHelp(){
   }
 }
 if(standbyBtn){ standbyBtn.addEventListener("click", ()=> setStandby(!standbyOn)); }
+// 起動時：前回「待受オン」だったら自動で待受を再開する（押し直し不要）。
+// 非対応端末（iPhone Safari等）では静かに何もしない。
+async function loadStandbyPref(){
+  let want=false;
+  try{ const v=await window.storage.get(K_STBY); want=!!(v && v.value==="1"); }catch(e){}
+  if(!want || !SR) return;
+  standbyAutoResume=true;
+  setStandby(true);
+  // 一定時間は自動復帰扱い（マイク許可がまだのときに案内で煩わせない）。以降は通常動作。
+  setTimeout(()=>{ standbyAutoResume=false; }, 12000);
+}
 
 /* ---------- slide creation (PowerPoint) ---------- */
 const slideBtn=document.getElementById("slideBtn");
@@ -1892,6 +1907,7 @@ if(sumRefresh) sumRefresh.addEventListener("click", async ()=>{
   await loadMemory();
   greet(false);
   await saveMemory();
+  await loadStandbyPref();   // 前回オンなら待受を自動再開
 })();
 </script>
 </body>
