@@ -1,0 +1,541 @@
+/* =========================================================================
+   Canva Studio — main logic
+   - Fabric.js powered canvas (drag / resize / rotate / delete)
+   - Text, shapes, background, PNG export
+   - AI prompt makers (image & short-video) with one-click copy + toast
+   ========================================================================= */
+
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------------------
+     1. Canvas setup
+  --------------------------------------------------------------------- */
+  let CANVAS_W = 1200;
+  let CANVAS_H = 630;
+
+  const canvas = new fabric.Canvas('designCanvas', {
+    width: CANVAS_W,
+    height: CANVAS_H,
+    backgroundColor: '#ffffff',
+    preserveObjectStacking: true,
+  });
+
+  // Make the canvas scale down to fit the viewport while keeping crisp export.
+  function fitCanvasToViewport() {
+    const wrap = document.getElementById('canvasWrap');
+    const main = wrap.parentElement;
+    const availW = main.clientWidth - 80;
+    const availH = main.clientHeight - 80;
+    const scale = Math.min(availW / CANVAS_W, availH / CANVAS_H, 1);
+    wrap.style.width = CANVAS_W * scale + 'px';
+    wrap.style.height = CANVAS_H * scale + 'px';
+    canvas.setZoom(scale);
+    canvas.setDimensions({ width: CANVAS_W * scale, height: CANVAS_H * scale });
+  }
+  window.addEventListener('resize', fitCanvasToViewport);
+
+  /* ---------------------------------------------------------------------
+     2. Helpers
+  --------------------------------------------------------------------- */
+  const $ = (id) => document.getElementById(id);
+  const palette = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6'];
+  const randColor = () => palette[Math.floor(Math.random() * palette.length)];
+  const center = () => ({ left: CANVAS_W / 2, top: CANVAS_H / 2 });
+
+  function addAndSelect(obj) {
+    canvas.add(obj);
+    canvas.setActiveObject(obj);
+    canvas.requestRenderAll();
+    saveState();
+  }
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  /* ---------------------------------------------------------------------
+     3. Add text
+  --------------------------------------------------------------------- */
+  $('addTextBtn').addEventListener('click', () => {
+    const text = new fabric.IText('テキストを入力', {
+      ...center(),
+      originX: 'center',
+      originY: 'center',
+      fontFamily: '"Zen Kaku Gothic New", sans-serif',
+      fontSize: 48,
+      fill: '#1e293b',
+      fontWeight: 'normal',
+    });
+    addAndSelect(text);
+  });
+
+  /* ---------------------------------------------------------------------
+     4. Add shapes
+  --------------------------------------------------------------------- */
+  function makeStar(cx, cy, outer, inner, points) {
+    const path = [];
+    for (let i = 0; i < points * 2; i++) {
+      const r = i % 2 === 0 ? outer : inner;
+      const a = (Math.PI / points) * i - Math.PI / 2;
+      path.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+    }
+    return path;
+  }
+
+  const shapeFactories = {
+    rect: () => new fabric.Rect({ width: 200, height: 140, fill: randColor(), rx: 0, ry: 0 }),
+    roundrect: () => new fabric.Rect({ width: 200, height: 140, fill: randColor(), rx: 24, ry: 24 }),
+    circle: () => new fabric.Circle({ radius: 80, fill: randColor() }),
+    ellipse: () => new fabric.Ellipse({ rx: 110, ry: 70, fill: randColor() }),
+    triangle: () => new fabric.Triangle({ width: 170, height: 150, fill: randColor() }),
+    line: () => new fabric.Rect({ width: 240, height: 8, fill: '#334155', rx: 4, ry: 4 }),
+    star: () => new fabric.Polygon(makeStar(0, 0, 90, 38, 5), { fill: '#f59e0b' }),
+    heart: () => new fabric.Path(
+      'M 0 -30 C -40 -75 -100 -35 0 40 C 100 -35 40 -75 0 -30 Z',
+      { fill: '#f43f5e', scaleX: 1.1, scaleY: 1.1 }
+    ),
+  };
+
+  document.querySelectorAll('.shape-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const obj = shapeFactories[btn.dataset.shape]();
+      obj.set({ ...center(), originX: 'center', originY: 'center' });
+      addAndSelect(obj);
+    });
+  });
+
+  /* ---------------------------------------------------------------------
+     5. Background color
+  --------------------------------------------------------------------- */
+  function makeGradient(colors) {
+    return new fabric.Gradient({
+      type: 'linear',
+      coords: { x1: 0, y1: 0, x2: CANVAS_W, y2: CANVAS_H },
+      colorStops: [
+        { offset: 0, color: colors[0] },
+        { offset: 1, color: colors[1] },
+      ],
+    });
+  }
+  const gradients = {
+    grad1: ['#6366f1', '#ec4899'],
+    grad2: ['#0ea5e9', '#10b981'],
+    grad3: ['#f59e0b', '#ef4444'],
+  };
+
+  function setBackground(value) {
+    if (gradients[value]) {
+      canvas.setBackgroundColor(makeGradient(gradients[value]), canvas.renderAll.bind(canvas));
+    } else {
+      canvas.setBackgroundColor(value, canvas.renderAll.bind(canvas));
+      $('bgColorPicker').value = value;
+    }
+    saveState();
+  }
+
+  document.querySelectorAll('.bg-swatch').forEach((sw) => {
+    sw.addEventListener('click', () => setBackground(sw.dataset.bg));
+  });
+  $('bgColorPicker').addEventListener('input', (e) => setBackground(e.target.value));
+
+  /* ---------------------------------------------------------------------
+     6. Canvas size switch
+  --------------------------------------------------------------------- */
+  $('canvasSize').addEventListener('change', (e) => {
+    const [w, h] = e.target.value.split('x').map(Number);
+    CANVAS_W = w; CANVAS_H = h;
+    canvas.setWidth(w);
+    canvas.setHeight(h);
+    fitCanvasToViewport();
+    canvas.requestRenderAll();
+    saveState();
+  });
+
+  /* ---------------------------------------------------------------------
+     7. Property panel (right) — wiring to selected object
+  --------------------------------------------------------------------- */
+  const propPanel = $('propPanel');
+  const propText = $('propText');
+
+  function refreshPanel() {
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.type === 'activeSelection') {
+      propPanel.classList.add('hidden');
+      return;
+    }
+    propPanel.classList.remove('hidden');
+
+    // fill color
+    const fill = typeof obj.fill === 'string' ? obj.fill : '#6366f1';
+    $('objColor').value = fill.startsWith('#') ? fill : '#6366f1';
+
+    // opacity
+    $('opacity').value = Math.round((obj.opacity ?? 1) * 100);
+    $('opacityVal').textContent = $('opacity').value + '%';
+
+    // text-only controls
+    const isText = obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox';
+    propText.classList.toggle('hidden', !isText);
+    if (isText) {
+      $('fontSize').value = obj.fontSize;
+      $('fontSizeVal').textContent = obj.fontSize + 'px';
+      $('boldBtn').classList.toggle('active', obj.fontWeight === 'bold');
+      $('italicBtn').classList.toggle('active', obj.fontStyle === 'italic');
+      $('underlineBtn').classList.toggle('active', !!obj.underline);
+      $('fontFamily').value = obj.fontFamily;
+      document.querySelectorAll('.align-btn').forEach((b) =>
+        b.classList.toggle('active', b.dataset.align === obj.textAlign)
+      );
+    }
+  }
+
+  canvas.on('selection:created', refreshPanel);
+  canvas.on('selection:updated', refreshPanel);
+  canvas.on('selection:cleared', () => propPanel.classList.add('hidden'));
+
+  // Fill color
+  $('objColor').addEventListener('input', (e) => {
+    const obj = canvas.getActiveObject();
+    if (obj) { obj.set('fill', e.target.value); canvas.requestRenderAll(); }
+  });
+  $('objColor').addEventListener('change', saveState);
+
+  // Opacity
+  $('opacity').addEventListener('input', (e) => {
+    const obj = canvas.getActiveObject();
+    if (obj) {
+      obj.set('opacity', e.target.value / 100);
+      $('opacityVal').textContent = e.target.value + '%';
+      canvas.requestRenderAll();
+    }
+  });
+  $('opacity').addEventListener('change', saveState);
+
+  // Font size
+  $('fontSize').addEventListener('input', (e) => {
+    const obj = canvas.getActiveObject();
+    if (obj) {
+      obj.set('fontSize', parseInt(e.target.value, 10));
+      $('fontSizeVal').textContent = e.target.value + 'px';
+      canvas.requestRenderAll();
+    }
+  });
+  $('fontSize').addEventListener('change', saveState);
+
+  // Bold / Italic / Underline
+  $('boldBtn').addEventListener('click', () => toggleText('fontWeight', 'bold', 'normal', 'boldBtn'));
+  $('italicBtn').addEventListener('click', () => toggleText('fontStyle', 'italic', 'normal', 'italicBtn'));
+  $('underlineBtn').addEventListener('click', () => {
+    const obj = canvas.getActiveObject();
+    if (!obj) return;
+    obj.set('underline', !obj.underline);
+    $('underlineBtn').classList.toggle('active', obj.underline);
+    canvas.requestRenderAll(); saveState();
+  });
+
+  function toggleText(prop, onVal, offVal, btnId) {
+    const obj = canvas.getActiveObject();
+    if (!obj) return;
+    const next = obj[prop] === onVal ? offVal : onVal;
+    obj.set(prop, next);
+    $(btnId).classList.toggle('active', next === onVal);
+    canvas.requestRenderAll(); saveState();
+  }
+
+  // Text alignment
+  document.querySelectorAll('.align-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const obj = canvas.getActiveObject();
+      if (!obj) return;
+      obj.set('textAlign', b.dataset.align);
+      document.querySelectorAll('.align-btn').forEach((x) =>
+        x.classList.toggle('active', x === b));
+      canvas.requestRenderAll(); saveState();
+    });
+  });
+
+  // Font family
+  $('fontFamily').addEventListener('change', (e) => {
+    const obj = canvas.getActiveObject();
+    if (obj) { obj.set('fontFamily', e.target.value); canvas.requestRenderAll(); saveState(); }
+  });
+
+  // Layer order
+  $('bringFront').addEventListener('click', () => {
+    const obj = canvas.getActiveObject();
+    if (obj) { obj.bringToFront(); canvas.requestRenderAll(); saveState(); }
+  });
+  $('sendBack').addEventListener('click', () => {
+    const obj = canvas.getActiveObject();
+    if (obj) { obj.sendToBack(); canvas.requestRenderAll(); saveState(); }
+  });
+
+  // Delete (button + keyboard)
+  function deleteActive() {
+    const objs = canvas.getActiveObjects();
+    objs.forEach((o) => canvas.remove(o));
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+    propPanel.classList.add('hidden');
+    saveState();
+  }
+  $('deleteObjBtn').addEventListener('click', deleteActive);
+
+  document.addEventListener('keydown', (e) => {
+    const editing = canvas.getActiveObject() && canvas.getActiveObject().isEditing;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !editing) {
+      if (canvas.getActiveObject()) { e.preventDefault(); deleteActive(); }
+    }
+    // Ctrl/Cmd + Z = undo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault(); undo();
+    }
+  });
+
+  /* ---------------------------------------------------------------------
+     8. Undo (simple state stack) + Clear
+  --------------------------------------------------------------------- */
+  let history = [];
+  let restoring = false;
+
+  function saveState() {
+    if (restoring) return;
+    history.push(JSON.stringify(canvas.toJSON()));
+    if (history.length > 40) history.shift();
+  }
+
+  function undo() {
+    if (history.length <= 1) return;
+    restoring = true;
+    history.pop();                       // drop current
+    const prev = history[history.length - 1];
+    canvas.loadFromJSON(prev, () => {
+      canvas.renderAll();
+      restoring = false;
+      propPanel.classList.add('hidden');
+    });
+  }
+  $('undoBtn').addEventListener('click', undo);
+
+  $('clearBtn').addEventListener('click', () => {
+    if (!confirm('キャンバスの内容をすべて消去しますか？')) return;
+    canvas.getObjects().slice().forEach((o) => canvas.remove(o));
+    canvas.setBackgroundColor('#ffffff', canvas.renderAll.bind(canvas));
+    $('bgColorPicker').value = '#ffffff';
+    propPanel.classList.add('hidden');
+    saveState();
+  });
+
+  // Track manual moves/resizes for history
+  canvas.on('object:modified', saveState);
+
+  /* ---------------------------------------------------------------------
+     9. PNG export (high resolution)
+  --------------------------------------------------------------------- */
+  $('downloadBtn').addEventListener('click', () => {
+    canvas.discardActiveObject();
+    canvas.renderAll();
+    // multiplier=2 → 2x resolution PNG, accounting for current zoom.
+    const dataURL = canvas.toDataURL({
+      format: 'png',
+      quality: 1,
+      multiplier: 2 / canvas.getZoom(),
+    });
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = 'canva-studio-design.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast('PNG画像をダウンロードしました！');
+  });
+
+  /* ---------------------------------------------------------------------
+     10. Tab switching (Design / AI)
+  --------------------------------------------------------------------- */
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle('bg-brand-600', active);
+        b.classList.toggle('text-white', active);
+        b.classList.toggle('text-slate-500', !active);
+      });
+      $('tab-design').classList.toggle('hidden', tab !== 'design');
+      $('tab-ai').classList.toggle('hidden', tab !== 'ai');
+    });
+  });
+
+  /* ---------------------------------------------------------------------
+     11. AI prompt makers
+  --------------------------------------------------------------------- */
+  // Dropdown options ---------------------------------------------------
+  const imageStyles = {
+    '実写風':     'ultra-realistic photography, shot on a full-frame DSLR, 85mm lens, shallow depth of field, natural lighting',
+    'アニメ風':   'anime style, clean cel shading, vibrant colors, detailed line art, studio-quality key visual',
+    '水彩画風':   'delicate watercolor painting, soft bleeding pigments, textured paper, hand-painted, gentle gradients',
+    '3Dレンダー調': '3D rendered, Octane render, physically based materials, soft global illumination, Pixar-like polish',
+    '水墨画風':   'traditional Japanese sumi-e ink wash painting, expressive brush strokes, minimal negative space',
+    '油絵風':     'classical oil painting, thick impasto brush strokes, rich texture, museum-quality, dramatic chiaroscuro',
+    'ピクセルアート': 'detailed pixel art, 16-bit retro game style, crisp dithering, limited color palette',
+    'フラットイラスト': 'modern flat vector illustration, bold clean shapes, harmonious color scheme, minimal',
+  };
+  const imageMoods = {
+    'エモい':       'emotional, nostalgic atmosphere, soft golden hour light, gentle melancholy, dreamy bokeh',
+    'シネマティック': 'cinematic, dramatic lighting, film grain, anamorphic widescreen feel, teal-and-orange color grade',
+    'サイバーパンク': 'cyberpunk, neon-lit, futuristic, rain-soaked streets, glowing holograms, high contrast',
+    '明るく爽やか':  'bright and refreshing, airy pastel tones, clean and cheerful, sunny daylight',
+    '重厚・シリアス': 'dark and serious, moody low-key lighting, deep shadows, intense and dramatic mood',
+    'ファンタジー':  'epic fantasy, magical glowing particles, ethereal mist, otherworldly grandeur',
+    'ミニマル':     'minimalist, lots of negative space, calm and elegant, muted refined palette',
+  };
+  const videoTones = {
+    '情熱的':       '情熱的で熱量が高く、視聴者の感情を強く揺さぶる語り口',
+    '論理的・冷静':  '論理的かつ冷静で、データや根拠を示しながら淡々と信頼感を与える語り口',
+    'エンタメ風':    'テンポが速くエンタメ性が高い、飽きさせない明るくノリの良い語り口',
+    'クスッと笑える': '軽いユーモアと自虐や意外性を交え、クスッと笑えて親近感のある語り口',
+  };
+
+  function fillSelect(id, obj) {
+    const sel = $(id);
+    Object.keys(obj).forEach((k) => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k;
+      sel.appendChild(o);
+    });
+  }
+  fillSelect('imgStyle', imageStyles);
+  fillSelect('imgMood', imageMoods);
+  fillSelect('vidTone', videoTones);
+
+  // ① Image prompt -----------------------------------------------------
+  $('genImgPrompt').addEventListener('click', () => {
+    const subject = $('imgSubject').value.trim() || 'a lone cat sitting by a neon-lit window';
+    const styleKey = $('imgStyle').value;
+    const moodKey = $('imgMood').value;
+    const styleEN = imageStyles[styleKey];
+    const moodEN = imageMoods[moodKey];
+
+    const prompt =
+`A highly detailed, professional illustration of: ${subject}.
+
+【Art style / タッチ】${styleKey} — ${styleEN}
+【Mood / 雰囲気】${moodKey} — ${moodEN}
+
+【Composition & background】
+A carefully composed scene with a complementary, atmospheric background that matches the subject and mood. Balanced rule-of-thirds framing, clear focal point, depth and layering between foreground, midground and background. Cohesive color palette and harmonious lighting that reinforces the intended mood.
+
+【Quality boosters】
+masterpiece, best quality, ultra detailed, 4k, 8k, highly detailed, sharp focus, intricate details, professional lighting, award-winning, trending on ArtStation, beautiful color grading, perfect composition
+
+【Negative prompt (avoid)】
+low quality, blurry, lowres, bad anatomy, extra limbs, deformed, watermark, text, signature, jpeg artifacts, ugly, distorted
+
+---
+※このプロンプトをそのまま ChatGPT(DALL·E 3) / Gemini / Midjourney などに貼り付けてください。`;
+
+    $('imgPromptOut').value = prompt;
+    toast('画像プロンプトを生成しました！');
+  });
+
+  // ② Video script prompt ---------------------------------------------
+  $('genVidPrompt').addEventListener('click', () => {
+    const theme = $('vidTheme').value.trim() || '初心者向けAI仕事術';
+    const target = $('vidTarget').value.trim() || '副業を始めたい20〜40代の会社員';
+    const toneKey = $('vidTone').value;
+    const toneDesc = videoTones[toneKey];
+
+    const prompt =
+`# 役割（Role）
+あなたは、YouTubeショート・TikTok・Instagramリールで何本もバズらせてきたトップクラスの「縦型ショート動画 構成作家」です。視聴維持率と完視聴率を最大化する台本設計のプロフェッショナルとして振る舞ってください。
+
+# 前提条件（Context）
+- 動画テーマ・題材：${theme}
+- ターゲット視聴者：${target}
+- 動画のトーン：${toneKey}（${toneDesc}）
+- 動画の長さ：30〜45秒程度の縦型ショート動画（9:16）
+- 最重要KPI：最初の3秒の離脱を防ぐこと（フック）と、最後まで見てもらう視聴維持率
+
+# 守ってほしいルール（Constraints）
+1. 冒頭2〜3秒で「続きが気になる」強烈なフック（問いかけ・意外な事実・否定形・数字）を入れる
+2. 専門用語は避け、ターゲットが普段使う言葉で書く
+3. 1カットが間延びしないよう、テンポよく場面を切り替える
+4. 視聴者が「自分ごと」だと感じる共感ポイントを必ず入れる
+5. 最後に行動を促すCTA（コメント・保存・フォロー）を自然に入れる
+
+# 出力フォーマット（Output Format）
+以下のタイムライン形式で、各区間ごとに「ナレーション（セリフ）」「画面・テロップ」「演出意図」を必ず3点セットで出力してください。
+
+---
+🎬 タイトル案（3パターン・サムネにも使えるキャッチー版）
+
+⏱ 0〜3秒（フック）
+　・ナレーション：
+　・画面/テロップ：
+　・演出意図：
+
+⏱ 3〜10秒（共感・問題提起）
+　・ナレーション：
+　・画面/テロップ：
+　・演出意図：
+
+⏱ 10〜25秒（本編・解決/価値提供）
+　・ナレーション：
+　・画面/テロップ：
+　・演出意図：
+
+⏱ 25〜40秒（まとめ・CTA）
+　・ナレーション：
+　・画面/テロップ：
+　・演出意図：
+
+📌 おすすめBGM/効果音の方向性
+🔖 おすすめハッシュタグ（5個）
+---
+
+それでは、上記の条件に沿って、視聴維持率を最大化する最高の縦型ショート動画の構成案を作成してください。`;
+
+    $('vidPromptOut').value = prompt;
+    toast('動画構成プロンプトを生成しました！');
+  });
+
+  /* ---------------------------------------------------------------------
+     12. Copy buttons + toast
+  --------------------------------------------------------------------- */
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ta = $(btn.dataset.target);
+      if (!ta.value.trim()) { toast('先にプロンプトを生成してください'); return; }
+      try {
+        await navigator.clipboard.writeText(ta.value);
+      } catch (_) {
+        ta.select();
+        document.execCommand('copy');
+      }
+      toast('コピーしました！');
+    });
+  });
+
+  /* ---------------------------------------------------------------------
+     13. Init
+  --------------------------------------------------------------------- */
+  fitCanvasToViewport();
+  saveState(); // baseline state for undo
+
+  // Friendly starter content so the canvas isn't empty on first load.
+  const welcome = new fabric.IText('ここにテキストや図形を追加', {
+    ...center(),
+    originX: 'center', originY: 'center',
+    fontFamily: '"Zen Kaku Gothic New", sans-serif',
+    fontSize: 44, fill: '#94a3b8', fontWeight: 'bold',
+  });
+  canvas.add(welcome);
+  canvas.requestRenderAll();
+  saveState();
+})();

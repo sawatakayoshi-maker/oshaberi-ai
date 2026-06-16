@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canva Studio — デザイン & AIプロンプト生成ツール</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca'
+            }
+          },
+          fontFamily: {
+            sans: ['"Zen Kaku Gothic New"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Fabric.js (canvas engine: drag / resize / delete / export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-slate-100 text-slate-800 font-sans h-screen overflow-hidden">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm z-20 relative">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-fuchsia-500 grid place-items-center text-white font-black">C</div>
+      <h1 class="font-black text-lg tracking-tight">Canva <span class="text-brand-600">Studio</span></h1>
+      <span class="ml-2 text-xs text-slate-400 hidden sm:inline">SNSバナーデザイン & AIプロンプト生成</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="undoBtn" class="px-3 py-1.5 text-sm rounded-lg hover:bg-slate-100 text-slate-600" title="元に戻す">↶ 戻す</button>
+      <button id="clearBtn" class="px-3 py-1.5 text-sm rounded-lg hover:bg-rose-50 text-rose-600">全消去</button>
+      <button id="downloadBtn" class="px-4 py-1.5 text-sm font-bold rounded-lg bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white shadow hover:shadow-lg hover:brightness-110 transition flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PNGダウンロード
+      </button>
+    </div>
+  </header>
+
+  <div class="flex h-[calc(100vh-3.5rem)]">
+
+    <!-- ===================== LEFT SIDEBAR ===================== -->
+    <aside class="w-[380px] min-w-[380px] bg-white border-r border-slate-200 flex flex-col">
+
+      <!-- Tab switch -->
+      <div class="flex p-2 gap-1 border-b border-slate-100">
+        <button data-tab="design" class="tab-btn flex-1 py-2 rounded-lg text-sm font-bold transition bg-brand-600 text-white">🎨 素材・テキスト</button>
+        <button data-tab="ai" class="tab-btn flex-1 py-2 rounded-lg text-sm font-bold transition text-slate-500 hover:bg-slate-100">✨ AIプロンプト</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-5 sidebar-scroll">
+
+        <!-- ============ DESIGN PANEL ============ -->
+        <section id="tab-design" class="space-y-5">
+
+          <!-- Text -->
+          <div class="panel-card">
+            <h2 class="panel-title">テキストを追加</h2>
+            <button id="addTextBtn" class="w-full btn-primary">＋ テキストを追加</button>
+            <p class="text-xs text-slate-400 mt-2">追加後、文字をダブルクリックで編集できます。</p>
+          </div>
+
+          <!-- Shapes -->
+          <div class="panel-card">
+            <h2 class="panel-title">図形・素材を追加</h2>
+            <div class="grid grid-cols-4 gap-2">
+              <button class="shape-btn" data-shape="rect" title="四角形"><div class="w-7 h-7 bg-brand-500 rounded-sm"></div></button>
+              <button class="shape-btn" data-shape="circle" title="円"><div class="w-7 h-7 bg-fuchsia-500 rounded-full"></div></button>
+              <button class="shape-btn" data-shape="triangle" title="三角形"><div class="tri"></div></button>
+              <button class="shape-btn" data-shape="star" title="星型"><span class="text-2xl leading-none text-amber-400">★</span></button>
+              <button class="shape-btn" data-shape="line" title="直線"><div class="w-7 h-1 bg-slate-700 rounded"></div></button>
+              <button class="shape-btn" data-shape="heart" title="ハート"><span class="text-2xl leading-none text-rose-500">♥</span></button>
+              <button class="shape-btn" data-shape="roundrect" title="角丸四角"><div class="w-7 h-7 bg-emerald-500 rounded-lg"></div></button>
+              <button class="shape-btn" data-shape="ellipse" title="楕円"><div class="w-7 h-5 bg-sky-500 rounded-full"></div></button>
+            </div>
+          </div>
+
+          <!-- Background -->
+          <div class="panel-card">
+            <h2 class="panel-title">キャンバスの背景</h2>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button class="bg-swatch" style="background:#ffffff" data-bg="#ffffff"></button>
+              <button class="bg-swatch" style="background:#0f172a" data-bg="#0f172a"></button>
+              <button class="bg-swatch" style="background:#6366f1" data-bg="#6366f1"></button>
+              <button class="bg-swatch" style="background:#ec4899" data-bg="#ec4899"></button>
+              <button class="bg-swatch" style="background:#10b981" data-bg="#10b981"></button>
+              <button class="bg-swatch" style="background:#f59e0b" data-bg="#f59e0b"></button>
+              <button class="bg-swatch" style="background:linear-gradient(135deg,#6366f1,#ec4899)" data-bg="grad1"></button>
+              <button class="bg-swatch" style="background:linear-gradient(135deg,#0ea5e9,#10b981)" data-bg="grad2"></button>
+              <button class="bg-swatch" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" data-bg="grad3"></button>
+            </div>
+            <label class="flex items-center justify-between text-sm text-slate-600">
+              <span>カスタム背景色</span>
+              <input type="color" id="bgColorPicker" value="#ffffff" class="color-input" />
+            </label>
+          </div>
+
+          <!-- Canvas size -->
+          <div class="panel-card">
+            <h2 class="panel-title">キャンバスサイズ</h2>
+            <select id="canvasSize" class="select-input">
+              <option value="1200x630">SNSバナー (1200×630)</option>
+              <option value="1080x1080">Instagram 正方形 (1080×1080)</option>
+              <option value="1080x1920">縦型ストーリー (1080×1920)</option>
+              <option value="1280x720">YouTubeサムネ (1280×720)</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- ============ AI PANEL ============ -->
+        <section id="tab-ai" class="space-y-5 hidden">
+
+          <!-- ① Image prompt maker -->
+          <div class="panel-card border-2 border-brand-100">
+            <h2 class="panel-title flex items-center gap-2">🪄 神イラスト・画像生成プロンプト</h2>
+            <p class="text-xs text-slate-400 mb-3">ChatGPT(DALL·E 3)やGeminiに貼るだけで高品質画像が出る「呪文」を生成します。</p>
+
+            <label class="field-label">作りたいもののイメージ</label>
+            <input id="imgSubject" type="text" class="text-input" placeholder="例：サイバーパンクな猫、カフェでパソコンを開く女性" />
+
+            <label class="field-label mt-3">画像のタッチ</label>
+            <select id="imgStyle" class="select-input"></select>
+
+            <label class="field-label mt-3">雰囲気</label>
+            <select id="imgMood" class="select-input"></select>
+
+            <button id="genImgPrompt" class="w-full btn-primary mt-4">⚡ プロンプトを生成</button>
+
+            <div class="relative mt-3">
+              <textarea id="imgPromptOut" rows="8" readonly class="prompt-output" placeholder="ここに生成された画像プロンプトが表示されます…"></textarea>
+              <button class="copy-btn" data-target="imgPromptOut">コピー</button>
+            </div>
+          </div>
+
+          <!-- ② Short video script maker -->
+          <div class="panel-card border-2 border-fuchsia-100">
+            <h2 class="panel-title flex items-center gap-2">🎬 バズる縦型ショート動画構成プロンプト</h2>
+            <p class="text-xs text-slate-400 mb-3">YouTubeショート/TikTokで伸びる台本をAIに書かせる最強の指示文を生成します。</p>
+
+            <label class="field-label">動画のテーマ・題材</label>
+            <input id="vidTheme" type="text" class="text-input" placeholder="例：禁煙を2ヶ月続けると起こる体の変化、初心者向けAI仕事術" />
+
+            <label class="field-label mt-3">ターゲット</label>
+            <input id="vidTarget" type="text" class="text-input" placeholder="例：40代のサラリーマン、副業を始めたい人" />
+
+            <label class="field-label mt-3">動画のトーン</label>
+            <select id="vidTone" class="select-input"></select>
+
+            <button id="genVidPrompt" class="w-full btn-secondary mt-4">⚡ プロンプトを生成</button>
+
+            <div class="relative mt-3">
+              <textarea id="vidPromptOut" rows="8" readonly class="prompt-output" placeholder="ここに生成された動画構成プロンプトが表示されます…"></textarea>
+              <button class="copy-btn" data-target="vidPromptOut">コピー</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- ===================== CENTER: CANVAS AREA ===================== -->
+    <main class="flex-1 flex flex-col items-center justify-center overflow-auto bg-slate-200/70 relative p-8">
+      <div id="canvasWrap" class="shadow-2xl rounded-sm bg-white">
+        <canvas id="designCanvas"></canvas>
+      </div>
+      <p class="absolute bottom-4 text-xs text-slate-400">要素をクリックで選択 ／ 角をドラッグでサイズ変更 ／ <kbd class="kbd">Delete</kbd> で削除</p>
+    </main>
+
+    <!-- ===================== RIGHT: PROPERTY PANEL ===================== -->
+    <aside id="propPanel" class="w-[280px] min-w-[280px] bg-white border-l border-slate-200 p-4 space-y-5 overflow-y-auto hidden">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-slate-700">プロパティ</h2>
+        <button id="deleteObjBtn" class="text-rose-600 text-sm hover:bg-rose-50 px-2 py-1 rounded">🗑 削除</button>
+      </div>
+
+      <!-- Fill color (all) -->
+      <div id="propFill" class="space-y-1">
+        <label class="field-label">塗りの色</label>
+        <input type="color" id="objColor" class="color-input w-full h-10" />
+      </div>
+
+      <!-- Text-only -->
+      <div id="propText" class="space-y-3 hidden">
+        <div>
+          <label class="field-label">フォントサイズ <span id="fontSizeVal" class="text-brand-600 font-bold"></span></label>
+          <input type="range" id="fontSize" min="8" max="200" value="40" class="w-full accent-brand-600" />
+        </div>
+        <div class="flex gap-2">
+          <button id="boldBtn" class="prop-toggle flex-1 font-black">B</button>
+          <button id="italicBtn" class="prop-toggle flex-1 italic">I</button>
+          <button id="underlineBtn" class="prop-toggle flex-1 underline">U</button>
+        </div>
+        <div class="flex gap-2">
+          <button data-align="left" class="prop-toggle align-btn flex-1">左</button>
+          <button data-align="center" class="prop-toggle align-btn flex-1">中</button>
+          <button data-align="right" class="prop-toggle align-btn flex-1">右</button>
+        </div>
+        <div>
+          <label class="field-label">フォント</label>
+          <select id="fontFamily" class="select-input">
+            <option value='"Zen Kaku Gothic New", sans-serif'>Zen Kaku Gothic</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value='"Times New Roman", serif'>Times New Roman</option>
+            <option value='"Courier New", monospace'>Courier New</option>
+            <option value="Impact, sans-serif">Impact</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Opacity (all) -->
+      <div>
+        <label class="field-label">不透明度 <span id="opacityVal" class="text-brand-600 font-bold">100%</span></label>
+        <input type="range" id="opacity" min="0" max="100" value="100" class="w-full accent-brand-600" />
+      </div>
+
+      <!-- Layer -->
+      <div>
+        <label class="field-label">重ね順</label>
+        <div class="flex gap-2">
+          <button id="bringFront" class="prop-toggle flex-1 text-xs">前面へ</button>
+          <button id="sendBack" class="prop-toggle flex-1 text-xs">背面へ</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">コピーしました！</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
