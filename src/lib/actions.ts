@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
+import { getUserModel } from "@/lib/user-settings";
+import { isAllowedModel } from "@/lib/models";
 import type { ItemKind } from "@/lib/types";
 
 /** ログインユーザ ID を取得（未認証は /login へ） */
@@ -64,26 +66,56 @@ export async function deleteItem(formData: FormData) {
   revalidatePath("/", "layout");
 }
 
-/** 本文を AI 要約して保存 */
+/** 本文を AI 要約して保存（ユーザー選択モデルを使用） */
 export async function summarizeItem(formData: FormData) {
-  const { supabase } = await requireUser();
+  const { supabase, userId } = await requireUser();
   const id = formData.get("id") as string;
   const { data: item } = await supabase.from("items").select("body").eq("id", id).single();
   if (!item?.body) return;
-  const summary = await getAIProvider().summarize(item.body);
+  const model = await getUserModel(supabase, userId);
+  const summary = await getAIProvider().summarize(item.body, model);
   await supabase.from("items").update({ ai_summary: summary }).eq("id", id);
   revalidatePath("/", "layout");
 }
 
-/** アイデアを 4 軸スコアリングして保存 */
+/** アイデアを 4 軸スコアリングして保存（ユーザー選択モデルを使用） */
 export async function scoreIdea(formData: FormData) {
-  const { supabase } = await requireUser();
+  const { supabase, userId } = await requireUser();
   const id = formData.get("id") as string;
   const { data: item } = await supabase.from("items").select("title, body").eq("id", id).single();
   if (!item) return;
-  const scores = await getAIProvider().scoreIdea({ title: item.title, body: item.body });
+  const model = await getUserModel(supabase, userId);
+  const scores = await getAIProvider().scoreIdea({ title: item.title, body: item.body }, model);
   await supabase.from("items").update({ scores }).eq("id", id);
   revalidatePath("/", "layout");
+}
+
+/** AI モデルの選択を保存（機能B / profiles.settings.ai_model） */
+export async function updateAiModel(formData: FormData) {
+  const { supabase, userId } = await requireUser();
+  const model = formData.get("model") as string;
+  if (!isAllowedModel(model)) return;
+  const { data } = await supabase.from("profiles").select("settings").eq("id", userId).single();
+  const settings = { ...((data?.settings as object) ?? {}), ai_model: model };
+  await supabase.from("profiles").update({ settings }).eq("id", userId);
+  revalidatePath("/", "layout");
+}
+
+/** 生成したレポートをメモとして保存（機能C） */
+export async function saveReport(formData: FormData) {
+  const { supabase, userId } = await requireUser();
+  const title = ((formData.get("title") as string) || "").trim() || "レポート";
+  const body = formData.get("body") as string;
+  if (!body?.trim()) return;
+  await supabase.from("items").insert({
+    user_id: userId,
+    kind: "memo",
+    title: `レポート: ${title}`,
+    body,
+    source: "manual",
+    metadata: { type: "report" },
+  });
+  revalidatePath("/memos");
 }
 
 // ─────────────── projects ───────────────

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
+import { getUserModel } from "@/lib/user-settings";
 import type { Item } from "@/lib/types";
 
 /** AI秘書: 自然言語検索 → 関連情報を集めて回答生成 */
@@ -47,7 +48,8 @@ export async function POST(req: Request) {
 
   let answer: string;
   try {
-    answer = await getAIProvider().answer(q.trim(), context);
+    const model = await getUserModel(supabase, user.id);
+    answer = await getAIProvider().answer(q.trim(), context, model);
   } catch (e) {
     console.error("assistant answer failed:", e);
     answer = "関連情報は見つかりましたが、回答生成に失敗しました。下記をご確認ください。";

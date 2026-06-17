@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-8 shadow-sm">
-        <h1 className="text-xl font-semibold">Personal Brain OS</h1>
+        <h1 className="text-xl font-semibold">パーソナル ブレイン</h1>
         <p className="mt-1 text-sm text-ink-muted">
           メールにログインリンクを送信します。
         </p>

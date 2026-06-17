@@ -11,14 +11,16 @@ const NAV: { href: string; label: string; icon: string }[] = [
   { href: "/graph", label: "グラフ", icon: "⌗" },
   { href: "/timeline", label: "タイムライン", icon: "↗" },
   { href: "/assistant", label: "AI秘書", icon: "✺" },
+  { href: "/talk", label: "お話", icon: "💬" },
+  { href: "/report", label: "レポート生成", icon: "▦" },
 ];
 
 export function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-surface p-3 md:flex">
       <div className="px-2 py-3">
-        <p className="text-sm font-semibold">Personal Brain OS</p>
-        <p className="text-xs text-ink-muted">第二の脳</p>
+        <p className="text-sm font-semibold">パーソナル ブレイン</p>
+        <p className="text-xs text-ink-muted">Personal Brain · 第二の脳</p>
       </div>
       <nav className="mt-2 flex flex-col gap-0.5">
         {NAV.map((n) => (

@@ -64,3 +64,9 @@ export interface CaptureClassification {
   summary: string | null;
   confidence: number; // 0..1
 }
+
+/** お話（会話）の1ターン */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}

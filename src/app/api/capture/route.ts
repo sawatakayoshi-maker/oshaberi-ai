@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
 import { normalizeClassification } from "@/lib/ai/provider";
+import { getUserModel } from "@/lib/user-settings";
 import type { CaptureClassification } from "@/lib/types";
 
 /** "明日"/"2026-07-01" 等のヒントを timestamptz に粗く変換（MVP） */
@@ -34,7 +35,8 @@ export async function POST(req: Request) {
   // 1. AI 分類（失敗時は memo にフォールバックして取りこぼしを防ぐ）
   let cls: CaptureClassification;
   try {
-    cls = await getAIProvider().classifyCapture(text.trim());
+    const model = await getUserModel(supabase, user.id);
+    cls = await getAIProvider().classifyCapture(text.trim(), model);
   } catch (e) {
     console.error("classify failed:", e);
     cls = normalizeClassification({ title: text.trim().slice(0, 60), kind: "memo" });

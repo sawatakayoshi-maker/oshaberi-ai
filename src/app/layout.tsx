@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Personal Brain OS",
-  description: "あなた専用の第二の脳 — メモ・タスク・アイデア・知識の統合管理",
+  title: "パーソナル ブレイン (Personal Brain)",
+  description: "あなた専用の第二の脳 — メモ・タスク・アイデア・知識・お話の統合管理",
 };
 
 export default function RootLayout({

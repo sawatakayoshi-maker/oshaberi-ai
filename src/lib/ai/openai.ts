@@ -2,14 +2,22 @@ import OpenAI from "openai";
 import type { CaptureClassification, IdeaScores } from "@/lib/types";
 import {
   type AIProvider,
+  type ChatInput,
+  type ReportInput,
   CLASSIFY_SYSTEM,
   CLASSIFY_SCHEMA,
+  TALK_SYSTEM,
+  REPORT_SYSTEM,
   normalizeClassification,
 } from "./provider";
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/** OpenAI 実装 */
+/**
+ * OpenAI 実装。
+ * 機能B のモデル選択は Claude 用の許可リスト（sonnet/opus）が対象のため、
+ * OpenAI 側では `model` 引数を無視し OPENAI_MODEL を使用する。
+ */
 export class OpenAIProvider implements AIProvider {
   private client: OpenAI;
 
@@ -29,10 +37,7 @@ export class OpenAIProvider implements AIProvider {
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: { name, schema, strict: false },
-      },
+      response_format: { type: "json_schema", json_schema: { name, schema, strict: false } },
     });
     return JSON.parse(res.choices[0]?.message?.content || "{}") as T;
   }
@@ -99,5 +104,28 @@ export class OpenAIProvider implements AIProvider {
       "あなたはユーザーのセカンドブレインの秘書です。提供された関連情報のみを根拠に、日本語で簡潔に回答してください。",
       `# 質問\n${question}\n\n# 関連情報\n${context}`
     );
+  }
+
+  async chat({ system, history }: ChatInput): Promise<string> {
+    const res = await this.client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: system ?? TALK_SYSTEM },
+        ...history.map((h) => ({ role: h.role, content: h.content })),
+      ],
+    });
+    return (res.choices[0]?.message?.content || "").trim();
+  }
+
+  async report({ prompt, maxTokens }: ReportInput): Promise<string> {
+    const res = await this.client.chat.completions.create({
+      model: MODEL,
+      max_tokens: maxTokens ?? 4096,
+      messages: [
+        { role: "system", content: REPORT_SYSTEM },
+        { role: "user", content: prompt },
+      ],
+    });
+    return (res.choices[0]?.message?.content || "").trim();
   }
 }
