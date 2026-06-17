@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  @apply bg-surface-sunken text-ink antialiased;
+}
+
+/* 細いスクロールバー（Linear/Notion 風） */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d8dc transparent;
+}
