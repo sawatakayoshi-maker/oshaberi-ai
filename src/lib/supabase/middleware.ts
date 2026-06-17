@@ -1,5 +1,7 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+
+type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /** セッションを更新し、未認証アクセスを /login へ誘導する */
 export async function updateSession(request: NextRequest) {
@@ -13,7 +15,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );

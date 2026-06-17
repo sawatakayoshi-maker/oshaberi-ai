@@ -17,7 +17,12 @@ export class OpenAIProvider implements AIProvider {
     this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  private async json<T>(system: string, user: string, schema: object, name: string): Promise<T> {
+  private async json<T>(
+    system: string,
+    user: string,
+    schema: Record<string, unknown>,
+    name: string
+  ): Promise<T> {
     const res = await this.client.chat.completions.create({
       model: MODEL,
       messages: [
@@ -44,7 +49,12 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async classifyCapture(text: string): Promise<CaptureClassification> {
-    const raw = await this.json(CLASSIFY_SYSTEM, text, CLASSIFY_SCHEMA, "classification");
+    const raw = await this.json(
+      CLASSIFY_SYSTEM,
+      text,
+      CLASSIFY_SCHEMA as unknown as Record<string, unknown>,
+      "classification"
+    );
     return normalizeClassification(raw);
   }
 
