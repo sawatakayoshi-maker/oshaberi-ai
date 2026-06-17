@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChatTurn } from "@/lib/types";
+import { AvatarView } from "@/components/avatar";
+import { AVATARS, findAvatar, type AvatarState } from "@/lib/avatars";
 
 // ─── Web Speech API（型は最小限で宣言）───
 type RecognitionLike = {
@@ -29,14 +31,6 @@ interface VoicevoxCfg {
   speaker: number;
 }
 
-// アバター（キャラクター）。選ぶと AI がこの名前で名乗る。
-const AVATARS = [
-  { id: "ai_f", name: "AI", face: "👩", desc: "女性AI" },
-  { id: "minato", name: "みなと", face: "👨", desc: "男性" },
-  { id: "asuka", name: "あすか", face: "🎨", desc: "女性イラスト" },
-] as const;
-type AvatarId = (typeof AVATARS)[number]["id"];
-
 const VV_KEY = "pb:voicevox";
 const TTS_KEY = "pb:tts";
 const SLOW_KEY = "pb:slow";
@@ -55,8 +49,9 @@ export function Talk() {
   const [standby, setStandby] = useState(false); // 待受（連続音声）
   const [showVv, setShowVv] = useState(false);
   const [vv, setVv] = useState<VoicevoxCfg>({ enabled: true, url: "http://127.0.0.1:50021", speaker: 3 });
-  const [avatarId, setAvatarId] = useState<AvatarId>("ai_f");
+  const [avatarId, setAvatarId] = useState<string>("ai_f");
   const [fontIdx, setFontIdx] = useState(0);
+  const [speaking, setSpeaking] = useState(false); // 発話中（口パク用）
 
   const recRef = useRef<RecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -64,8 +59,11 @@ export function Talk() {
   const standbyRef = useRef(false);
   const busyRef = useRef(false);
   const restored = useRef(false);
+  const pulseRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
+  const avatar = findAvatar(avatarId);
+  // 状態に応じた表情：応答待ち=考え中、発話中=speaking、それ以外=待機
+  const avatarState: AvatarState = busy ? "thinking" : speaking ? "speaking" : "idle";
 
   // 設定・記憶の復元
   useEffect(() => {
@@ -76,7 +74,7 @@ export function Talk() {
       if (savedTts !== null) setTts(savedTts === "1");
       setSlow(localStorage.getItem(SLOW_KEY) === "1");
       const av = localStorage.getItem(AV_KEY);
-      if (av && AVATARS.some((a) => a.id === av)) setAvatarId(av as AvatarId);
+      if (av) setAvatarId(av);
       const hist = localStorage.getItem(MSG_KEY);
       if (hist) setMessages(JSON.parse(hist));
     } catch {
@@ -138,11 +136,16 @@ export function Talk() {
     return slow ? 0.85 : 1;
   }
   function browserSpeak(text: string) {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      pulseSpeaking(text);
+      return;
+    }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
     u.rate = speechRate();
+    u.onstart = () => setSpeaking(true);
+    u.onend = () => setSpeaking(false);
     window.speechSynthesis.speak(u);
   }
   async function voicevoxSpeak(text: string) {
@@ -163,11 +166,27 @@ export function Talk() {
     audioRef.current?.pause();
     const a = new Audio(url);
     audioRef.current = a;
-    a.onended = () => URL.revokeObjectURL(url);
+    a.onplay = () => setSpeaking(true);
+    const stop = () => {
+      setSpeaking(false);
+      URL.revokeObjectURL(url);
+    };
+    a.onended = stop;
+    a.onerror = stop;
     await a.play();
   }
+  // 声オフ環境でも口パクだけは動かす（文字数からおおよその発話時間を推定）
+  function pulseSpeaking(text: string) {
+    setSpeaking(true);
+    clearTimeout(pulseRef.current);
+    pulseRef.current = setTimeout(() => setSpeaking(false), Math.min(8000, 1000 + text.length * 60));
+  }
   function speak(text: string) {
-    if (!tts || !text) return;
+    if (!text) return;
+    if (!tts) {
+      pulseSpeaking(text); // 声オフでもアバターは話す
+      return;
+    }
     if (vv.enabled) voicevoxSpeak(text).catch(() => browserSpeak(text));
     else browserSpeak(text);
   }
@@ -276,18 +295,16 @@ export function Talk() {
     <div className="flex flex-col gap-4">
       {/* アバター選択 */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-xl">
-          {avatar.face}
-        </div>
+        <AvatarView avatar={avatar} state={avatarState} size={40} />
         <select
           value={avatarId}
-          onChange={(e) => setAvatarId(e.target.value as AvatarId)}
+          onChange={(e) => setAvatarId(e.target.value)}
           className="rounded-lg border border-line px-2 py-1.5 text-sm"
           title="アバター（キャラクター）を選ぶ"
         >
           {AVATARS.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.face} {a.name}（{a.desc}）
+              {a.name}（{a.desc}）
             </option>
           ))}
         </select>
@@ -358,8 +375,8 @@ export function Talk() {
       {/* 会話 */}
       <div className="min-h-[320px] rounded-2xl border border-line bg-surface p-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-3xl">{avatar.face}</div>
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+            <AvatarView avatar={avatar} state={avatarState} size={96} />
             <p className="text-sm text-ink-muted">「{avatar.name}」です。気軽に話しかけてください。聞き役になります。</p>
           </div>
         ) : (
