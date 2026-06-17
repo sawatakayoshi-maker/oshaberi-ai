@@ -52,6 +52,10 @@ export function Talk() {
   const [avatarId, setAvatarId] = useState<string>("ai_f");
   const [fontIdx, setFontIdx] = useState(0);
   const [speaking, setSpeaking] = useState(false); // 発話中（口パク用）
+  // VOICEVOX 話者一覧（名前で選択）
+  const [vvSpeakers, setVvSpeakers] = useState<{ label: string; id: number }[]>([]);
+  const [vvLoading, setVvLoading] = useState(false);
+  const [vvError, setVvError] = useState<string | null>(null);
 
   const recRef = useRef<RecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -189,6 +193,28 @@ export function Talk() {
     }
     if (vv.enabled) voicevoxSpeak(text).catch(() => browserSpeak(text));
     else browserSpeak(text);
+  }
+
+  // VOICEVOX エンジンから話者・スタイル一覧を取得（男性話者も選択可能に）
+  async function loadVvSpeakers() {
+    setVvLoading(true);
+    setVvError(null);
+    try {
+      const base = vv.url.replace(/\/+$/, "");
+      const res = await fetch(`${base}/speakers`);
+      if (!res.ok) throw new Error("speakers");
+      const data = (await res.json()) as { name: string; styles: { name: string; id: number }[] }[];
+      const opts = data.flatMap((sp) =>
+        sp.styles.map((st) => ({ label: `${sp.name}（${st.name}）`, id: st.id }))
+      );
+      setVvSpeakers(opts);
+      if (opts.length === 0) setVvError("話者が取得できませんでした。");
+    } catch {
+      setVvSpeakers([]);
+      setVvError("VOICEVOX エンジンに接続できませんでした。起動中か URL をご確認ください（未起動時は端末の声になります）。");
+    } finally {
+      setVvLoading(false);
+    }
   }
 
   // ── 送信 ──
@@ -358,16 +384,50 @@ export function Talk() {
               placeholder="http://127.0.0.1:50021"
               className="min-w-0 flex-1 rounded-lg border border-line px-2 py-1.5"
             />
-            <input
-              type="number"
-              value={vv.speaker}
-              onChange={(e) => setVv({ ...vv, speaker: Number(e.target.value) })}
-              placeholder="話者ID"
-              className="w-24 rounded-lg border border-line px-2 py-1.5"
-            />
+            <button
+              type="button"
+              onClick={loadVvSpeakers}
+              disabled={vvLoading}
+              className="rounded-lg border border-line px-3 py-1.5 text-xs hover:bg-surface-sunken disabled:opacity-50"
+            >
+              {vvLoading ? "取得中…" : "話者一覧を取得"}
+            </button>
           </div>
+
+          {/* 名前で話者・スタイルを選択（男性の声も） */}
+          <div className="flex flex-wrap items-center gap-2">
+            {vvSpeakers.length > 0 ? (
+              <select
+                value={vv.speaker}
+                onChange={(e) => setVv({ ...vv, speaker: Number(e.target.value) })}
+                className="min-w-0 flex-1 rounded-lg border border-line px-2 py-1.5"
+              >
+                {/* 現在のIDが一覧に無い場合に備えて先頭に保持 */}
+                {!vvSpeakers.some((s) => s.id === vv.speaker) && (
+                  <option value={vv.speaker}>現在のID: {vv.speaker}</option>
+                )}
+                {vvSpeakers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}（ID:{s.id}）
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <label className="flex items-center gap-2 text-xs text-ink-muted">
+                話者ID
+                <input
+                  type="number"
+                  value={vv.speaker}
+                  onChange={(e) => setVv({ ...vv, speaker: Number(e.target.value) })}
+                  className="w-24 rounded-lg border border-line px-2 py-1.5"
+                />
+              </label>
+            )}
+          </div>
+          {vvError && <p className="text-xs text-red-600">{vvError}</p>}
           <p className="text-xs text-ink-muted">
-            VOICEVOX エンジンをローカル起動している場合のみ高品質な声で話します。未起動時は端末の声になります（VOICEVOX 使用時はクレジット表示が必要）。
+            「話者一覧を取得」で VOICEVOX エンジンの話者・スタイルを名前で選べます（青山龍星 などの男性話者も）。
+            ローカル起動時のみ高品質な声で話し、未起動時は端末の声になります（VOICEVOX 使用時はクレジット表示が必要）。
           </p>
         </div>
       )}
