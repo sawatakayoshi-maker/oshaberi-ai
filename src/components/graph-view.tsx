@@ -66,7 +66,7 @@ export function GraphView({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEd
           const b = pos.get(arr[j])!;
           let dx = a.x - b.x;
           let dy = a.y - b.y;
-          let d2 = dx * dx + dy * dy || 0.01;
+          const d2 = dx * dx + dy * dy || 0.01;
           const f = 1800 / d2;
           const d = Math.sqrt(d2);
           dx /= d;

@@ -28,31 +28,64 @@ interface VoicevoxCfg {
   url: string;
   speaker: number;
 }
+
+// アバター（キャラクター）。選ぶと AI がこの名前で名乗る。
+const AVATARS = [
+  { id: "ai_f", name: "AI", face: "👩", desc: "女性AI" },
+  { id: "minato", name: "みなと", face: "👨", desc: "男性" },
+  { id: "asuka", name: "あすか", face: "🎨", desc: "女性イラスト" },
+] as const;
+type AvatarId = (typeof AVATARS)[number]["id"];
+
 const VV_KEY = "pb:voicevox";
 const TTS_KEY = "pb:tts";
+const SLOW_KEY = "pb:slow";
+const AV_KEY = "pb:avatar";
+const MSG_KEY = "pb:talk:history";
+const FONT_SIZES = ["text-sm", "text-base", "text-lg"];
+const FONT_LABELS = ["文字:標準", "文字:大", "文字:特大"];
 
 export function Talk() {
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [tts, setTts] = useState(false);
+  const [tts, setTts] = useState(true); // 読み上げ既定オン
+  const [slow, setSlow] = useState(false); // ゆっくり
   const [listening, setListening] = useState(false);
+  const [standby, setStandby] = useState(false); // 待受（連続音声）
   const [showVv, setShowVv] = useState(false);
-  const [vv, setVv] = useState<VoicevoxCfg>({ enabled: false, url: "http://127.0.0.1:50021", speaker: 0 });
+  const [vv, setVv] = useState<VoicevoxCfg>({ enabled: true, url: "http://127.0.0.1:50021", speaker: 3 });
+  const [avatarId, setAvatarId] = useState<AvatarId>("ai_f");
+  const [fontIdx, setFontIdx] = useState(0);
+
   const recRef = useRef<RecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const standbyRef = useRef(false);
+  const busyRef = useRef(false);
+  const restored = useRef(false);
 
-  // 設定の復元
+  const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
+
+  // 設定・記憶の復元
   useEffect(() => {
     try {
       const v = localStorage.getItem(VV_KEY);
       if (v) setVv(JSON.parse(v));
-      setTts(localStorage.getItem(TTS_KEY) === "1");
+      const savedTts = localStorage.getItem(TTS_KEY);
+      if (savedTts !== null) setTts(savedTts === "1");
+      setSlow(localStorage.getItem(SLOW_KEY) === "1");
+      const av = localStorage.getItem(AV_KEY);
+      if (av && AVATARS.some((a) => a.id === av)) setAvatarId(av as AvatarId);
+      const hist = localStorage.getItem(MSG_KEY);
+      if (hist) setMessages(JSON.parse(hist));
     } catch {
       /* noop */
     }
+    restored.current = true;
   }, []);
+
+  // 設定の保存
   useEffect(() => {
     try {
       localStorage.setItem(VV_KEY, JSON.stringify(vv));
@@ -67,17 +100,49 @@ export function Talk() {
       /* noop */
     }
   }, [tts]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(SLOW_KEY, slow ? "1" : "0");
+    } catch {
+      /* noop */
+    }
+  }, [slow]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(AV_KEY, avatarId);
+    } catch {
+      /* noop */
+    }
+  }, [avatarId]);
+
+  // 記憶（会話履歴）の保存。直近40件まで。
+  useEffect(() => {
+    if (!restored.current) return;
+    try {
+      localStorage.setItem(MSG_KEY, JSON.stringify(messages.slice(-40)));
+    } catch {
+      /* noop */
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    standbyRef.current = standby;
+  }, [standby]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
 
   // ── 読み上げ ──
+  function speechRate() {
+    return slow ? 0.85 : 1;
+  }
   function browserSpeak(text: string) {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "ja-JP";
+    u.rate = speechRate();
     window.speechSynthesis.speak(u);
   }
   async function voicevoxSpeak(text: string) {
@@ -87,6 +152,7 @@ export function Talk() {
     });
     if (!q.ok) throw new Error("audio_query");
     const query = await q.json();
+    query.speedScale = speechRate(); // 「ゆっくり」を VOICEVOX 話速にも反映
     const s = await fetch(`${base}/synthesis?speaker=${vv.speaker}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +168,6 @@ export function Talk() {
   }
   function speak(text: string) {
     if (!tts || !text) return;
-    // VOICEVOX が使えない環境（通信遮断など）は静かに端末の声へフォールバック
     if (vv.enabled) voicevoxSpeak(text).catch(() => browserSpeak(text));
     else browserSpeak(text);
   }
@@ -110,16 +175,17 @@ export function Talk() {
   // ── 送信 ──
   async function send(text: string) {
     const value = text.trim();
-    if (!value || busy) return;
+    if (!value || busyRef.current) return;
     const next: ChatTurn[] = [...messages, { role: "user", content: value }];
     setMessages(next);
     setInput("");
     setBusy(true);
+    busyRef.current = true;
     try {
       const res = await fetch("/api/talk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, avatarName: avatar.name }),
       });
       const data = await res.json();
       if (res.ok && data.reply) {
@@ -130,18 +196,19 @@ export function Talk() {
       }
     } finally {
       setBusy(false);
+      busyRef.current = false;
+      // 待受モードなら、応答後に再び聞き取りを開始
+      if (standbyRef.current) setTimeout(() => standbyRef.current && startListening(), 900);
     }
   }
 
   // ── 音声入力 ──
-  function toggleMic() {
-    if (listening) {
-      recRef.current?.stop();
-      return;
-    }
+  function startListening() {
+    if (listening || recRef.current) return;
     const Ctor = getRecognitionCtor();
     if (!Ctor) {
       alert("このブラウザは音声入力に対応していません。");
+      setStandby(false);
       return;
     }
     const rec = new Ctor();
@@ -153,15 +220,80 @@ export function Talk() {
       for (let i = 0; i < e.results.length; i++) s += e.results[i][0].transcript;
       if (s.trim()) send(s);
     };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
+    rec.onend = () => {
+      setListening(false);
+      recRef.current = null;
+      // 待受中で、何も送信していない（無音）なら聞き取りを継続
+      if (standbyRef.current && !busyRef.current) {
+        setTimeout(() => standbyRef.current && startListening(), 400);
+      }
+    };
+    rec.onerror = () => {
+      setListening(false);
+      recRef.current = null;
+    };
     recRef.current = rec;
     setListening(true);
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setListening(false);
+      recRef.current = null;
+    }
+  }
+  function stopListening() {
+    try {
+      recRef.current?.stop();
+    } catch {
+      /* noop */
+    }
+    recRef.current = null;
+    setListening(false);
+  }
+  function toggleMic() {
+    if (listening) stopListening();
+    else startListening();
+  }
+  function toggleStandby() {
+    const nextOn = !standby;
+    setStandby(nextOn);
+    standbyRef.current = nextOn;
+    if (nextOn) startListening();
+    else stopListening();
+  }
+
+  function clearMemory() {
+    if (!confirm("これまでの会話の記憶を消します。よろしいですか?")) return;
+    setMessages([]);
+    try {
+      localStorage.removeItem(MSG_KEY);
+    } catch {
+      /* noop */
+    }
   }
 
   return (
     <div className="flex flex-col gap-4">
+      {/* アバター選択 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-xl">
+          {avatar.face}
+        </div>
+        <select
+          value={avatarId}
+          onChange={(e) => setAvatarId(e.target.value as AvatarId)}
+          className="rounded-lg border border-line px-2 py-1.5 text-sm"
+          title="アバター（キャラクター）を選ぶ"
+        >
+          {AVATARS.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.face} {a.name}（{a.desc}）
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-ink-muted">前回の続きも覚えています</span>
+      </div>
+
       {/* ツールバー */}
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -170,12 +302,28 @@ export function Talk() {
         >
           {tts ? "🔊 声オン" : "🔈 声オフ"}
         </button>
+        <button
+          onClick={toggleStandby}
+          className={`rounded-full border px-3 py-1.5 text-sm ${standby ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
+          title="待受モード：話しかけると自動で聞き取り→返答"
+        >
+          {standby ? "🎧 待受オン" : "🎧 待受オフ"}
+        </button>
+        <button
+          onClick={() => setSlow(!slow)}
+          className={`rounded-full border px-3 py-1.5 text-sm ${slow ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
+        >
+          {slow ? "🐢 ゆっくり中" : "🐢 ゆっくり"}
+        </button>
+        <button onClick={() => setFontIdx((fontIdx + 1) % FONT_SIZES.length)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
+          {FONT_LABELS[fontIdx]}
+        </button>
         <button onClick={() => setShowVv(!showVv)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
           ⚙️ 声設定
         </button>
         {messages.length > 0 && (
-          <button onClick={() => setMessages([])} className="ml-auto rounded-full border border-line px-3 py-1.5 text-sm text-ink-muted">
-            会話をクリア
+          <button onClick={clearMemory} className="ml-auto rounded-full border border-line px-3 py-1.5 text-sm text-ink-muted">
+            記憶を消す
           </button>
         )}
       </div>
@@ -211,15 +359,15 @@ export function Talk() {
       <div className="min-h-[320px] rounded-2xl border border-line bg-surface p-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-2xl">🙂</div>
-            <p className="text-sm text-ink-muted">気軽に話しかけてみてください。聞き役になります。</p>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-3xl">{avatar.face}</div>
+            <p className="text-sm text-ink-muted">「{avatar.name}」です。気軽に話しかけてください。聞き役になります。</p>
           </div>
         ) : (
           <ul className="space-y-3">
             {messages.map((m, i) => (
               <li key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${
+                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-3 py-2 ${FONT_SIZES[fontIdx]} ${
                     m.role === "user" ? "bg-accent text-white" : "bg-surface-sunken text-ink"
                   }`}
                 >
