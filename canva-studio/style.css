@@ -193,3 +193,25 @@ aside::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
   font-family: ui-monospace, monospace;
 }
 .tab-btn { transition: all .15s ease; }
+
+/* ---------- Drag & drop highlight ---------- */
+#imageDropZone.drag-over {
+  border-color: var(--brand);
+  background: #eef2ff;
+  color: var(--brand);
+}
+main.drag-over::after {
+  content: "ここに画像をドロップ";
+  position: absolute;
+  inset: 16px;
+  border: 3px dashed var(--brand);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--brand);
+  background: rgba(99, 102, 241, 0.08);
+  pointer-events: none;
+  z-index: 5;
+}

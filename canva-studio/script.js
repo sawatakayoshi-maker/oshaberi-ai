@@ -110,6 +110,103 @@
   });
 
   /* ---------------------------------------------------------------------
+     4b. Add images (button + drag & drop)
+  --------------------------------------------------------------------- */
+  // Place an image (from a DataURL) onto the canvas, scaled to fit nicely.
+  function placeImage(dataURL, dropPoint) {
+    fabric.Image.fromURL(dataURL, (img) => {
+      // Scale so the image fits within ~60% of the canvas.
+      const maxW = CANVAS_W * 0.6;
+      const maxH = CANVAS_H * 0.6;
+      const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+      img.set({
+        originX: 'center',
+        originY: 'center',
+        left: dropPoint ? dropPoint.x : CANVAS_W / 2,
+        top: dropPoint ? dropPoint.y : CANVAS_H / 2,
+        scaleX: scale,
+        scaleY: scale,
+      });
+      addAndSelect(img);
+    }, { crossOrigin: 'anonymous' });
+  }
+
+  // Read one File (image) and place it. Returns a Promise.
+  function loadImageFile(file, dropPoint) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => placeImage(e.target.result, dropPoint);
+    reader.readAsDataURL(file);
+  }
+
+  // Button → hidden file input
+  $('addImageBtn').addEventListener('click', () => $('imageInput').click());
+  $('imageInput').addEventListener('change', (e) => {
+    Array.from(e.target.files).forEach((f) => loadImageFile(f));
+    e.target.value = ''; // allow re-selecting the same file
+  });
+
+  // Convert a viewport (clientX/Y) point to canvas coordinates (account zoom).
+  function clientToCanvas(clientX, clientY) {
+    const rect = canvas.upperCanvasEl.getBoundingClientRect();
+    const zoom = canvas.getZoom();
+    return {
+      x: (clientX - rect.left) / zoom,
+      y: (clientY - rect.top) / zoom,
+    };
+  }
+
+  // Drag & drop targets: the canvas area AND the small drop zone in the sidebar.
+  const canvasArea = document.getElementById('canvasWrap').parentElement; // <main>
+  const dropZone = $('imageDropZone');
+
+  function handleDrop(e, dropPoint) {
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    // 1) Files dropped from the OS
+    if (dt.files && dt.files.length) {
+      Array.from(dt.files).forEach((f) => loadImageFile(f, dropPoint));
+      return;
+    }
+    // 2) An image URL dragged from another browser tab
+    const url = dt.getData('text/uri-list') || dt.getData('text/plain');
+    if (url && /^https?:|^data:/.test(url)) placeImage(url, dropPoint);
+  }
+
+  // Canvas area: drop image at the actual drop position.
+  ['dragenter', 'dragover'].forEach((ev) =>
+    canvasArea.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      canvasArea.classList.add('drag-over');
+    })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    canvasArea.addEventListener(ev, () => canvasArea.classList.remove('drag-over'))
+  );
+  canvasArea.addEventListener('drop', (e) =>
+    handleDrop(e, clientToCanvas(e.clientX, e.clientY))
+  );
+
+  // Sidebar drop zone: drop image at canvas center.
+  ['dragenter', 'dragover'].forEach((ev) =>
+    dropZone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      dropZone.classList.add('drag-over');
+    })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'))
+  );
+  dropZone.addEventListener('drop', (e) => handleDrop(e, null));
+
+  // Prevent the browser from navigating away if a file is dropped outside targets.
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => e.preventDefault());
+
+  /* ---------------------------------------------------------------------
      5. Background color
   --------------------------------------------------------------------- */
   function makeGradient(colors) {
