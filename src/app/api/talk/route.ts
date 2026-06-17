@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     messages?: ChatTurn[];
     system?: string;
     avatarName?: string;
+    web?: boolean;
   };
   const messages = Array.isArray(body.messages) ? body.messages : [];
   if (messages.length === 0) {
@@ -39,8 +40,14 @@ export async function POST(req: Request) {
 
   try {
     const model = await getUserModel(supabase, user.id);
-    const reply = await getAIProvider().chat({ system, history, model });
-    return NextResponse.json({ reply });
+    const { reply, action } = await getAIProvider().chat({
+      system,
+      history,
+      model,
+      web: !!body.web,
+      actions: true, // お話はツール実行（確認後）に対応
+    });
+    return NextResponse.json({ reply, action });
   } catch (e) {
     console.error("talk failed:", e);
     return NextResponse.json({ error: "ai failed" }, { status: 502 });

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { CaptureClassification, IdeaScores } from "@/lib/types";
+import type { CaptureClassification, IdeaScores, ChatResult, ToolAction } from "@/lib/types";
 import { resolveModel } from "@/lib/models";
 import {
   type AIProvider,
@@ -19,6 +19,61 @@ function firstText(message: Anthropic.Message): string {
   }
   return "";
 }
+
+/** content の全テキストブロックを連結（Web検索など複数ブロック対応） */
+function allText(message: Anthropic.Message): string {
+  return message.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+}
+
+// 機能B: お話で実行を提案できるツール（自動実行せず、UIで確認後に実行）
+const ACTION_TOOLS: Record<string, unknown>[] = [
+  {
+    name: "create_task",
+    description: "ユーザーが「〜する」「〜を調べる」などやること・タスクの作成を依頼したとき。",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "タスクの内容" },
+        due_hint: { type: "string", description: "期限のヒント（例: 明日, 2026-07-01）" },
+        priority: { type: "integer", enum: [0, 1, 2, 3], description: "優先度 0なし/1低/2中/3高" },
+      },
+      required: ["title"],
+    },
+  },
+  {
+    name: "create_schedule",
+    description: "日時のある予定の登録を依頼したとき。アプリ内のタイムライン/タスクに登録する。",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        date: { type: "string", description: "YYYY-MM-DD" },
+        time: { type: "string", description: "HH:MM（任意）" },
+        kind: { type: "string", enum: ["timeline", "task"], description: "timeline=記録 / task=締切タスク" },
+        description: { type: "string" },
+      },
+      required: ["title", "date"],
+    },
+  },
+  {
+    name: "draft_email",
+    description: "メールの下書き作成を依頼したとき。件名と本文を作成する（送信はしない）。",
+    input_schema: {
+      type: "object",
+      properties: {
+        to_hint: { type: "string", description: "宛先の手がかり（名前など）" },
+        subject: { type: "string" },
+        body: { type: "string" },
+      },
+      required: ["subject", "body"],
+    },
+  },
+];
+const ACTION_NAMES = new Set(ACTION_TOOLS.map((t) => t.name as string));
 
 /** Claude (Anthropic) 実装 */
 export class ClaudeProvider implements AIProvider {
@@ -98,28 +153,52 @@ export class ClaudeProvider implements AIProvider {
     return JSON.parse(firstText(res) || "{}") as IdeaScores;
   }
 
-  async answer(question: string, context: string, model?: string): Promise<string> {
-    const res = await this.client.messages.create({
+  async answer(question: string, context: string, model?: string, web?: boolean): Promise<string> {
+    const tools: Record<string, unknown>[] = [];
+    if (web) tools.push({ type: "web_search_20260209", name: "web_search" });
+    const system = web
+      ? "あなたはユーザーのセカンドブレインの秘書です。提供された関連情報に加え、必要に応じて Web検索の結果も用い、最新情報を踏まえて日本語で簡潔に回答し、出典や根拠を示してください。"
+      : "あなたはユーザーのセカンドブレインの秘書です。提供された関連情報のみを根拠に、日本語で簡潔に回答し、根拠を示してください。";
+    const params = {
       model: this.pick(model),
       max_tokens: 2048,
-      system:
-        "あなたはユーザーのセカンドブレインの秘書です。提供された関連情報のみを根拠に、日本語で簡潔に回答し、根拠を示してください。",
+      system,
       messages: [{ role: "user", content: `# 質問\n${question}\n\n# 関連情報\n${context}` }],
-    });
-    return firstText(res).trim();
+      ...(tools.length ? { tools } : {}),
+    };
+    const res = await this.client.messages.create(
+      params as unknown as Anthropic.MessageCreateParamsNonStreaming
+    );
+    return allText(res);
   }
 
-  async chat({ system, history, model }: ChatInput): Promise<string> {
-    const res = await this.client.messages.create({
+  async chat({ system, history, model, web, actions }: ChatInput): Promise<ChatResult> {
+    const tools: Record<string, unknown>[] = [];
+    if (web) tools.push({ type: "web_search_20260209", name: "web_search" });
+    if (actions) tools.push(...ACTION_TOOLS);
+
+    const params = {
       model: this.pick(model),
-      max_tokens: 1024,
+      max_tokens: web ? 1536 : 1024,
       // システムプロンプトはプロンプトキャッシュ対象にして入力コストを抑える
-      system: [
-        { type: "text", text: system ?? TALK_SYSTEM, cache_control: { type: "ephemeral" } },
-      ],
+      system: [{ type: "text", text: system ?? TALK_SYSTEM, cache_control: { type: "ephemeral" } }],
       messages: history.map((h) => ({ role: h.role, content: h.content })),
-    } as Anthropic.MessageCreateParamsNonStreaming);
-    return firstText(res).trim();
+      ...(tools.length ? { tools } : {}),
+    };
+    const res = await this.client.messages.create(
+      params as unknown as Anthropic.MessageCreateParamsNonStreaming
+    );
+
+    let reply = "";
+    let action: ToolAction | undefined;
+    for (const block of res.content) {
+      if (block.type === "text") reply += block.text;
+      else if (block.type === "tool_use" && ACTION_NAMES.has(block.name)) {
+        // 自動実行しない。UI で確認後に実行する提案として返す。
+        action = { tool: block.name, input: (block.input ?? {}) as Record<string, unknown> };
+      }
+    }
+    return { reply: reply.trim(), action };
   }
 
   async report({ prompt, model, maxTokens }: ReportInput): Promise<string> {

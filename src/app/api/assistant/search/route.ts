@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { q } = (await req.json().catch(() => ({}))) as { q?: string };
+  const { q, web } = (await req.json().catch(() => ({}))) as { q?: string; web?: boolean };
   if (!q?.trim()) return NextResponse.json({ error: "q is required" }, { status: 400 });
 
   // 1. 全文検索（simple）→ 0件なら ilike フォールバック
@@ -34,9 +34,10 @@ export async function POST(req: Request) {
 
   const items = (data ?? []) as Item[];
 
-  if (items.length === 0) {
+  // Web検索OFFで、かつ関連情報も無ければ早期終了
+  if (items.length === 0 && !web) {
     return NextResponse.json({
-      answer: "関連する情報が見つかりませんでした。別のキーワードでお試しください。",
+      answer: "関連する情報が見つかりませんでした。別のキーワードでお試しください（Web検索をオンにすると最新情報も検索できます）。",
       sources: [],
     });
   }
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
   let answer: string;
   try {
     const model = await getUserModel(supabase, user.id);
-    answer = await getAIProvider().answer(q.trim(), context, model);
+    answer = await getAIProvider().answer(q.trim(), context, model, !!web);
   } catch (e) {
     console.error("assistant answer failed:", e);
     answer = "関連情報は見つかりましたが、回答生成に失敗しました。下記をご確認ください。";

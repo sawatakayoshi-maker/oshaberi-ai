@@ -1,9 +1,11 @@
-import type { CaptureClassification, IdeaScores, ChatTurn } from "@/lib/types";
+import type { CaptureClassification, IdeaScores, ChatTurn, ChatResult } from "@/lib/types";
 
 export interface ChatInput {
   system?: string;
   history: ChatTurn[];
   model?: string;
+  web?: boolean; // Web検索を使う（機能C・課金増）
+  actions?: boolean; // ツール実行（機能B・確認後に実行）
 }
 
 export interface ReportInput {
@@ -27,10 +29,10 @@ export interface AIProvider {
   generateTags(text: string, model?: string): Promise<string[]>;
   /** アイデアの 4 軸スコアリング */
   scoreIdea(input: { title: string; body: string }, model?: string): Promise<IdeaScores>;
-  /** AI 秘書: コンテキストを踏まえた回答 */
-  answer(question: string, context: string, model?: string): Promise<string>;
-  /** お話（会話）: システムプロンプト + 直近履歴から応答（機能A） */
-  chat(input: ChatInput): Promise<string>;
+  /** AI 秘書: コンテキストを踏まえた回答（web=true で Web検索も使用） */
+  answer(question: string, context: string, model?: string, web?: boolean): Promise<string>;
+  /** お話（会話）: システムプロンプト + 直近履歴から応答（機能A/B/C） */
+  chat(input: ChatInput): Promise<ChatResult>;
   /** レポート生成: 組み立て済みプロンプトから Markdown を生成（機能C） */
   report(input: ReportInput): Promise<string>;
 }

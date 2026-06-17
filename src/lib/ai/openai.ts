@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { CaptureClassification, IdeaScores } from "@/lib/types";
+import type { CaptureClassification, IdeaScores, ChatResult } from "@/lib/types";
 import {
   type AIProvider,
   type ChatInput,
@@ -106,7 +106,8 @@ export class OpenAIProvider implements AIProvider {
     );
   }
 
-  async chat({ system, history }: ChatInput): Promise<string> {
+  // 注: OpenAI 実装では Web検索/ツール実行（機能B/C）は未対応。応答テキストのみ返す。
+  async chat({ system, history }: ChatInput): Promise<ChatResult> {
     const res = await this.client.chat.completions.create({
       model: MODEL,
       messages: [
@@ -114,7 +115,7 @@ export class OpenAIProvider implements AIProvider {
         ...history.map((h) => ({ role: h.role, content: h.content })),
       ],
     });
-    return (res.choices[0]?.message?.content || "").trim();
+    return { reply: (res.choices[0]?.message?.content || "").trim() };
   }
 
   async report({ prompt, maxTokens }: ReportInput): Promise<string> {

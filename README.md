@@ -65,6 +65,11 @@ http://localhost:3000 を開きます。
 - [x] **お話（機能A）**: 会話ページ `/talk`・音声入力/読み上げ（Web Speech API・VOICEVOX 任意）
 - [x] **モデル選択（機能B）**: Sonnet 4.6 / Opus 4.8 を設定で選択・全機能に反映
 - [x] **レポート生成（機能C）**: 選択項目からプロンプト自動組立 → 編集 → AI 生成 → 保存/DL
+- [x] **お話の声選択**: VOICEVOX 話者を名前で選択（男性話者対応, `GET /speakers`）
+- [x] **お話のツール実行**: 発話→タスク/予定/メール下書きを **確認カードで承認後に実行**（mailto, 自動送信なし）。連絡先 `/contacts`
+- [x] **Web検索**: お話・AI秘書で最新情報に対応（Anthropic web_search・費用増の明記つき）
+
+> DB マイグレーションは `supabase/migrations/0001_init.sql` → `0002_contacts.sql` の順で適用してください。
 
 > 既定 AI モデルは `claude-sonnet-4-6`（`ANTHROPIC_MODEL`）。設定画面で Opus 4.8 に切替可。
 > お話の音声はブラウザ標準（無料）。VOICEVOX をローカル起動している場合のみ高品質音声を使用し、未起動時は自動で端末の声にフォールバックします。

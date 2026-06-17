@@ -70,3 +70,15 @@ export interface ChatTurn {
   role: "user" | "assistant";
   content: string;
 }
+
+/** お話のツール実行（確認後に実行する提案） */
+export interface ToolAction {
+  tool: string; // create_task / create_schedule / draft_email
+  input: Record<string, unknown>;
+}
+
+/** chat() の戻り値（応答テキスト + 任意のアクション提案） */
+export interface ChatResult {
+  reply: string;
+  action?: ToolAction;
+}

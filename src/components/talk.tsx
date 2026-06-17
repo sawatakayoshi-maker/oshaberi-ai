@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ChatTurn } from "@/lib/types";
+import type { ChatTurn, ToolAction } from "@/lib/types";
 import { AvatarView } from "@/components/avatar";
 import { AVATARS, findAvatar, type AvatarState } from "@/lib/avatars";
+
+interface Contact {
+  id: string;
+  name: string;
+  email: string;
+}
 
 // ─── Web Speech API（型は最小限で宣言）───
 type RecognitionLike = {
@@ -39,7 +45,7 @@ const MSG_KEY = "pb:talk:history";
 const FONT_SIZES = ["text-sm", "text-base", "text-lg"];
 const FONT_LABELS = ["文字:標準", "文字:大", "文字:特大"];
 
-export function Talk() {
+export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -56,6 +62,13 @@ export function Talk() {
   const [vvSpeakers, setVvSpeakers] = useState<{ label: string; id: number }[]>([]);
   const [vvLoading, setVvLoading] = useState(false);
   const [vvError, setVvError] = useState<string | null>(null);
+  // 機能C: Web検索
+  const [web, setWeb] = useState(false);
+  // 機能B: 確認待ちのアクション
+  const [pending, setPending] = useState<ToolAction | null>(null);
+  const [mailTo, setMailTo] = useState("");
+  const [mailSubject, setMailSubject] = useState("");
+  const [mailBody, setMailBody] = useState("");
 
   const recRef = useRef<RecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -230,12 +243,27 @@ export function Talk() {
       const res = await fetch("/api/talk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, avatarName: avatar.name }),
+        body: JSON.stringify({ messages: next, avatarName: avatar.name, web }),
       });
       const data = await res.json();
-      if (res.ok && data.reply) {
-        setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
-        speak(data.reply);
+      if (res.ok) {
+        if (data.reply) {
+          setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
+          speak(data.reply);
+        }
+        // 機能B: アクション提案があれば確認カードを表示（自動実行しない）
+        if (data.action) {
+          const a = data.action as ToolAction;
+          setPending(a);
+          if (a.tool === "draft_email") {
+            setMailSubject(String(a.input.subject ?? ""));
+            setMailBody(String(a.input.body ?? ""));
+            setMailTo("");
+          }
+          if (!data.reply) {
+            setMessages((m) => [...m, { role: "assistant", content: "下の内容で実行してよいか確認してね。" }]);
+          }
+        }
       } else {
         setMessages((m) => [...m, { role: "assistant", content: "うまく応答できなかったみたい。もう一度試してね。" }]);
       }
@@ -317,6 +345,41 @@ export function Talk() {
     }
   }
 
+  function pushAssistant(content: string) {
+    setMessages((m) => [...m, { role: "assistant", content }]);
+  }
+
+  // 機能B: 確認後にアクションを実行
+  async function runAction() {
+    if (!pending) return;
+    const action = pending;
+    setPending(null);
+
+    if (action.tool === "draft_email") {
+      const to = mailTo.trim();
+      const href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
+      if (typeof window !== "undefined") window.location.href = href;
+      pushAssistant("メールアプリを開きました（自動送信はしていません）。内容を確認して送信してください。");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool: action.tool, input: action.input }),
+      });
+      const data = await res.json();
+      pushAssistant(res.ok ? data.message ?? "登録しました。" : "登録に失敗しました。");
+    } catch {
+      pushAssistant("登録に失敗しました。");
+    }
+  }
+  function cancelAction() {
+    setPending(null);
+    pushAssistant("キャンセルしました。");
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* アバター選択 */}
@@ -360,6 +423,13 @@ export function Talk() {
         </button>
         <button onClick={() => setFontIdx((fontIdx + 1) % FONT_SIZES.length)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
           {FONT_LABELS[fontIdx]}
+        </button>
+        <button
+          onClick={() => setWeb(!web)}
+          className={`rounded-full border px-3 py-1.5 text-sm ${web ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
+          title="天気・ニュース等の最新情報を Web 検索（費用が増えます）"
+        >
+          {web ? "🔎 Web検索オン" : "🔎 Web検索"}
         </button>
         <button onClick={() => setShowVv(!showVv)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
           ⚙️ 声設定
@@ -457,6 +527,87 @@ export function Talk() {
         )}
         <div ref={endRef} />
       </div>
+
+      {/* 機能B: 実行前の確認カード */}
+      {pending && (
+        <div className="rounded-2xl border border-accent bg-accent-soft p-4">
+          <p className="mb-2 text-sm font-semibold text-accent">この内容で実行しますか?</p>
+
+          {pending.tool === "create_task" && (
+            <ul className="space-y-0.5 text-sm">
+              <li>種別: タスク作成</li>
+              <li>内容: {String(pending.input.title ?? "")}</li>
+              {pending.input.due_hint ? <li>期限: {String(pending.input.due_hint)}</li> : null}
+              {pending.input.priority ? (
+                <li>優先度: {["なし", "低", "中", "高"][Number(pending.input.priority)] ?? "なし"}</li>
+              ) : null}
+            </ul>
+          )}
+
+          {pending.tool === "create_schedule" && (
+            <ul className="space-y-0.5 text-sm">
+              <li>種別: 予定登録（{pending.input.kind === "task" ? "締切タスク" : "タイムライン"}）</li>
+              <li>内容: {String(pending.input.title ?? "")}</li>
+              <li>
+                日付: {String(pending.input.date ?? "")} {pending.input.time ? String(pending.input.time) : ""}
+              </li>
+            </ul>
+          )}
+
+          {pending.tool === "draft_email" && (
+            <div className="space-y-2 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>宛先:</span>
+                {contacts.length > 0 && (
+                  <select
+                    onChange={(e) => setMailTo(e.target.value)}
+                    className="rounded-lg border border-line px-2 py-1.5"
+                  >
+                    <option value="">連絡先から選択</option>
+                    {contacts.map((c) => (
+                      <option key={c.id} value={c.email}>
+                        {c.name}（{c.email}）
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <input
+                  value={mailTo}
+                  onChange={(e) => setMailTo(e.target.value)}
+                  placeholder="メールアドレス（手入力可）"
+                  className="min-w-0 flex-1 rounded-lg border border-line px-2 py-1.5"
+                />
+              </div>
+              <input
+                value={mailSubject}
+                onChange={(e) => setMailSubject(e.target.value)}
+                placeholder="件名"
+                className="w-full rounded-lg border border-line px-2 py-1.5"
+              />
+              <textarea
+                value={mailBody}
+                onChange={(e) => setMailBody(e.target.value)}
+                rows={5}
+                className="w-full rounded-lg border border-line px-2 py-1.5"
+              />
+              <p className="text-xs text-ink-muted">「メールを開く」で既定メールアプリに反映します（自動送信はしません）。</p>
+            </div>
+          )}
+
+          <div className="mt-3 flex gap-2">
+            <button onClick={runAction} className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white">
+              {pending.tool === "draft_email" ? "メールを開く" : "実行する"}
+            </button>
+            <button onClick={cancelAction} className="rounded-lg border border-line px-4 py-2 text-sm">
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+
+      {web && (
+        <p className="text-xs text-ink-muted">🔎 Web検索オン：最新情報を検索します（検索利用料・本文トークンで費用が増えます）。</p>
+      )}
 
       {/* 入力 */}
       <form

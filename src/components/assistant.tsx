@@ -22,6 +22,7 @@ export function Assistant() {
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
+  const [web, setWeb] = useState(false);
 
   async function ask(question: string) {
     const value = question.trim();
@@ -33,7 +34,7 @@ export function Assistant() {
       const res = await fetch("/api/assistant/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ q: value }),
+        body: JSON.stringify({ q: value, web }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -66,6 +67,11 @@ export function Assistant() {
           {loading ? "検索中…" : "質問"}
         </button>
       </form>
+
+      <label className="mt-2 flex items-center gap-2 text-xs text-ink-muted">
+        <input type="checkbox" checked={web} onChange={(e) => setWeb(e.target.checked)} />
+        Web検索を使う（天気・ニュース等の最新情報。検索利用料・トークンで費用が増えます）
+      </label>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {EXAMPLES.map((ex) => (

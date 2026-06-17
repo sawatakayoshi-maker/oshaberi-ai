@@ -13,6 +13,7 @@ const NAV: { href: string; label: string; icon: string }[] = [
   { href: "/assistant", label: "AI秘書", icon: "✺" },
   { href: "/talk", label: "お話", icon: "💬" },
   { href: "/report", label: "レポート生成", icon: "▦" },
+  { href: "/contacts", label: "連絡先", icon: "☎" },
 ];
 
 export function Sidebar() {

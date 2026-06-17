@@ -208,6 +208,23 @@ export async function createTimelineEvent(formData: FormData) {
   revalidatePath("/timeline");
 }
 
+// ─────────────── contacts（機能B: メール宛先） ───────────────
+
+export async function createContact(formData: FormData) {
+  const { supabase, userId } = await requireUser();
+  const name = (formData.get("name") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim();
+  if (!name || !email) return;
+  await supabase.from("contacts").insert({ user_id: userId, name, email });
+  revalidatePath("/contacts");
+}
+
+export async function deleteContact(formData: FormData) {
+  const { supabase } = await requireUser();
+  await supabase.from("contacts").delete().eq("id", formData.get("id") as string);
+  revalidatePath("/contacts");
+}
+
 // ─────────────── auth ───────────────
 
 export async function signOut() {
