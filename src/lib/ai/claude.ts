@@ -201,6 +201,40 @@ export class ClaudeProvider implements AIProvider {
     return { reply: reply.trim(), action };
   }
 
+  // 逐次読み上げ用のストリーミング応答。テキスト差分を onText に流し、終了時に action を返す。
+  async chatStream(
+    { system, history, model, web, actions }: ChatInput,
+    onText: (chunk: string) => void
+  ): Promise<ChatResult> {
+    const tools: Record<string, unknown>[] = [];
+    if (web) tools.push({ type: "web_search_20260209", name: "web_search" });
+    if (actions) tools.push(...ACTION_TOOLS);
+
+    const params = {
+      model: this.pick(model),
+      max_tokens: web ? 1536 : 1024,
+      system: [{ type: "text", text: system ?? TALK_SYSTEM, cache_control: { type: "ephemeral" } }],
+      messages: history.map((h) => ({ role: h.role, content: h.content })),
+      ...(tools.length ? { tools } : {}),
+    };
+
+    const stream = this.client.messages.stream(
+      params as unknown as Anthropic.MessageStreamParams
+    );
+    stream.on("text", (delta: string) => onText(delta));
+    const final = await stream.finalMessage();
+
+    let reply = "";
+    let action: ToolAction | undefined;
+    for (const block of final.content) {
+      if (block.type === "text") reply += block.text;
+      else if (block.type === "tool_use" && ACTION_NAMES.has(block.name)) {
+        action = { tool: block.name, input: (block.input ?? {}) as Record<string, unknown> };
+      }
+    }
+    return { reply: reply.trim(), action };
+  }
+
   async report({ prompt, model, maxTokens }: ReportInput): Promise<string> {
     const res = await this.client.messages.create({
       model: this.pick(model),

@@ -28,10 +28,13 @@ export function AvatarView({
   }, [state]);
 
   if (avatar.kind === "image") {
-    const src =
-      (state === "speaking" && avatar.speaking) ||
-      (state === "thinking" && avatar.thinking) ||
-      avatar.idle;
+    // 発話中は idle と speaking を交互に表示して口パク風に。考え中は thinking。
+    let src = avatar.idle;
+    if (state === "speaking") {
+      src = frame % 2 === 1 && avatar.speaking ? avatar.speaking : avatar.idle;
+    } else if (state === "thinking" && avatar.thinking) {
+      src = avatar.thinking;
+    }
     return (
       // 小さなアバター画像のため next/image ではなく <img> を使用
       // eslint-disable-next-line @next/next/no-img-element

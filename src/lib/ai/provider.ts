@@ -33,6 +33,8 @@ export interface AIProvider {
   answer(question: string, context: string, model?: string, web?: boolean): Promise<string>;
   /** お話（会話）: システムプロンプト + 直近履歴から応答（機能A/B/C） */
   chat(input: ChatInput): Promise<ChatResult>;
+  /** お話のストリーミング応答（逐次読み上げ用）。未対応プロバイダは省略可。 */
+  chatStream?(input: ChatInput, onText: (chunk: string) => void): Promise<ChatResult>;
   /** レポート生成: 組み立て済みプロンプトから Markdown を生成（機能C） */
   report(input: ReportInput): Promise<string>;
 }

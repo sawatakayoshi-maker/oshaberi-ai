@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatTurn, ToolAction } from "@/lib/types";
 import { AvatarView } from "@/components/avatar";
 import { AVATARS, findAvatar, type AvatarState } from "@/lib/avatars";
+import { TALK_I18N, LANGS, type LangCode } from "@/lib/talk-i18n";
 
 interface Contact {
   id: string;
@@ -16,7 +17,9 @@ type RecognitionLike = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onresult:
+    | ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>>; resultIndex?: number }) => void)
+    | null;
   onend: (() => void) | null;
   onerror: (() => void) | null;
   start: () => void;
@@ -42,8 +45,9 @@ const TTS_KEY = "pb:tts";
 const SLOW_KEY = "pb:slow";
 const AV_KEY = "pb:avatar";
 const MSG_KEY = "pb:talk:history";
+const NOTE_KEY = "pb:note"; // ずっと覚えておくメモ
+const LANG_KEY = "pb:lang"; // 表示・会話の言語
 const FONT_SIZES = ["text-sm", "text-base", "text-lg"];
-const FONT_LABELS = ["文字:標準", "文字:大", "文字:特大"];
 
 export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
   const [messages, setMessages] = useState<ChatTurn[]>([]);
@@ -55,9 +59,13 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
   const [standby, setStandby] = useState(false); // 待受（連続音声）
   const [showVv, setShowVv] = useState(false);
   const [vv, setVv] = useState<VoicevoxCfg>({ enabled: true, url: "http://127.0.0.1:50021", speaker: 3 });
-  const [avatarId, setAvatarId] = useState<string>("ai_f");
+  const [avatarId, setAvatarId] = useState<string>("real_f");
   const [fontIdx, setFontIdx] = useState(0);
   const [speaking, setSpeaking] = useState(false); // 発話中（口パク用）
+  const [note, setNote] = useState(""); // ずっと覚えておくメモ
+  const [showNote, setShowNote] = useState(false);
+  const [lang, setLang] = useState<LangCode>("ja"); // 表示・会話の言語
+  const [copied, setCopied] = useState(false);
   // VOICEVOX 話者一覧（名前で選択）
   const [vvSpeakers, setVvSpeakers] = useState<{ label: string; id: number }[]>([]);
   const [vvLoading, setVvLoading] = useState(false);
@@ -75,10 +83,20 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
   const endRef = useRef<HTMLDivElement | null>(null);
   const standbyRef = useRef(false);
   const busyRef = useRef(false);
+  const speakingRef = useRef(false); // 発話中かどうか（待受の制御に使用）
   const restored = useRef(false);
   const pulseRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const abortRef = useRef<AbortController | null>(null); // 応答生成の中断用
+  // ③ 逐次読み上げキュー / ② クールダウン・エコー判定 / マイクストリーム
+  const speakQueueRef = useRef<string[]>([]);
+  const speakActiveRef = useRef(false);
+  const cooldownRef = useRef(false);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastAiRef = useRef(""); // 直近のAI発話（エコー誤認の保険）
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   const avatar = findAvatar(avatarId);
+  const t = TALK_I18N[lang]; // 現在の言語の表示ラベル
   // 状態に応じた表情：応答待ち=考え中、発話中=speaking、それ以外=待機
   const avatarState: AvatarState = busy ? "thinking" : speaking ? "speaking" : "idle";
 
@@ -94,6 +112,10 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
       if (av) setAvatarId(av);
       const hist = localStorage.getItem(MSG_KEY);
       if (hist) setMessages(JSON.parse(hist));
+      const nt = localStorage.getItem(NOTE_KEY);
+      if (nt) setNote(nt);
+      const lg = localStorage.getItem(LANG_KEY);
+      if (lg) setLang(lg as LangCode);
     } catch {
       /* noop */
     }
@@ -130,6 +152,31 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
     }
   }, [avatarId]);
 
+  // メモの保存
+  useEffect(() => {
+    try {
+      localStorage.setItem(NOTE_KEY, note);
+    } catch {
+      /* noop */
+    }
+  }, [note]);
+
+  // 言語の保存
+  useEffect(() => {
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+    } catch {
+      /* noop */
+    }
+  }, [lang]);
+
+  // 発話中はマイクを止める（自分の声を拾うループ防止）。再開はクールダウン後に syncMic が行う。
+  useEffect(() => {
+    speakingRef.current = speaking;
+    if (speaking) stopListening();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speaking]);
+
   // 記憶（会話履歴）の保存。直近40件まで。
   useEffect(() => {
     if (!restored.current) return;
@@ -152,60 +199,92 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
   function speechRate() {
     return slow ? 0.85 : 1;
   }
-  function browserSpeak(text: string) {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      pulseSpeaking(text);
-      return;
+  // 1文を端末の声で読み上げ（終了で resolve）
+  function browserSpeakOne(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) {
+        setTimeout(resolve, Math.min(6000, 800 + text.length * 60));
+        return;
+      }
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ja-JP";
+      u.rate = speechRate();
+      u.onend = () => resolve();
+      u.onerror = () => resolve();
+      window.speechSynthesis.speak(u);
+    });
+  }
+  // 1文を VOICEVOX で読み上げ（終了で resolve、失敗で端末の声へ）
+  async function voicevoxSpeakOne(text: string): Promise<void> {
+    try {
+      const res = await fetch("/api/voicevox/synth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: vv.url, speaker: vv.speaker, text, speedScale: speechRate() }),
+      });
+      if (!res.ok) throw new Error("synthesis");
+      const url = URL.createObjectURL(await res.blob());
+      audioRef.current?.pause();
+      const a = new Audio(url);
+      audioRef.current = a;
+      await a.play();
+      await new Promise<void>((resolve) => {
+        const done = () => {
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        a.onended = done;
+        a.onerror = done;
+      });
+    } catch {
+      await browserSpeakOne(text);
     }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    u.rate = speechRate();
-    u.onstart = () => setSpeaking(true);
-    u.onend = () => setSpeaking(false);
-    window.speechSynthesis.speak(u);
   }
-  async function voicevoxSpeak(text: string) {
-    const base = vv.url.replace(/\/+$/, "");
-    const q = await fetch(`${base}/audio_query?speaker=${vv.speaker}&text=${encodeURIComponent(text)}`, {
-      method: "POST",
-    });
-    if (!q.ok) throw new Error("audio_query");
-    const query = await q.json();
-    query.speedScale = speechRate(); // 「ゆっくり」を VOICEVOX 話速にも反映
-    const s = await fetch(`${base}/synthesis?speaker=${vv.speaker}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(query),
-    });
-    if (!s.ok) throw new Error("synthesis");
-    const url = URL.createObjectURL(await s.blob());
-    audioRef.current?.pause();
-    const a = new Audio(url);
-    audioRef.current = a;
-    a.onplay = () => setSpeaking(true);
-    const stop = () => {
-      setSpeaking(false);
-      URL.revokeObjectURL(url);
-    };
-    a.onended = stop;
-    a.onerror = stop;
-    await a.play();
-  }
-  // 声オフ環境でも口パクだけは動かす（文字数からおおよその発話時間を推定）
-  function pulseSpeaking(text: string) {
-    setSpeaking(true);
-    clearTimeout(pulseRef.current);
-    pulseRef.current = setTimeout(() => setSpeaking(false), Math.min(8000, 1000 + text.length * 60));
-  }
-  function speak(text: string) {
-    if (!text) return;
+  async function speakOne(text: string): Promise<void> {
     if (!tts) {
-      pulseSpeaking(text); // 声オフでもアバターは話す
+      // 声オフ：アバターの口パクのみ（概算時間）
+      await new Promise<void>((r) => setTimeout(r, Math.min(5000, 600 + text.length * 55)));
       return;
     }
-    if (vv.enabled) voicevoxSpeak(text).catch(() => browserSpeak(text));
-    else browserSpeak(text);
+    if (vv.enabled) await voicevoxSpeakOne(text);
+    else await browserSpeakOne(text);
+  }
+  // ③ 文を読み上げキューに積む（最初の文が来た時点で再生開始）
+  function enqueueSpeak(text: string) {
+    const s = text.trim();
+    if (!s) return;
+    lastAiRef.current = (lastAiRef.current + " " + s).slice(-400); // エコー判定用に直近AI発話を保持
+    speakQueueRef.current.push(s);
+    void pumpSpeak();
+  }
+  async function pumpSpeak() {
+    if (speakActiveRef.current) return;
+    speakActiveRef.current = true;
+    speakingRef.current = true;
+    setSpeaking(true);
+    stopListening();
+    while (speakQueueRef.current.length) {
+      const s = speakQueueRef.current.shift();
+      if (!s) break;
+      try {
+        await speakOne(s);
+      } catch {
+        /* noop */
+      }
+    }
+    speakActiveRef.current = false;
+    speakingRef.current = false;
+    setSpeaking(false);
+    startCooldown(); // 読み上げ後にクールダウン→マイク再開
+  }
+  // ② 読み上げ終了後のクールダウン（残響・回り込みの取りこぼし送信を防ぐ）
+  function startCooldown() {
+    cooldownRef.current = true;
+    clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = setTimeout(() => {
+      cooldownRef.current = false;
+      syncMic();
+    }, 900);
   }
 
   // VOICEVOX エンジンから話者・スタイル一覧を取得（男性話者も選択可能に）
@@ -213,8 +292,7 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
     setVvLoading(true);
     setVvError(null);
     try {
-      const base = vv.url.replace(/\/+$/, "");
-      const res = await fetch(`${base}/speakers`);
+      const res = await fetch(`/api/voicevox/speakers?url=${encodeURIComponent(vv.url)}`);
       if (!res.ok) throw new Error("speakers");
       const data = (await res.json()) as { name: string; styles: { name: string; id: number }[] }[];
       const opts = data.flatMap((sp) =>
@@ -230,58 +308,221 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
     }
   }
 
-  // ── 送信 ──
+  // ── 送信（③ ストリーミング受信＋逐次読み上げ）──
   async function send(text: string) {
     const value = text.trim();
     if (!value || busyRef.current) return;
+    stopListening(); // 処理中はマイクを止める
+    cooldownRef.current = false;
+    clearTimeout(cooldownTimerRef.current);
     const next: ChatTurn[] = [...messages, { role: "user", content: value }];
     setMessages(next);
     setInput("");
     setBusy(true);
     busyRef.current = true;
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const res = await fetch("/api/talk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, avatarName: avatar.name, web }),
+        body: JSON.stringify({ messages: next, avatarName: avatar.name, web, note, lang }),
+        signal: controller.signal,
       });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.reply) {
-          setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
-          speak(data.reply);
-        }
-        // 機能B: アクション提案があれば確認カードを表示（自動実行しない）
-        if (data.action) {
-          const a = data.action as ToolAction;
-          setPending(a);
-          if (a.tool === "draft_email") {
-            setMailSubject(String(a.input.subject ?? ""));
-            setMailBody(String(a.input.body ?? ""));
-            setMailTo("");
-          }
-          if (!data.reply) {
-            setMessages((m) => [...m, { role: "assistant", content: "下の内容で実行してよいか確認してね。" }]);
-          }
-        }
+      const ct = res.headers.get("content-type") || "";
+      if (res.ok && ct.includes("ndjson") && res.body) {
+        await consumeStream(res.body);
       } else {
-        setMessages((m) => [...m, { role: "assistant", content: "うまく応答できなかったみたい。もう一度試してね。" }]);
+        const data = await res.json();
+        if (res.ok) {
+          if (data.reply) {
+            pushAssistant(data.reply);
+            enqueueSpeak(data.reply);
+          }
+          if (data.action) handleAction(data.action as ToolAction, !!data.reply);
+        } else {
+          pushAssistant("うまく応答できなかったみたい。もう一度試してね。");
+        }
+      }
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") {
+        pushAssistant("うまく応答できなかったみたい。もう一度試してね。");
       }
     } finally {
+      abortRef.current = null;
       setBusy(false);
       busyRef.current = false;
-      // 待受モードなら、応答後に再び聞き取りを開始
-      if (standbyRef.current) setTimeout(() => standbyRef.current && startListening(), 900);
+      syncMic(); // 待受なら（発話中でなければ）聞き取りを再開
     }
   }
 
-  // ── 音声入力 ──
+  // NDJSON ストリームを読み、文字を逐次表示＋文単位で読み上げキューへ
+  async function consumeStream(body: ReadableStream<Uint8Array>) {
+    const reader = body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    let full = "";
+    let spokenLen = 0;
+    setMessages((m) => [...m, { role: "assistant", content: "" }]); // 受信用の空メッセージ
+    const flushSentences = (final: boolean) => {
+      const rest = full.slice(spokenLen);
+      const re = /[^。．！？!?\n]*[。．！？!?\n]+/g;
+      let mt: RegExpExecArray | null;
+      let consumed = 0;
+      while ((mt = re.exec(rest))) {
+        enqueueSpeak(mt[0]);
+        consumed = re.lastIndex;
+      }
+      if (consumed) spokenLen += consumed;
+      if (final) {
+        const tail = full.slice(spokenLen).trim();
+        if (tail) {
+          enqueueSpeak(tail);
+          spokenLen = full.length;
+        }
+      }
+    };
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (!line) continue;
+        let ev: { type?: string; text?: string; action?: ToolAction };
+        try {
+          ev = JSON.parse(line);
+        } catch {
+          continue;
+        }
+        if (ev.type === "delta" && typeof ev.text === "string") {
+          full += ev.text;
+          const cur = full;
+          setMessages((m) => {
+            const c = [...m];
+            if (c.length) c[c.length - 1] = { role: "assistant", content: cur };
+            return c;
+          });
+          flushSentences(false);
+        } else if (ev.type === "done") {
+          flushSentences(true);
+          if (ev.action) handleAction(ev.action, full.length > 0);
+        } else if (ev.type === "error" && !full) {
+          setMessages((m) => {
+            const c = [...m];
+            if (c.length) c[c.length - 1] = { role: "assistant", content: "うまく応答できなかったみたい。もう一度試してね。" };
+            return c;
+          });
+        }
+      }
+    }
+  }
+
+  // 機能B: アクション提案を確認カードに載せる
+  function handleAction(a: ToolAction, hadReply: boolean) {
+    setPending(a);
+    if (a.tool === "draft_email") {
+      setMailSubject(String(a.input.subject ?? ""));
+      setMailBody(String(a.input.body ?? ""));
+      setMailTo("");
+    }
+    if (!hadReply) pushAssistant("下の内容で実行してよいか確認してね。");
+  }
+
+  // ── マイク制御（① 単一ルール：待受ON かつ AI非発話 かつ 非処理中 かつ 非クールダウンのときだけ聞く）──
+  function micShouldBeOn() {
+    return standbyRef.current && !speakingRef.current && !busyRef.current && !cooldownRef.current;
+  }
+  function syncMic() {
+    if (micShouldBeOn()) {
+      if (!recRef.current) startListening();
+    } else if (recRef.current) {
+      stopListening();
+    }
+  }
+  // 直前のAI発話と酷似する認識結果はエコー誤認として無視
+  function isEcho(text: string) {
+    const norm = (s: string) => s.replace(/[\s　、。．，！？!?,.「」『』]/g, "").toLowerCase();
+    const a = norm(text);
+    const b = norm(lastAiRef.current);
+    if (a.length < 4 || !b) return false;
+    return b.includes(a) || a.includes(b);
+  }
+  function consumeResult(text: string) {
+    // ② AI発話中／クールダウン中／処理中の認識結果は破棄（自問自答ループ防止）
+    if (speakingRef.current || busyRef.current || cooldownRef.current) return;
+    const v = text.trim();
+    if (!v || isEcho(v)) return;
+    send(v);
+  }
+
+  // ① 待受は continuous=true の連続認識。onend/onerror でも聞くべき状態なら即再起動。
   function startListening() {
-    if (listening || recRef.current) return;
+    if (recRef.current) return;
+    if (!micShouldBeOn()) return;
     const Ctor = getRecognitionCtor();
     if (!Ctor) {
       alert("このブラウザは音声入力に対応していません。");
       setStandby(false);
+      standbyRef.current = false;
+      return;
+    }
+    const rec = new Ctor();
+    rec.lang = "ja-JP";
+    rec.interimResults = false;
+    rec.continuous = true;
+    rec.onresult = (e) => {
+      let s = "";
+      const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
+      for (let i = from; i < e.results.length; i++) s += e.results[i][0].transcript;
+      consumeResult(s);
+    };
+    rec.onend = () => {
+      recRef.current = null;
+      setListening(false);
+      if (micShouldBeOn()) setTimeout(syncMic, 150); // 穴を作らず即再起動
+    };
+    rec.onerror = () => {
+      recRef.current = null;
+      setListening(false);
+      if (micShouldBeOn()) setTimeout(syncMic, 300); // no-speech 等でも静かに再起動
+    };
+    recRef.current = rec;
+    setListening(true);
+    try {
+      rec.start();
+    } catch {
+      recRef.current = null;
+      setListening(false);
+    }
+  }
+  function stopListening() {
+    const rec = recRef.current;
+    recRef.current = null;
+    setListening(false);
+    if (rec) {
+      rec.onresult = null;
+      rec.onend = null;
+      rec.onerror = null;
+      try {
+        rec.stop();
+      } catch {
+        /* noop */
+      }
+    }
+  }
+  // 手動マイク（プッシュトゥトーク）：1回だけ聞き取って送信
+  function toggleMic() {
+    if (recRef.current) {
+      stopListening();
+      return;
+    }
+    if (speakingRef.current || busyRef.current) return;
+    const Ctor = getRecognitionCtor();
+    if (!Ctor) {
+      alert("このブラウザは音声入力に対応していません。");
       return;
     }
     const rec = new Ctor();
@@ -290,53 +531,98 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
     rec.continuous = false;
     rec.onresult = (e) => {
       let s = "";
-      for (let i = 0; i < e.results.length; i++) s += e.results[i][0].transcript;
-      if (s.trim()) send(s);
+      const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
+      for (let i = from; i < e.results.length; i++) s += e.results[i][0].transcript;
+      consumeResult(s);
     };
     rec.onend = () => {
-      setListening(false);
       recRef.current = null;
-      // 待受中で、何も送信していない（無音）なら聞き取りを継続
-      if (standbyRef.current && !busyRef.current) {
-        setTimeout(() => standbyRef.current && startListening(), 400);
-      }
+      setListening(false);
     };
     rec.onerror = () => {
-      setListening(false);
       recRef.current = null;
+      setListening(false);
     };
     recRef.current = rec;
     setListening(true);
     try {
       rec.start();
     } catch {
-      setListening(false);
       recRef.current = null;
+      setListening(false);
     }
   }
-  function stopListening() {
+  // ② マイクのAEC（回り込み軽減）。待受ON時に getUserMedia でエコーキャンセル等を有効化。
+  async function primeMic() {
     try {
-      recRef.current?.stop();
+      if (!navigator.mediaDevices?.getUserMedia) return;
+      micStreamRef.current = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+    } catch {
+      /* 権限拒否などは無視 */
+    }
+  }
+  function stopMicStream() {
+    try {
+      micStreamRef.current?.getTracks().forEach((tr) => tr.stop());
     } catch {
       /* noop */
     }
-    recRef.current = null;
-    setListening(false);
+    micStreamRef.current = null;
   }
-  function toggleMic() {
-    if (listening) stopListening();
-    else startListening();
-  }
-  function toggleStandby() {
+  async function toggleStandby() {
     const nextOn = !standby;
     setStandby(nextOn);
     standbyRef.current = nextOn;
-    if (nextOn) startListening();
-    else stopListening();
+    if (nextOn) {
+      await primeMic();
+      syncMic();
+    } else {
+      stopListening();
+      stopMicStream();
+    }
+  }
+
+  // ── 会話を止める（読み上げ・音声・応答生成をまとめて停止）──
+  function stopAll() {
+    // 1. 読み上げ（端末の声）を停止
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      /* noop */
+    }
+    // 2. VOICEVOX の再生中音声を停止
+    try {
+      audioRef.current?.pause();
+    } catch {
+      /* noop */
+    }
+    clearTimeout(pulseRef.current);
+    // 読み上げキューを全消去（③ 停止ボタンで即止まる）
+    speakQueueRef.current = [];
+    speakActiveRef.current = false;
+    speakingRef.current = false;
+    setSpeaking(false);
+    cooldownRef.current = false;
+    clearTimeout(cooldownTimerRef.current);
+    // 3. 応答生成中なら中断
+    try {
+      abortRef.current?.abort();
+    } catch {
+      /* noop */
+    }
+    // 4. 待受・聞き取りも止めて会話を完全に停止
+    standbyRef.current = false;
+    setStandby(false);
+    stopListening();
+    stopMicStream();
+    setBusy(false);
+    busyRef.current = false;
   }
 
   function clearMemory() {
-    if (!confirm("これまでの会話の記憶を消します。よろしいですか?")) return;
+    if (!confirm(t.clearConfirm)) return;
     setMessages([]);
     try {
       localStorage.removeItem(MSG_KEY);
@@ -380,9 +666,42 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
     pushAssistant("キャンセルしました。");
   }
 
+  // 会話をクリップボードにコピー（失敗時は execCommand にフォールバック）
+  async function copyText(text: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      /* fallthrough */
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+  async function copyAll() {
+    if (messages.length === 0) return;
+    const text = messages.map((m) => `${m.role === "user" ? "🧑" : "🤖"} ${m.content}`).join("\n\n");
+    if (await copyText(text)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {/* アバター選択 */}
+      {/* アバター・言語選択 */}
       <div className="flex flex-wrap items-center gap-2">
         <AvatarView avatar={avatar} state={avatarState} size={40} />
         <select
@@ -397,7 +716,19 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
             </option>
           ))}
         </select>
-        <span className="text-xs text-ink-muted">前回の続きも覚えています</span>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as LangCode)}
+          className="rounded-lg border border-line px-2 py-1.5 text-sm"
+          title="言語を選ぶ / Language"
+        >
+          {LANGS.map((l) => (
+            <option key={l.code} value={l.code}>
+              🌐 {l.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-ink-muted">{t.remembers}</span>
       </div>
 
       {/* ツールバー */}
@@ -406,37 +737,56 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
           onClick={() => setTts(!tts)}
           className={`rounded-full border px-3 py-1.5 text-sm ${tts ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
         >
-          {tts ? "🔊 声オン" : "🔈 声オフ"}
+          {tts ? t.voiceOn : t.voiceOff}
         </button>
         <button
           onClick={toggleStandby}
           className={`rounded-full border px-3 py-1.5 text-sm ${standby ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
           title="待受モード：話しかけると自動で聞き取り→返答"
         >
-          {standby ? "🎧 待受オン" : "🎧 待受オフ"}
+          {standby ? t.standbyOn : t.standbyOff}
         </button>
         <button
           onClick={() => setSlow(!slow)}
           className={`rounded-full border px-3 py-1.5 text-sm ${slow ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
         >
-          {slow ? "🐢 ゆっくり中" : "🐢 ゆっくり"}
+          {slow ? t.slowOn : t.slow}
         </button>
         <button onClick={() => setFontIdx((fontIdx + 1) % FONT_SIZES.length)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
-          {FONT_LABELS[fontIdx]}
+          {t.fontLabels[fontIdx]}
         </button>
         <button
           onClick={() => setWeb(!web)}
           className={`rounded-full border px-3 py-1.5 text-sm ${web ? "border-accent bg-accent text-white" : "border-line text-ink-soft"}`}
           title="天気・ニュース等の最新情報を Web 検索（費用が増えます）"
         >
-          {web ? "🔎 Web検索オン" : "🔎 Web検索"}
+          {web ? t.webOn : t.web}
         </button>
         <button onClick={() => setShowVv(!showVv)} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft">
-          ⚙️ 声設定
+          {t.voiceSet}
+        </button>
+        <button
+          onClick={stopAll}
+          className={`rounded-full border px-3 py-1.5 text-sm ${busy || speaking ? "border-red-500 bg-red-500 text-white" : "border-line text-ink-soft"}`}
+          title="読み上げ・応答を止める"
+        >
+          {t.stop}
+        </button>
+        <button
+          onClick={() => setShowNote(!showNote)}
+          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft"
+          title="ずっと覚えておくメモ（毎回かならずAIに伝わります）"
+        >
+          {t.note}
         </button>
         {messages.length > 0 && (
+          <button onClick={copyAll} className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft" title="会話を全部コピー">
+            {copied ? `✓ ${t.copied}` : t.copy}
+          </button>
+        )}
+        {messages.length > 0 && (
           <button onClick={clearMemory} className="ml-auto rounded-full border border-line px-3 py-1.5 text-sm text-ink-muted">
-            記憶を消す
+            {t.clear}
           </button>
         )}
       </div>
@@ -502,12 +852,37 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
         </div>
       )}
 
+      {showNote && (
+        <div className="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm">
+          <div className="font-medium">{t.noteTitle}</div>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={6}
+            placeholder={"ここに書いたことは、これからずっと覚えています。\n例）わたしの名前は〇〇。孫は△△と□□。膝が悪い。甘いものが好き。朝はゆっくり話したい。"}
+            className="w-full rounded-lg border border-line px-2 py-1.5"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-ink-muted">{t.noteHint}</span>
+            <button
+              onClick={() => setShowNote(false)}
+              className="shrink-0 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white"
+            >
+              {t.noteClose}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 会話 */}
       <div className="min-h-[320px] rounded-2xl border border-line bg-surface p-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
             <AvatarView avatar={avatar} state={avatarState} size={96} />
-            <p className="text-sm text-ink-muted">「{avatar.name}」です。気軽に話しかけてください。聞き役になります。</p>
+            <p className="text-sm text-ink-muted">
+              {avatar.name}
+              {t.introSuffix}
+            </p>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -522,7 +897,7 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
                 </div>
               </li>
             ))}
-            {busy && <li className="text-sm text-ink-muted">…考え中</li>}
+            {busy && <li className="text-sm text-ink-muted">{t.thinking}</li>}
           </ul>
         )}
         <div ref={endRef} />
@@ -606,7 +981,7 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
       )}
 
       {web && (
-        <p className="text-xs text-ink-muted">🔎 Web検索オン：最新情報を検索します（検索利用料・本文トークンで費用が増えます）。</p>
+        <p className="text-xs text-ink-muted">{t.webNote}</p>
       )}
 
       {/* 入力 */}
@@ -628,11 +1003,11 @@ export function Talk({ contacts = [] }: { contacts?: Contact[] }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="メッセージを入力…"
+          placeholder={t.placeholder}
           className="flex-1 rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-accent"
         />
         <button disabled={busy} className="rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white disabled:opacity-50">
-          送信
+          {t.send}
         </button>
       </form>
     </div>

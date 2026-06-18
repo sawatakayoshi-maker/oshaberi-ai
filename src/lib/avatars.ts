@@ -57,6 +57,26 @@ export const AVATARS: AvatarDef[] = [
     speaking: [1, 2],
     thinking: 3,
   },
+  // ④ 実写写真アバター（女性/男性）。public/avatars/ の切り出し済みフレームを使用。
+  //    発話中は idle と speaking を交互に表示して口パク風に見せる（avatar.tsx 側で処理）。
+  {
+    id: "real_f",
+    name: "女性",
+    desc: "実写・女性",
+    kind: "image",
+    idle: "/avatars/woman_idle.png",
+    speaking: "/avatars/woman_talk.png",
+    thinking: "/avatars/woman_think.png",
+  },
+  {
+    id: "real_m",
+    name: "男性",
+    desc: "実写・男性",
+    kind: "image",
+    idle: "/avatars/man_idle.png",
+    speaking: "/avatars/man_talk.png",
+    thinking: "/avatars/man_think.png",
+  },
 ];
 
 export const DEFAULT_AVATAR = AVATARS[0];
