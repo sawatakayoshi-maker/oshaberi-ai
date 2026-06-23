@@ -1,0 +1,14 @@
+{
+  "_note": "Português — estrutura de chaves, sem tradução. Valores vazios fazem fallback para 日本語.",
+  "brand": { "tagline": "" },
+  "nav": { "home": "", "about": "", "members": "", "jobs": "", "grow": "", "future": "", "numbers": "", "faq": "", "entry": "" },
+  "cta": { "entry": "", "entryLong": "", "casual": "", "viewMembers": "", "learnMore": "", "toEntry": "" },
+  "a11y": { "skip": "", "close": "", "menu": "" },
+  "footer": { "site": "", "more": "", "note": "" },
+  "common": { "todo": "", "proposal": "", "wip": "" },
+  "members": { "filterDept": "", "filterOrigin": "", "all": "", "empty": "", "story.join": "", "story.day": "", "story.message": "", "placeholderName": "" },
+  "jobs": { "fit": "", "work": "", "experience": "" },
+  "numbers": { "todo": "" },
+  "faq": {},
+  "entry": { "methodForm": "", "methodLine": "", "methodCasual": "", "methodReferral": "", "name": "", "email": "", "phone": "", "lang": "", "job": "", "referral": "", "message": "", "namePh": "", "referralPh": "", "consent": "", "submit": "", "required": "", "sent": "" }
+}

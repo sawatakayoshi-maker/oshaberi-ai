@@ -1,0 +1,11 @@
+{
+  "_note": "数値はすべて未確定。出典の出せない数字は載せない。value は null のままにし、UIは [要確認] を表示する。",
+  "stats": [
+    { "id": "nationalities", "label": "在籍国籍数",       "value": null, "unit": "カ国", "hint": "ベトナム・タイ・ブラジルほか（組織図より）" },
+    { "id": "foreign-ratio", "label": "多国籍メンバー比率", "value": null, "unit": "%",   "hint": "" },
+    { "id": "retention",     "label": "定着率",           "value": null, "unit": "%",   "hint": "" },
+    { "id": "tenure",        "label": "平均勤続年数",       "value": null, "unit": "年",  "hint": "" },
+    { "id": "members",       "label": "仲間の人数",        "value": null, "unit": "名",  "hint": "組織図上は41名分の枠（要確認）" },
+    { "id": "gender",        "label": "男女比",           "value": null, "unit": "",    "hint": "" }
+  ]
+}

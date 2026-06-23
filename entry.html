@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>エントリー｜アセアンテクノロジー 採用サイト</title>
+  <meta name="description" content="アセアンテクノロジーへのエントリー。通常フォーム・LINE応募・カジュアル面談・社員紹介（リファラル）から選べます。多言語対応。" />
+  <meta property="og:title" content="エントリー｜アセアンテクノロジー" />
+  <meta property="og:description" content="まずは気軽に話すところから。" />
+  <meta property="og:image" content="/public/images/ogp.png" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main id="main">
+    <section class="page-head">
+      <div class="container page-head__inner">
+        <p class="eyebrow">JOIN US</p>
+        <h1>エントリー</h1>
+        <p>応募の方法は、あなたが選べます。日本語に不安があっても大丈夫。
+          まずは「話してみる」ところから、どうぞ。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <!-- 複数の応募手段 -->
+        <div class="entry-methods">
+          <div class="method-card">
+            <span class="m-ico">📝</span>
+            <div><strong data-i18n="entry.methodForm">応募フォーム</strong>
+              <p class="muted" style="margin:4px 0 0">下のフォームから送信</p></div>
+          </div>
+          <div class="method-card">
+            <span class="m-ico">💬</span>
+            <div><strong data-i18n="entry.methodLine">LINEで応募</strong>
+              <p class="muted" style="margin:4px 0 0"><a href="#" class="todo-inline">[要確認] LINE URL</a></p></div>
+          </div>
+          <div class="method-card">
+            <span class="m-ico">☕</span>
+            <div><strong data-i18n="entry.methodCasual">カジュアル面談予約</strong>
+              <p class="muted" style="margin:4px 0 0"><a href="#" class="todo-inline">[要確認] 予約URL</a></p></div>
+          </div>
+          <div class="method-card">
+            <span class="m-ico">🎟️</span>
+            <div><strong data-i18n="entry.methodReferral">社員紹介（リファラル）</strong>
+              <p class="muted" style="margin:4px 0 0">紹介コードを下の欄に</p></div>
+          </div>
+        </div>
+
+        <!-- フォーム -->
+        <form class="form" id="entry-form" novalidate>
+          <div class="field">
+            <label for="f-name"><span data-i18n="entry.name">お名前</span> <span class="req-mark" data-i18n="entry.required">必須</span></label>
+            <input id="f-name" name="name" required data-i18n-attr="placeholder:entry.namePh" placeholder="山田 太郎" />
+          </div>
+          <div class="grid grid--2" style="gap:0 22px">
+            <div class="field">
+              <label for="f-email"><span data-i18n="entry.email">メールアドレス</span> <span class="req-mark" data-i18n="entry.required">必須</span></label>
+              <input id="f-email" name="email" type="email" required placeholder="you@example.com" />
+            </div>
+            <div class="field">
+              <label for="f-phone" data-i18n="entry.phone">電話番号</label>
+              <input id="f-phone" name="phone" type="tel" placeholder="090-0000-0000" />
+            </div>
+          </div>
+          <div class="grid grid--2" style="gap:0 22px">
+            <div class="field">
+              <label for="f-lang" data-i18n="entry.lang">希望する言語</label>
+              <select id="f-lang" name="language">
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+                <option value="th">ภาษาไทย</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-job" data-i18n="entry.job">気になる職種</label>
+              <select id="f-job" name="job">
+                <option value="">—</option>
+                <option value="contract">請負スタッフ</option>
+                <option value="dispatch">オンサイト派遣スタッフ</option>
+                <option value="homework">内職スタッフ</option>
+                <option value="leader">管理・リーダー</option>
+                <option value="sales">営業</option>
+                <option value="accounting">経理事務</option>
+                <option value="interpreter">通訳・多言語サポート</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-referral" data-i18n="entry.referral">紹介コード（任意）</label>
+            <input id="f-referral" name="referralCode" data-i18n-attr="placeholder:entry.referralPh" placeholder="例：AT-XXXX" />
+          </div>
+          <div class="field">
+            <label for="f-message" data-i18n="entry.message">ひとこと（任意）</label>
+            <textarea id="f-message" name="message"></textarea>
+          </div>
+          <div class="field consent">
+            <input id="f-consent" name="consent" type="checkbox" required />
+            <label for="f-consent" style="font-weight:400">
+              <span data-i18n="entry.consent">個人情報の取り扱いに同意します。</span>
+              <span class="todo-inline">（プライバシーポリシーURL [要確認]）</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn--primary btn--lg" data-i18n="entry.submit">送信内容を確認して応募する</button>
+          <p id="form-msg" class="form-msg" role="status" aria-live="polite"></p>
+          <p class="muted" style="margin-top:12px;font-size:13px">
+            ※ 実際の送信先は <span class="todo-inline">[要確認]</span> です。
+            現在はデモのため、送信内容はブラウザのコンソールに出力されます。
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/layout.js"></script>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "brand": { "tagline": "Careers — meet your future teammates" },
+  "nav": {
+    "home": "Home", "about": "About Us", "members": "Meet the Team",
+    "jobs": "Roles", "grow": "Grow & Belong", "future": "New Challenges",
+    "numbers": "By the Numbers", "faq": "FAQ", "entry": "Apply"
+  },
+  "cta": {
+    "entry": "Apply", "entryLong": "Start with a casual chat",
+    "casual": "Book a casual interview", "viewMembers": "Meet the team",
+    "learnMore": "Learn more", "toEntry": "Apply now"
+  },
+  "a11y": { "skip": "Skip to content", "close": "Close", "menu": "Menu" },
+  "footer": { "site": "Sitemap", "more": "Discover more", "note": "Some figures and programs on this site are under review or in planning." },
+  "common": { "todo": "[TBC]", "proposal": "Proposed", "wip": "In planning" },
+  "members": {
+    "filterDept": "Department", "filterOrigin": "Origin", "all": "All",
+    "empty": "No teammates match your filters.",
+    "story.join": "Why I joined", "story.day": "A day in the life", "story.message": "To future teammates",
+    "placeholderName": "[TBC]"
+  },
+  "jobs": { "fit": "A good fit for", "work": "What you'll do", "experience": "Experience" },
+  "numbers": { "todo": "Figures under review" },
+  "faq": {},
+  "entry": {
+    "methodForm": "Application form", "methodLine": "Apply via LINE", "methodCasual": "Book a casual interview", "methodReferral": "Employee referral",
+    "name": "Name", "email": "Email", "phone": "Phone",
+    "lang": "Preferred language", "job": "Role of interest", "referral": "Referral code (optional)", "message": "A note (optional)",
+    "namePh": "Your name", "referralPh": "e.g. AT-XXXX",
+    "consent": "I agree to the handling of my personal information.",
+    "submit": "Review & apply", "required": "Required",
+    "sent": "Your entry was reviewed (logged to console for this demo)."
+  }
+}

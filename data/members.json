@@ -1,0 +1,42 @@
+{
+  "_note": "確定情報は社長エントリのみ。その他は『仲間図鑑』のグリッド/フィルタ/モーダルを動かすための構造プレースホルダ（name は [要確認]）。別添『Nano Bananaプロンプト集』の41名（氏名・所属・国旗）が届き次第、この配列を丸ごと差し替える。営業と内職に同名『河合佑司』が存在する点は見本どおり意図的な重複として扱い、統合しない（[要確認]）。",
+  "departments": {
+    "president":  { "label": "社長",       "labelEn": "President",          "color": "#1F2A44" },
+    "vietnam":    { "label": "ベトナムチーム", "labelEn": "Vietnam Team",      "color": "#D7263D" },
+    "contract":   { "label": "請負事業",     "labelEn": "Contract",           "color": "#E8743B" },
+    "dispatch":   { "label": "派遣事業",     "labelEn": "On-site Dispatch",   "color": "#3FA66A" },
+    "sales":      { "label": "営業",        "labelEn": "Sales",              "color": "#2D7DD2" },
+    "homework":   { "label": "内職事業",     "labelEn": "Homework",           "color": "#F2B705" },
+    "accounting": { "label": "経理事務",     "labelEn": "Accounting",         "color": "#7A4FB5" }
+  },
+  "origins": {
+    "JP": { "label": "日本",     "flag": "🇯🇵" },
+    "VN": { "label": "ベトナム", "flag": "🇻🇳" },
+    "TH": { "label": "タイ",     "flag": "🇹🇭" },
+    "BR": { "label": "ブラジル", "flag": "🇧🇷" }
+  },
+  "members": [
+    {
+      "id": "ceo-001",
+      "name": "西尾武志",
+      "department": "president",
+      "role": "社長",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ceo-001.png",
+      "comment": "[要確認] ※組織図では社長＝西尾武志。代表取締役は中山浩行。サイト表示はどちらにするか要確認。",
+      "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" }
+    },
+    { "id": "vn-001", "name": "[要確認]", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-002", "name": "[要確認]", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": null, "image": "/public/images/members/vn-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-001", "name": "[要確認]", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-002", "name": "[要確認]", "department": "contract", "role": "[要確認]", "origin": "BR", "flagBadge": "BR", "image": "/public/images/members/ct-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-001", "name": "[要確認]", "department": "dispatch", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/dp-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-002", "name": "[要確認]", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "sl-001", "name": "[要確認]", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "sl-002", "name": "[要確認] ※河合佑司（営業／内職に重複・意図的）", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-001", "name": "[要確認]", "department": "homework", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/hw-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-002", "name": "[要確認] ※河合佑司（営業／内職に重複・意図的）", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ac-001", "name": "[要確認]", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } }
+  ]
+}
