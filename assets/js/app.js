@@ -13,6 +13,11 @@
   }
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // 英語表示時は <base>En を優先。無ければ日本語フィールドにフォールバック。
+  const pick = (obj, base) => {
+    if (isEn() && obj[base + "En"] != null && obj[base + "En"] !== "") return obj[base + "En"];
+    return obj[base];
+  };
 
   function initials(name) {
     if (!name || name.includes("[要確認]")) return "?";
@@ -192,19 +197,25 @@
     const wrap = document.getElementById("faq-list");
     if (!wrap) return;
     const data = await getJSON("/data/faq.json");
-    wrap.innerHTML = data.faqs.map((f, i) => `
-      <div class="faq-item" aria-expanded="false">
-        <button class="faq-q" aria-controls="faq-a-${i}">
-          <span>${esc(f.q)}</span><span class="chevron" aria-hidden="true">▾</span>
-        </button>
-        <div class="faq-a" id="faq-a-${i}">${esc(f.a)}</div>
-      </div>`).join("");
-    wrap.querySelectorAll(".faq-item").forEach((item) => {
-      item.querySelector(".faq-q").addEventListener("click", () => {
-        const open = item.getAttribute("aria-expanded") === "true";
-        item.setAttribute("aria-expanded", String(!open));
+    function render() {
+      wrap.innerHTML = data.faqs.map((f, i) => `
+        <div class="faq-item" aria-expanded="false">
+          <button class="faq-q" aria-controls="faq-a-${i}" aria-expanded="false">
+            <span>${esc(pick(f, "q"))}</span><span class="chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="faq-a" id="faq-a-${i}">${esc(pick(f, "a"))}</div>
+        </div>`).join("");
+      wrap.querySelectorAll(".faq-item").forEach((item) => {
+        const btn = item.querySelector(".faq-q");
+        btn.addEventListener("click", () => {
+          const open = item.getAttribute("aria-expanded") === "true";
+          item.setAttribute("aria-expanded", String(!open));
+          btn.setAttribute("aria-expanded", String(!open));
+        });
       });
-    });
+    }
+    render();
+    document.addEventListener("i18n:changed", render);
   }
 
   /* ---------------- エントリーフォーム ---------------- */
@@ -235,39 +246,39 @@
         id: "services-grid", path: "/data/services.json", key: "services",
         tpl: (s) => `<article class="card card--hover">
           <div class="card__icon" style="background:${s.color}">${s.icon}</div>
-          <h3>${esc(s.title)} <small class="muted">${esc(s.titleEn)}</small></h3>
-          <p><strong>${esc(s.lead)}</strong></p>
-          <p>${esc(s.forSeeker)}</p>
+          <h3>${esc(pick(s, "title"))} ${isEn() ? "" : `<small class="muted">${esc(s.titleEn)}</small>`}</h3>
+          <p><strong>${esc(pick(s, "lead"))}</strong></p>
+          <p>${esc(pick(s, "forSeeker"))}</p>
           <ul class="muted" style="padding-left:1.1em;margin:8px 0 0">
-            ${s.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+            ${(pick(s, "points") || []).map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
         </article>`,
       });
       await initCards({
         id: "jobs-grid", path: "/data/jobs.json", key: "jobs",
         tpl: (j) => `<article class="card card--hover">
           <div class="card__icon" style="background:${j.color}">${j.icon}</div>
-          <h3>${esc(j.title)}</h3>
-          <p><strong>${t("jobs.fit", "向いている人")}：</strong>${esc(j.fit)}</p>
-          <p><strong>${t("jobs.work", "仕事内容")}：</strong>${esc(j.work)}</p>
-          <p><span class="req-flag">${t("jobs.experience", "未経験可否")}</span> ${esc(j.experience)}</p>
+          <h3>${esc(pick(j, "title"))}</h3>
+          <p><strong>${t("jobs.fit", "向いている人")}：</strong>${esc(pick(j, "fit"))}</p>
+          <p><strong>${t("jobs.work", "仕事内容")}：</strong>${esc(pick(j, "work"))}</p>
+          <p><span class="req-flag">${t("jobs.experience", "未経験可否")}</span> ${esc(pick(j, "experience"))}</p>
         </article>`,
       });
       await initCards({
         id: "programs-grid", path: "/data/programs.json", key: "programs",
         tpl: (p) => `<article class="card card--hover">
           <div class="card__icon" style="background:${p.color}">${p.icon}</div>
-          <h3>${esc(p.title)}</h3>
-          <p>${esc(p.desc)}</p>
-          <span class="badge-note">${esc(p.status)}</span>
+          <h3>${esc(pick(p, "title"))}</h3>
+          <p>${esc(pick(p, "desc"))}</p>
+          <span class="badge-note">${esc(pick(p, "status"))}</span>
         </article>`,
       });
       await initCards({
         id: "future-grid", path: "/data/future.json", key: "ideas",
         tpl: (f) => `<article class="card card--hover">
           <div class="card__icon" style="background:${f.color}">${f.icon}</div>
-          <h3>${esc(f.title)}</h3>
-          <p><strong>${esc(f.overview)}</strong></p>
-          <p>${esc(f.benefit)}</p>
+          <h3>${esc(pick(f, "title"))}</h3>
+          <p><strong>${esc(pick(f, "overview"))}</strong></p>
+          <p>${esc(pick(f, "benefit"))}</p>
         </article>`,
       });
     } catch (e) {

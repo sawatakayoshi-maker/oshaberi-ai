@@ -1,42 +1,55 @@
 {
-  "_note": "新サービス構想（指示書8章）。確定事業ではなく『構想・検討中』のアイデア提案。誇大表現にしないこと。",
+  "_note": "新サービス構想（指示書8章）。確定事業ではなく『構想・検討中』のアイデア提案。誇大表現にしないこと。*En は英語表示用。",
   "disclaimer": "以下は確定したサービスではなく、構想・検討中のアイデアです。",
+  "disclaimerEn": "The following are not finalised services but ideas under consideration.",
   "ideas": [
     {
       "id": "worker-app", "icon": "📱", "color": "#3FA66A",
-      "title": "多言語ワーカーアプリ",
+      "title": "多言語ワーカーアプリ", "titleEn": "Multilingual worker app",
       "overview": "シフト・連絡・マニュアルをベトナム語／タイ語／ポルトガル語で配信。",
-      "benefit": "母国語で働ける安心。情報がきちんと届くから、ミスや不安が減ります。"
+      "overviewEn": "Deliver shifts, messages and manuals in Vietnamese, Thai and Portuguese.",
+      "benefit": "母国語で働ける安心。情報がきちんと届くから、ミスや不安が減ります。",
+      "benefitEn": "The comfort of working in your own language — information reaches you, so errors and worries drop."
     },
     {
       "id": "ai-match", "icon": "🤖", "color": "#2D7DD2",
-      "title": "AIスキルマッチング",
+      "title": "AIスキルマッチング", "titleEn": "AI skill matching",
       "overview": "本人の希望・適性と現場をAIがマッチング。",
-      "benefit": "ミスマッチ離職を減らし、続けられる現場に出会えます。"
+      "overviewEn": "AI matches each person's wishes and aptitude with the right site.",
+      "benefit": "ミスマッチ離職を減らし、続けられる現場に出会えます。",
+      "benefitEn": "Fewer mismatched departures, and a site you can keep working at."
     },
     {
       "id": "smart-line", "icon": "🏭", "color": "#F2B705",
-      "title": "スマート内職ライン（IoT工程管理）",
+      "title": "スマート内職ライン（IoT工程管理）", "titleEn": "Smart handwork line (IoT process control)",
       "overview": "手作業ラインの進捗・品質をデジタルで可視化。",
-      "benefit": "即納・全品検査の強みを強化。取引先にも、働く人にも安心を。"
+      "overviewEn": "Digitally visualise the progress and quality of the handwork line.",
+      "benefit": "即納・全品検査の強みを強化。取引先にも、働く人にも安心を。",
+      "benefitEn": "Strengthens fast delivery and full inspection — peace of mind for clients and workers alike."
     },
     {
       "id": "dashboard", "icon": "📊", "color": "#E8743B",
-      "title": "現場ダッシュボード",
+      "title": "現場ダッシュボード", "titleEn": "Site dashboard",
       "overview": "オンサイト派遣先の稼働・品質を取引先とリアルタイム共有。",
-      "benefit": "見える化で信頼が深まり、現場の頑張りが正しく伝わります。"
+      "overviewEn": "Share on-site dispatch operations and quality with clients in real time.",
+      "benefit": "見える化で信頼が深まり、現場の頑張りが正しく伝わります。",
+      "benefitEn": "Visibility deepens trust and conveys the site's hard work accurately."
     },
     {
       "id": "skill-passport", "icon": "🪪", "color": "#7A4FB5",
-      "title": "デジタル・スキルパスポート",
+      "title": "デジタル・スキルパスポート", "titleEn": "Digital skill passport",
       "overview": "習得スキルをバッジ化し、キャリアと次の現場に持ち運べる。",
-      "benefit": "あなたの成長が資産に。どこへ行っても通用する証になります。"
+      "overviewEn": "Turn learned skills into badges you can carry to your career and next site.",
+      "benefit": "あなたの成長が資産に。どこへ行っても通用する証になります。",
+      "benefitEn": "Your growth becomes an asset — proof that holds up wherever you go."
     },
     {
       "id": "branding", "icon": "🎨", "color": "#D7263D",
-      "title": "キャラクター採用ブランディング",
+      "title": "キャラクター採用ブランディング", "titleEn": "Character recruiting brand",
       "overview": "社員キャラ図鑑・動画でファンを増やし、リファラルにつなげる。",
-      "benefit": "仲間が仲間を呼ぶ。あなたの紹介が、次の出会いをつくります。"
+      "overviewEn": "Grow fans with the staff character gallery and videos, leading to referrals.",
+      "benefit": "仲間が仲間を呼ぶ。あなたの紹介が、次の出会いをつくります。",
+      "benefitEn": "Teammates bring teammates — your referral creates the next encounter."
     }
   ]
 }

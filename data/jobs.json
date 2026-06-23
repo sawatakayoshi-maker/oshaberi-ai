@@ -1,54 +1,68 @@
 {
-  "_note": "職種カード。『向いている人』『仕事内容』『未経験可否』は提案ベース。確定条件は [要確認]。",
+  "_note": "職種カード。『向いている人』『仕事内容』『未経験可否』は提案ベース。確定条件は [要確認]。*En は英語表示用。",
   "jobs": [
     {
       "id": "contract-staff", "icon": "📦", "color": "#E8743B",
-      "title": "請負スタッフ",
+      "title": "請負スタッフ", "titleEn": "Contract Staff",
       "fit": "コツコツ正確に。チームで段取りを組むのが好きな人。",
+      "fitEn": "Steady and accurate; enjoys planning the flow as a team.",
       "work": "取引先から請け負った業務を、チームで運営・遂行します。",
-      "experience": "未経験可 [要確認]"
+      "workEn": "Run and carry out work contracted from clients, as a team.",
+      "experience": "未経験可 [要確認]", "experienceEn": "Open to beginners [TBC]"
     },
     {
       "id": "dispatch-staff", "icon": "🤝", "color": "#3FA66A",
-      "title": "オンサイト派遣スタッフ",
+      "title": "オンサイト派遣スタッフ", "titleEn": "On-site Dispatch Staff",
       "fit": "新しい環境でも、仲間と一緒なら頑張れる人。",
+      "fitEn": "Can thrive in a new environment when alongside teammates.",
       "work": "派遣先の現場に入り、仲間と一緒に業務を支えます。",
-      "experience": "未経験可 [要確認]"
+      "workEn": "Join the client's site and support the work together with peers.",
+      "experience": "未経験可 [要確認]", "experienceEn": "Open to beginners [TBC]"
     },
     {
       "id": "homework-staff", "icon": "🧵", "color": "#F2B705",
-      "title": "内職スタッフ",
+      "title": "内職スタッフ", "titleEn": "Homework Staff",
       "fit": "丁寧な手作業が得意。自分のペースを大切にしたい人。",
+      "fitEn": "Good at careful handwork; values their own pace.",
       "work": "手作業ラインで、部品の組立・検査などを担当します。",
-      "experience": "未経験可 [要確認]"
+      "workEn": "Handle assembly, inspection and more on the handwork line.",
+      "experience": "未経験可 [要確認]", "experienceEn": "Open to beginners [TBC]"
     },
     {
       "id": "leader", "icon": "🧭", "color": "#1F2A44",
-      "title": "管理・リーダー",
+      "title": "管理・リーダー", "titleEn": "Manager / Leader",
       "fit": "人を支え、現場をまとめるのが好きな人。",
+      "fitEn": "Likes supporting people and bringing a site together.",
       "work": "チームの進捗・品質・シフトを管理し、メンバーを育てます。",
-      "experience": "経験者歓迎 [要確認]"
+      "workEn": "Manage the team's progress, quality and shifts, and grow members.",
+      "experience": "経験者歓迎 [要確認]", "experienceEn": "Experience welcome [TBC]"
     },
     {
       "id": "sales", "icon": "📈", "color": "#2D7DD2",
-      "title": "営業",
+      "title": "営業", "titleEn": "Sales",
       "fit": "人と企業の橋渡しにやりがいを感じる人。",
+      "fitEn": "Finds meaning in bridging people and companies.",
       "work": "取引先の課題を聞き、最適な請負・派遣プランを提案します。",
-      "experience": "未経験可 [要確認]"
+      "workEn": "Listen to clients' needs and propose the best contract or dispatch plan.",
+      "experience": "未経験可 [要確認]", "experienceEn": "Open to beginners [TBC]"
     },
     {
       "id": "accounting", "icon": "🧮", "color": "#7A4FB5",
-      "title": "経理事務",
+      "title": "経理事務", "titleEn": "Accounting / Admin",
       "fit": "数字と向き合い、正確さを大切にできる人。",
+      "fitEn": "Comfortable with numbers and values accuracy.",
       "work": "経理・労務・各種事務で、現場と会社を裏から支えます。",
-      "experience": "経験者歓迎 [要確認]"
+      "workEn": "Support sites and the company from behind through accounting, HR and admin.",
+      "experience": "経験者歓迎 [要確認]", "experienceEn": "Experience welcome [TBC]"
     },
     {
       "id": "interpreter", "icon": "🌏", "color": "#D7263D",
-      "title": "通訳・多言語サポート",
+      "title": "通訳・多言語サポート", "titleEn": "Interpreter / Multilingual Support",
       "fit": "母国語と日本語をいかして、仲間を支えたい人。",
+      "fitEn": "Wants to support teammates using their mother tongue and Japanese.",
       "work": "ベトナム語・タイ語・ポルトガル語などで、現場の通訳・サポートを担います。",
-      "experience": "語学力をいかせます [要確認]"
+      "workEn": "Provide on-site interpreting and support in Vietnamese, Thai, Portuguese and more.",
+      "experience": "語学力をいかせます [要確認]", "experienceEn": "Put your language skills to use [TBC]"
     }
   ]
 }
