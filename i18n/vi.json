@@ -1,14 +1,35 @@
 {
-  "_note": "Tiếng Việt — cấu trúc khóa, chưa dịch. Để trống sẽ tự fallback về 日本語.",
-  "brand": { "tagline": "" },
-  "nav": { "home": "", "about": "", "members": "", "jobs": "", "grow": "", "future": "", "numbers": "", "faq": "", "entry": "" },
-  "cta": { "entry": "", "entryLong": "", "casual": "", "viewMembers": "", "learnMore": "", "toEntry": "" },
-  "a11y": { "skip": "", "close": "", "menu": "" },
-  "footer": { "site": "", "more": "", "note": "" },
-  "common": { "todo": "", "proposal": "", "wip": "" },
-  "members": { "filterDept": "", "filterOrigin": "", "all": "", "empty": "", "story.join": "", "story.day": "", "story.message": "", "placeholderName": "" },
-  "jobs": { "fit": "", "work": "", "experience": "" },
-  "numbers": { "todo": "" },
+  "_note": "Tiếng Việt — đã dịch phần giao diện chung. Tiêu đề trang (page.*) và thẻ dữ liệu sẽ fallback về 日本語.",
+  "brand": { "tagline": "Tuyển dụng — gặp gỡ những đồng đội tương lai" },
+  "nav": {
+    "home": "Trang chủ", "about": "Về chúng tôi", "members": "Đồng đội",
+    "jobs": "Vị trí", "grow": "Phát triển & Gắn bó", "future": "Thử thách mới",
+    "numbers": "Những con số", "faq": "Câu hỏi thường gặp", "entry": "Ứng tuyển"
+  },
+  "cta": {
+    "entry": "Ứng tuyển", "entryLong": "Bắt đầu bằng một buổi trò chuyện thoải mái",
+    "casual": "Đặt lịch phỏng vấn thân mật", "viewMembers": "Xem đồng đội",
+    "learnMore": "Tìm hiểu thêm", "toEntry": "Ứng tuyển ngay"
+  },
+  "a11y": { "skip": "Bỏ qua đến nội dung", "close": "Đóng", "menu": "Menu" },
+  "footer": { "site": "Sơ đồ trang", "more": "Khám phá thêm", "note": "Một số số liệu và chương trình trên trang đang được xem xét hoặc lên kế hoạch." },
+  "common": { "todo": "[Cần xác nhận]", "proposal": "Đề xuất", "wip": "Đang lên kế hoạch", "demo": "Đây là dữ liệu mẫu (demo), sẽ được thay bằng nội dung thực tế." },
+  "members": {
+    "filterDept": "Bộ phận", "filterOrigin": "Quốc gia", "all": "Tất cả",
+    "empty": "Không tìm thấy đồng đội phù hợp.",
+    "story.join": "Lý do gia nhập", "story.day": "Một ngày làm việc", "story.message": "Gửi đồng đội tương lai",
+    "placeholderName": "[Cần xác nhận]"
+  },
+  "jobs": { "fit": "Phù hợp với", "work": "Công việc", "experience": "Kinh nghiệm" },
+  "numbers": { "todo": "Số liệu đang được xem xét" },
   "faq": {},
-  "entry": { "methodForm": "", "methodLine": "", "methodCasual": "", "methodReferral": "", "name": "", "email": "", "phone": "", "lang": "", "job": "", "referral": "", "message": "", "namePh": "", "referralPh": "", "consent": "", "submit": "", "required": "", "sent": "" }
+  "entry": {
+    "methodForm": "Mẫu ứng tuyển", "methodLine": "Ứng tuyển qua LINE", "methodCasual": "Đặt lịch phỏng vấn thân mật", "methodReferral": "Giới thiệu từ nhân viên",
+    "name": "Họ tên", "email": "Email", "phone": "Điện thoại",
+    "lang": "Ngôn ngữ mong muốn", "job": "Vị trí quan tâm", "referral": "Mã giới thiệu (không bắt buộc)", "message": "Lời nhắn (không bắt buộc)",
+    "namePh": "Tên của bạn", "referralPh": "VD: AT-XXXX",
+    "consent": "Tôi đồng ý với việc xử lý thông tin cá nhân.",
+    "submit": "Xem lại & ứng tuyển", "required": "Bắt buộc",
+    "sent": "Thông tin của bạn đã được xem lại (đã ghi vào console cho bản demo này)."
+  }
 }

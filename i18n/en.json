@@ -12,7 +12,7 @@
   },
   "a11y": { "skip": "Skip to content", "close": "Close", "menu": "Menu" },
   "footer": { "site": "Sitemap", "more": "Discover more", "note": "Some figures and programs on this site are under review or in planning." },
-  "common": { "todo": "[TBC]", "proposal": "Proposed", "wip": "In planning" },
+  "common": { "todo": "[TBC]", "proposal": "Proposed", "wip": "In planning", "demo": "This is sample (demo) data, to be replaced with real content." },
   "members": {
     "filterDept": "Department", "filterOrigin": "Origin", "all": "All",
     "empty": "No teammates match your filters.",
@@ -86,12 +86,12 @@
     "numbers": {
       "headTitle": "By the Numbers",
       "headLead": "Multinational ratio, retention and more — us, in numbers. We don't post figures we can't source. Confirmed values will appear over time.",
-      "foot": "The figures shown are currently [TBC]. Once confirmed with sources, they will appear in the counters."
+      "foot": "The figures shown are sample (demo) values. Please replace them once confirmed with sources."
     },
     "faq": {
       "headTitle": "FAQ",
       "headLead": "Answers to worries and questions before you apply. Answers include items still under review.",
-      "foot": "Answers are proposal-based and official replies are [TBC]. If anything else is on your mind, ask us anything in a casual interview."
+      "foot": "Answers are sample (demo) content; please replace them with official replies. If anything else is on your mind, ask us anything in a casual interview."
     },
     "entry": {
       "headTitle": "Apply",

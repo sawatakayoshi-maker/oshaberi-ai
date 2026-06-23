@@ -1,14 +1,35 @@
 {
-  "_note": "Português — estrutura de chaves, sem tradução. Valores vazios fazem fallback para 日本語.",
-  "brand": { "tagline": "" },
-  "nav": { "home": "", "about": "", "members": "", "jobs": "", "grow": "", "future": "", "numbers": "", "faq": "", "entry": "" },
-  "cta": { "entry": "", "entryLong": "", "casual": "", "viewMembers": "", "learnMore": "", "toEntry": "" },
-  "a11y": { "skip": "", "close": "", "menu": "" },
-  "footer": { "site": "", "more": "", "note": "" },
-  "common": { "todo": "", "proposal": "", "wip": "" },
-  "members": { "filterDept": "", "filterOrigin": "", "all": "", "empty": "", "story.join": "", "story.day": "", "story.message": "", "placeholderName": "" },
-  "jobs": { "fit": "", "work": "", "experience": "" },
-  "numbers": { "todo": "" },
+  "_note": "Português — interface geral traduzida. Títulos de página (page.*) e cards de dados fazem fallback para 日本語.",
+  "brand": { "tagline": "Carreiras — conheça seus futuros colegas" },
+  "nav": {
+    "home": "Início", "about": "Sobre nós", "members": "Equipe",
+    "jobs": "Vagas", "grow": "Crescer & Pertencer", "future": "Novos desafios",
+    "numbers": "Em números", "faq": "Perguntas frequentes", "entry": "Candidatar-se"
+  },
+  "cta": {
+    "entry": "Candidatar-se", "entryLong": "Comece com uma conversa informal",
+    "casual": "Agendar entrevista informal", "viewMembers": "Conheça a equipe",
+    "learnMore": "Saiba mais", "toEntry": "Candidate-se agora"
+  },
+  "a11y": { "skip": "Pular para o conteúdo", "close": "Fechar", "menu": "Menu" },
+  "footer": { "site": "Mapa do site", "more": "Descubra mais", "note": "Alguns números e programas neste site estão em revisão ou planejamento." },
+  "common": { "todo": "[A confirmar]", "proposal": "Proposto", "wip": "Em planejamento", "demo": "Estes são dados de exemplo (demo), a serem substituídos por conteúdo real." },
+  "members": {
+    "filterDept": "Departamento", "filterOrigin": "Origem", "all": "Todos",
+    "empty": "Nenhum colega corresponde aos filtros.",
+    "story.join": "Por que entrei", "story.day": "Um dia de trabalho", "story.message": "Aos futuros colegas",
+    "placeholderName": "[A confirmar]"
+  },
+  "jobs": { "fit": "Ideal para", "work": "O que você fará", "experience": "Experiência" },
+  "numbers": { "todo": "Números em revisão" },
   "faq": {},
-  "entry": { "methodForm": "", "methodLine": "", "methodCasual": "", "methodReferral": "", "name": "", "email": "", "phone": "", "lang": "", "job": "", "referral": "", "message": "", "namePh": "", "referralPh": "", "consent": "", "submit": "", "required": "", "sent": "" }
+  "entry": {
+    "methodForm": "Formulário", "methodLine": "Candidatar-se via LINE", "methodCasual": "Agendar entrevista informal", "methodReferral": "Indicação de funcionário",
+    "name": "Nome", "email": "E-mail", "phone": "Telefone",
+    "lang": "Idioma preferido", "job": "Vaga de interesse", "referral": "Código de indicação (opcional)", "message": "Mensagem (opcional)",
+    "namePh": "Seu nome", "referralPh": "ex.: AT-XXXX",
+    "consent": "Concordo com o tratamento dos meus dados pessoais.",
+    "submit": "Revisar e candidatar-se", "required": "Obrigatório",
+    "sent": "Sua inscrição foi revisada (registrada no console nesta demo)."
+  }
 }

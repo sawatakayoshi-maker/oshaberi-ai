@@ -1,11 +1,12 @@
 {
-  "_note": "数値はすべて未確定。出典の出せない数字は載せない。value は null のままにし、UIは [要確認] を表示する。",
+  "_note": "数値は『デモ用のサンプル（創作）』です。実績値ではありません（_demo: true）。確定値に差し替えてください。",
+  "_demo": true,
   "stats": [
-    { "id": "nationalities", "label": "在籍国籍数",       "value": null, "unit": "カ国", "hint": "ベトナム・タイ・ブラジルほか（組織図より）" },
-    { "id": "foreign-ratio", "label": "多国籍メンバー比率", "value": null, "unit": "%",   "hint": "" },
-    { "id": "retention",     "label": "定着率",           "value": null, "unit": "%",   "hint": "" },
-    { "id": "tenure",        "label": "平均勤続年数",       "value": null, "unit": "年",  "hint": "" },
-    { "id": "members",       "label": "仲間の人数",        "value": null, "unit": "名",  "hint": "組織図上は41名分の枠（要確認）" },
-    { "id": "gender",        "label": "男女比",           "value": null, "unit": "",    "hint": "" }
+    { "id": "nationalities", "label": "在籍国籍数",       "value": 4,  "unit": "カ国", "hint": "デモ値（日本・ベトナム・タイ・ブラジル）" },
+    { "id": "foreign-ratio", "label": "多国籍メンバー比率", "value": 39, "unit": "%",   "hint": "デモ値" },
+    { "id": "retention",     "label": "定着率",           "value": 88, "unit": "%",   "hint": "デモ値" },
+    { "id": "tenure",        "label": "平均勤続年数",       "value": 6,  "unit": "年",  "hint": "デモ値" },
+    { "id": "members",       "label": "仲間の人数",        "value": 41, "unit": "名",  "hint": "デモ値（組織図の枠数）" },
+    { "id": "female-ratio",  "label": "女性比率",          "value": 46, "unit": "%",   "hint": "デモ値" }
   ]
 }

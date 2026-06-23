@@ -1,47 +1,48 @@
 {
-  "_note": "回答はすべて提案ベース。正式回答は [要確認]。*En は英語表示用。",
+  "_note": "回答は『デモ用のサンプル（創作）』です。実在の正式回答ではありません（_demo: true）。*En は英語表示用。",
+  "_demo": true,
   "faqs": [
     {
       "id": "language",
       "q": "日本語が不安でも働けますか？",
       "qEn": "Can I work even if my Japanese is shaky?",
-      "a": "はい。多国籍の仲間が多く在籍し、母国語でのサポート体制を大切にしています。日常会話レベルから始める方も多いです。[要確認]",
-      "aEn": "Yes. Many multinational teammates are here and we value support in your own language. Many start at a conversational level. [TBC]"
+      "a": "はい、大丈夫です。多国籍の仲間が多く在籍し、母国語でのサポート体制があります。マニュアルや連絡も、やさしい日本語や母国語を用意。日常会話レベルから始める方も多く、働きながら少しずつ上達できます。",
+      "aEn": "Yes. Many multinational teammates are here and we offer support in your own language. Manuals and notices come in easy Japanese or your mother tongue. Many start at a conversational level and improve while working."
     },
     {
       "id": "inexperienced",
       "q": "未経験でも大丈夫ですか？",
       "qEn": "Is it okay to have no experience?",
-      "a": "多くの職種で未経験から始められます。先輩が同じ現場で支えるので、はじめての方も安心です。[要確認]",
-      "aEn": "Most roles can be started with no experience. Seniors support you on the same site, so beginners are in good hands. [TBC]"
+      "a": "多くの職種で未経験から始められます。最初は先輩が同じ現場で伴走し、作業の流れをていねいにお教えします。バディ制度もあるので、はじめての方も安心してスタートできます。",
+      "aEn": "Most roles can be started with no experience. At first a senior works beside you on the same site and teaches the flow carefully. With our buddy program, beginners can start with peace of mind."
     },
     {
       "id": "contract-vs-dispatch",
       "q": "請負と派遣の違いは何ですか？",
       "qEn": "What's the difference between contract and dispatch?",
-      "a": "請負は『業務をチームごと引き受ける』働き方、オンサイト派遣は『取引先の現場に入って支える』働き方です。どちらが向いているかは面談で一緒に考えます。[要確認]",
-      "aEn": "Contract means 'taking on work as a whole team'; on-site dispatch means 'joining the client's site to support it'. We'll figure out which fits you in an interview. [TBC]"
+      "a": "請負は『業務をチームごと引き受け、自分たちで段取りして進める』働き方です。オンサイト派遣は『取引先の現場に入り、その現場の一員として支える』働き方です。どちらが向いているかは、面談であなたの希望を聞きながら一緒に考えます。",
+      "aEn": "Contract means 'taking on work as a whole team and planning the flow yourselves'. On-site dispatch means 'joining the client's site and supporting it as a member there'. We'll consider which fits you together in an interview."
     },
     {
       "id": "culture",
       "q": "母国の祝日や文化は大切にできますか？",
       "qEn": "Can I honour my home country's holidays and culture?",
-      "a": "はい。母国の文化や祝日への配慮を大切にしたいと考えています。詳細はカジュアル面談でご相談ください。[要確認]",
-      "aEn": "Yes. We want to be mindful of home cultures and holidays. Please ask for details in a casual interview. [TBC]"
+      "a": "はい。母国の文化や祝日への配慮を大切にしています。シフトの相談にも柔軟に対応し、社内イベントでは各国の文化を楽しむ機会もあります。詳しくはカジュアル面談でお気軽にご相談ください。",
+      "aEn": "Yes. We value consideration for home cultures and holidays, flexibly discuss shifts, and our company events celebrate each country's culture. Please ask freely in a casual interview."
     },
     {
       "id": "career",
       "q": "入社後のキャリアはどう広がりますか？",
       "qEn": "How can my career grow after joining?",
-      "a": "スタッフからリーダー・管理、通訳・多言語サポートなど、適性に応じた道があります。定期面談で『次にやりたい』を一緒に描きます。[要確認]",
-      "aEn": "From staff to leader/manager, interpreter, multilingual support and more — paths suited to your aptitude. We map your 'what's next' together in regular talks. [TBC]"
+      "a": "スタッフからリーダー・管理職、通訳・多言語サポートなど、適性に応じた道があります。定期的な1on1で『次にやりたいこと』を一緒に描き、スキルの見える化で成長を後押しします。",
+      "aEn": "From staff to leader/manager, interpreter and multilingual support — paths suited to your aptitude. Regular 1-on-1s map your 'what's next' together, and visualised skills support your growth."
     },
     {
       "id": "apply",
       "q": "応募方法は何がありますか？",
       "qEn": "What ways can I apply?",
-      "a": "通常フォーム、LINE応募、カジュアル面談予約、社員からの紹介（リファラル）などから選べます。エントリーページからどうぞ。[要確認]",
-      "aEn": "Choose from the standard form, LINE, booking a casual interview, or an employee referral. Start from the Apply page. [TBC]"
+      "a": "通常フォーム、LINE応募、カジュアル面談予約、社員からの紹介（リファラル）から選べます。「まずは話だけ」も大歓迎です。エントリーページからお進みください。",
+      "aEn": "Choose from the standard form, LINE, booking a casual interview, or an employee referral. 'Just a chat first' is very welcome. Please start from the Apply page."
     }
   ]
 }

@@ -1,14 +1,35 @@
 {
-  "_note": "ภาษาไทย — โครงสร้างคีย์ ยังไม่แปล ค่าว่างจะ fallback ไปเป็น 日本語",
-  "brand": { "tagline": "" },
-  "nav": { "home": "", "about": "", "members": "", "jobs": "", "grow": "", "future": "", "numbers": "", "faq": "", "entry": "" },
-  "cta": { "entry": "", "entryLong": "", "casual": "", "viewMembers": "", "learnMore": "", "toEntry": "" },
-  "a11y": { "skip": "", "close": "", "menu": "" },
-  "footer": { "site": "", "more": "", "note": "" },
-  "common": { "todo": "", "proposal": "", "wip": "" },
-  "members": { "filterDept": "", "filterOrigin": "", "all": "", "empty": "", "story.join": "", "story.day": "", "story.message": "", "placeholderName": "" },
-  "jobs": { "fit": "", "work": "", "experience": "" },
-  "numbers": { "todo": "" },
+  "_note": "ภาษาไทย — แปลส่วนอินเทอร์เฟซทั่วไปแล้ว หัวข้อหน้า (page.*) และการ์ดข้อมูลจะ fallback ไปเป็น 日本語",
+  "brand": { "tagline": "ร่วมงานกับเรา — พบเพื่อนร่วมทีมในอนาคต" },
+  "nav": {
+    "home": "หน้าแรก", "about": "เกี่ยวกับเรา", "members": "เพื่อนร่วมทีม",
+    "jobs": "ตำแหน่งงาน", "grow": "เติบโต & เป็นส่วนหนึ่ง", "future": "ความท้าทายใหม่",
+    "numbers": "ตัวเลข", "faq": "คำถามที่พบบ่อย", "entry": "สมัคร"
+  },
+  "cta": {
+    "entry": "สมัคร", "entryLong": "เริ่มจากการพูดคุยสบาย ๆ",
+    "casual": "จองสัมภาษณ์แบบสบาย ๆ", "viewMembers": "ดูเพื่อนร่วมทีม",
+    "learnMore": "ดูเพิ่มเติม", "toEntry": "สมัครเลย"
+  },
+  "a11y": { "skip": "ข้ามไปยังเนื้อหา", "close": "ปิด", "menu": "เมนู" },
+  "footer": { "site": "แผนผังเว็บไซต์", "more": "ค้นพบเพิ่มเติม", "note": "ตัวเลขและโครงการบางส่วนบนเว็บไซต์นี้อยู่ระหว่างการตรวจสอบหรือวางแผน" },
+  "common": { "todo": "[รอยืนยัน]", "proposal": "ข้อเสนอ", "wip": "อยู่ระหว่างวางแผน", "demo": "นี่คือข้อมูลตัวอย่าง (เดโม) จะถูกแทนที่ด้วยเนื้อหาจริง" },
+  "members": {
+    "filterDept": "แผนก", "filterOrigin": "ประเทศ", "all": "ทั้งหมด",
+    "empty": "ไม่พบเพื่อนร่วมทีมที่ตรงเงื่อนไข",
+    "story.join": "เหตุผลที่เข้าร่วม", "story.day": "วันทำงานหนึ่งวัน", "story.message": "ถึงเพื่อนร่วมทีมในอนาคต",
+    "placeholderName": "[รอยืนยัน]"
+  },
+  "jobs": { "fit": "เหมาะกับ", "work": "ลักษณะงาน", "experience": "ประสบการณ์" },
+  "numbers": { "todo": "ตัวเลขอยู่ระหว่างตรวจสอบ" },
   "faq": {},
-  "entry": { "methodForm": "", "methodLine": "", "methodCasual": "", "methodReferral": "", "name": "", "email": "", "phone": "", "lang": "", "job": "", "referral": "", "message": "", "namePh": "", "referralPh": "", "consent": "", "submit": "", "required": "", "sent": "" }
+  "entry": {
+    "methodForm": "แบบฟอร์มสมัคร", "methodLine": "สมัครผ่าน LINE", "methodCasual": "จองสัมภาษณ์แบบสบาย ๆ", "methodReferral": "การแนะนำจากพนักงาน",
+    "name": "ชื่อ", "email": "อีเมล", "phone": "โทรศัพท์",
+    "lang": "ภาษาที่ต้องการ", "job": "ตำแหน่งที่สนใจ", "referral": "รหัสแนะนำ (ไม่บังคับ)", "message": "ข้อความ (ไม่บังคับ)",
+    "namePh": "ชื่อของคุณ", "referralPh": "เช่น AT-XXXX",
+    "consent": "ฉันยินยอมให้มีการจัดการข้อมูลส่วนบุคคล",
+    "submit": "ตรวจสอบ & สมัคร", "required": "จำเป็น",
+    "sent": "ตรวจสอบข้อมูลของคุณแล้ว (บันทึกลง console สำหรับเดโมนี้)"
+  }
 }

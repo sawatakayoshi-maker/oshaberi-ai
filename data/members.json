@@ -1,72 +1,680 @@
 {
-  "_note": "組織図(添付画像)から読み取った41名。氏名はユーザー確認済み。comment と story.* は未取得のため [要確認]。営業(sl-001)と内職(hw-001)の『河合佑司』は同一人物で、組織図どおり両部署に重複表示する（統合しない）。",
+  "_note": "組織図の41名。氏名・所属・国旗はユーザー確認済み。comment と story.* は『デモ用のサンプル（創作）』で、実在の発言ではありません（_demo: true）。営業(sl-001)と内職(hw-001)の『河合佑司』は同一人物で、組織図どおり両部署に重複表示する。",
   "_uncertain": [
-    "comment / story.* は未取得のため全員 [要確認]。",
+    "comment / story.* はデモ用サンプル（創作）。実際の社員コメントに差し替えてください。",
     "各社員のキャラ画像は public/images/members/<id>.png に配置すれば表示（未配置時は部署カラー＋イニシャル）。"
   ],
   "departments": {
-    "president":  { "label": "社長",       "labelEn": "President",        "color": "#1F2A44" },
-    "vietnam":    { "label": "ベトナムチーム", "labelEn": "Vietnam Team",    "color": "#D7263D" },
-    "contract":   { "label": "請負事業",     "labelEn": "Contract",         "color": "#E8743B" },
-    "dispatch":   { "label": "派遣事業",     "labelEn": "On-site Dispatch", "color": "#3FA66A" },
-    "sales":      { "label": "営業",        "labelEn": "Sales",            "color": "#2D7DD2" },
-    "homework":   { "label": "内職事業",     "labelEn": "Homework",         "color": "#F2B705" },
-    "accounting": { "label": "経理事務",     "labelEn": "Accounting",       "color": "#7A4FB5" }
+    "president": {
+      "label": "社長",
+      "labelEn": "President",
+      "color": "#1F2A44"
+    },
+    "vietnam": {
+      "label": "ベトナムチーム",
+      "labelEn": "Vietnam Team",
+      "color": "#D7263D"
+    },
+    "contract": {
+      "label": "請負事業",
+      "labelEn": "Contract",
+      "color": "#E8743B"
+    },
+    "dispatch": {
+      "label": "派遣事業",
+      "labelEn": "On-site Dispatch",
+      "color": "#3FA66A"
+    },
+    "sales": {
+      "label": "営業",
+      "labelEn": "Sales",
+      "color": "#2D7DD2"
+    },
+    "homework": {
+      "label": "内職事業",
+      "labelEn": "Homework",
+      "color": "#F2B705"
+    },
+    "accounting": {
+      "label": "経理事務",
+      "labelEn": "Accounting",
+      "color": "#7A4FB5"
+    }
   },
   "origins": {
-    "JP": { "label": "日本",     "flag": "🇯🇵" },
-    "VN": { "label": "ベトナム", "flag": "🇻🇳" },
-    "TH": { "label": "タイ",     "flag": "🇹🇭" },
-    "BR": { "label": "ブラジル", "flag": "🇧🇷" }
+    "JP": {
+      "label": "日本",
+      "flag": "🇯🇵"
+    },
+    "VN": {
+      "label": "ベトナム",
+      "flag": "🇻🇳"
+    },
+    "TH": {
+      "label": "タイ",
+      "flag": "🇹🇭"
+    },
+    "BR": {
+      "label": "ブラジル",
+      "flag": "🇧🇷"
+    }
   },
   "members": [
-    { "id": "ceo-001", "name": "西尾武志", "department": "president", "role": "社長", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ceo-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "vn-001", "name": "Phạm Ngọc Quỳnh Anh", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-002", "name": "チョコン・ドー・タイン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-003", "name": "アン・ティン・チェオン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-004", "name": "グエン・ディン・トン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-005", "name": "ダオ・ズイ・リン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": null, "image": "/public/images/members/vn-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-006", "name": "グエン・スアン・フン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-007", "name": "タ・ティ・ジャン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-008", "name": "チュコン・ヴァン・カン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "ASEAN", "image": "/public/images/members/vn-008.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-009", "name": "カオ・ミン・ダン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "ASEAN", "image": "/public/images/members/vn-009.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "vn-010", "name": "Sure Sak Seng-Wi-Luad", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/vn-010.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-011", "name": "勝木健一", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/vn-011.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-012", "name": "シーサンポンパーク", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": null, "image": "/public/images/members/vn-012.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-013", "name": "谷水洋美", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-013.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-014", "name": "小林瑞子", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-014.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-015", "name": "坪田陽介", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-015.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "ct-001", "name": "玉城将也", "department": "contract", "role": "リーダー", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-002", "name": "一ノ瀬莉紗", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-003", "name": "黒見竜ニ", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-004", "name": "大谷恵利", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-005", "name": "増田義二", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "dp-001", "name": "岩田民男", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-002", "name": "金田美緒", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-003", "name": "村中美花", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-004", "name": "奥山美鈴", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-005", "name": "楠原安英", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-006", "name": "山元ヘンリック武馬", "department": "dispatch", "role": "[要確認]", "origin": "BR", "flagBadge": null, "image": "/public/images/members/dp-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-007", "name": "吉川公隆", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-008", "name": "村村フェリペ", "department": "dispatch", "role": "[要確認]", "origin": "BR", "flagBadge": null, "image": "/public/images/members/dp-008.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-009", "name": "本村ミシェル", "department": "dispatch", "role": "[要確認]", "origin": "BR", "flagBadge": null, "image": "/public/images/members/dp-009.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "sl-001", "name": "河合佑司", "department": "sales", "role": "[要確認] ※内職(hw-001)と同一人物。組織図どおり両部署に重複表示", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "sl-002", "name": "荒川祐治", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "hw-001", "name": "河合佑司", "department": "homework", "role": "[要確認] ※営業(sl-001)と同一人物。組織図どおり両部署に重複表示", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-002", "name": "能田克己", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-003", "name": "河本愛美", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-004", "name": "田中由香", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-005", "name": "小柳宏治", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-006", "name": "青山佳子", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-007", "name": "越田美雪", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-
-    { "id": "ac-001", "name": "寺前有希子", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ac-002", "name": "中出岬", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } }
-  ]
+    {
+      "id": "ceo-001",
+      "name": "西尾武志",
+      "department": "president",
+      "role": "社長",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ceo-001.png",
+      "comment": "国も経験もちがう仲間が、ここでは強みになる。安心して長く働ける場所にしたい。",
+      "story": {
+        "joinReason": "仲間が長く安心して働ける会社をつくりたいと考え、この道を選びました。",
+        "aDay": "朝は各チームの様子を確認し、現場や面談に顔を出します。仲間の声を聞くのが一番の仕事です。",
+        "message": "国籍も経験も問いません。まずは気軽に話しに来てください。お待ちしています。"
+      }
+    },
+    {
+      "id": "vn-001",
+      "name": "Phạm Ngọc Quỳnh Anh",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-001.png",
+      "comment": "日本語が不安でも大丈夫。母国の仲間が近くで支えてくれます。",
+      "story": {
+        "joinReason": "日本で挑戦したくて応募しました。母国出身の先輩がいると知って安心できたのが決め手です。",
+        "aDay": "朝礼で一日の流れを確認し、現場では母国の仲間の通訳やサポートも。困っている人がいれば声をかけます。",
+        "message": "日本語が不安でも大丈夫。母国の仲間が待っています。一緒に頑張りましょう！"
+      }
+    },
+    {
+      "id": "vn-002",
+      "name": "チョコン・ドー・タイン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-002.png",
+      "comment": "困ったらすぐ聞ける。だから初めてでも前に進めました。",
+      "story": {
+        "joinReason": "母国の家族のためにも、しっかり働ける場所を探していました。",
+        "aDay": "作業の合間に日本語のメモを取りながら、少しずつ言葉も覚えています。",
+        "message": "はじめは誰でも不安。でも、ここには支えてくれる人がいます。"
+      }
+    },
+    {
+      "id": "vn-003",
+      "name": "アン・ティン・チェオン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-003.png",
+      "comment": "母国の文化も大事にしながら働けるのがうれしいです。",
+      "story": {
+        "joinReason": "言葉の不安はありましたが、サポートがあると聞いて飛び込みました。",
+        "aDay": "休憩時間は母国の仲間とおしゃべり。午後はまた集中して作業します。",
+        "message": "あなたの『やってみたい』を大切にできる場所です。"
+      }
+    },
+    {
+      "id": "vn-004",
+      "name": "グエン・ディン・トン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-004.png",
+      "comment": "一緒に頑張る仲間がいると、毎日がちょっと楽しい。",
+      "story": {
+        "joinReason": "日本で挑戦したくて応募しました。母国出身の先輩がいると知って安心できたのが決め手です。",
+        "aDay": "朝礼で一日の流れを確認し、現場では母国の仲間の通訳やサポートも。困っている人がいれば声をかけます。",
+        "message": "日本語が不安でも大丈夫。母国の仲間が待っています。一緒に頑張りましょう！"
+      }
+    },
+    {
+      "id": "vn-005",
+      "name": "ダオ・ズイ・リン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": null,
+      "image": "/public/images/members/vn-005.png",
+      "comment": "日本語が不安でも大丈夫。母国の仲間が近くで支えてくれます。",
+      "story": {
+        "joinReason": "母国の家族のためにも、しっかり働ける場所を探していました。",
+        "aDay": "作業の合間に日本語のメモを取りながら、少しずつ言葉も覚えています。",
+        "message": "はじめは誰でも不安。でも、ここには支えてくれる人がいます。"
+      }
+    },
+    {
+      "id": "vn-006",
+      "name": "グエン・スアン・フン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-006.png",
+      "comment": "困ったらすぐ聞ける。だから初めてでも前に進めました。",
+      "story": {
+        "joinReason": "言葉の不安はありましたが、サポートがあると聞いて飛び込みました。",
+        "aDay": "休憩時間は母国の仲間とおしゃべり。午後はまた集中して作業します。",
+        "message": "あなたの『やってみたい』を大切にできる場所です。"
+      }
+    },
+    {
+      "id": "vn-007",
+      "name": "タ・ティ・ジャン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "VN",
+      "image": "/public/images/members/vn-007.png",
+      "comment": "母国の文化も大事にしながら働けるのがうれしいです。",
+      "story": {
+        "joinReason": "日本で挑戦したくて応募しました。母国出身の先輩がいると知って安心できたのが決め手です。",
+        "aDay": "朝礼で一日の流れを確認し、現場では母国の仲間の通訳やサポートも。困っている人がいれば声をかけます。",
+        "message": "日本語が不安でも大丈夫。母国の仲間が待っています。一緒に頑張りましょう！"
+      }
+    },
+    {
+      "id": "vn-008",
+      "name": "チュコン・ヴァン・カン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "ASEAN",
+      "image": "/public/images/members/vn-008.png",
+      "comment": "一緒に頑張る仲間がいると、毎日がちょっと楽しい。",
+      "story": {
+        "joinReason": "母国の家族のためにも、しっかり働ける場所を探していました。",
+        "aDay": "作業の合間に日本語のメモを取りながら、少しずつ言葉も覚えています。",
+        "message": "はじめは誰でも不安。でも、ここには支えてくれる人がいます。"
+      }
+    },
+    {
+      "id": "vn-009",
+      "name": "カオ・ミン・ダン",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "VN",
+      "flagBadge": "ASEAN",
+      "image": "/public/images/members/vn-009.png",
+      "comment": "日本語が不安でも大丈夫。母国の仲間が近くで支えてくれます。",
+      "story": {
+        "joinReason": "言葉の不安はありましたが、サポートがあると聞いて飛び込みました。",
+        "aDay": "休憩時間は母国の仲間とおしゃべり。午後はまた集中して作業します。",
+        "message": "あなたの『やってみたい』を大切にできる場所です。"
+      }
+    },
+    {
+      "id": "vn-010",
+      "name": "Sure Sak Seng-Wi-Luad",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "TH",
+      "flagBadge": "TH",
+      "image": "/public/images/members/vn-010.png",
+      "comment": "困ったらすぐ聞ける。だから初めてでも前に進めました。",
+      "story": {
+        "joinReason": "日本で挑戦したくて応募しました。母国出身の先輩がいると知って安心できたのが決め手です。",
+        "aDay": "朝礼で一日の流れを確認し、現場では母国の仲間の通訳やサポートも。困っている人がいれば声をかけます。",
+        "message": "日本語が不安でも大丈夫。母国の仲間が待っています。一緒に頑張りましょう！"
+      }
+    },
+    {
+      "id": "vn-011",
+      "name": "勝木健一",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "TH",
+      "flagBadge": "TH",
+      "image": "/public/images/members/vn-011.png",
+      "comment": "母国の文化も大事にしながら働けるのがうれしいです。",
+      "story": {
+        "joinReason": "母国の家族のためにも、しっかり働ける場所を探していました。",
+        "aDay": "作業の合間に日本語のメモを取りながら、少しずつ言葉も覚えています。",
+        "message": "はじめは誰でも不安。でも、ここには支えてくれる人がいます。"
+      }
+    },
+    {
+      "id": "vn-012",
+      "name": "シーサンポンパーク",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "TH",
+      "flagBadge": null,
+      "image": "/public/images/members/vn-012.png",
+      "comment": "一緒に頑張る仲間がいると、毎日がちょっと楽しい。",
+      "story": {
+        "joinReason": "言葉の不安はありましたが、サポートがあると聞いて飛び込みました。",
+        "aDay": "休憩時間は母国の仲間とおしゃべり。午後はまた集中して作業します。",
+        "message": "あなたの『やってみたい』を大切にできる場所です。"
+      }
+    },
+    {
+      "id": "vn-013",
+      "name": "谷水洋美",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/vn-013.png",
+      "comment": "日本語が不安でも大丈夫。母国の仲間が近くで支えてくれます。",
+      "story": {
+        "joinReason": "日本で挑戦したくて応募しました。母国出身の先輩がいると知って安心できたのが決め手です。",
+        "aDay": "朝礼で一日の流れを確認し、現場では母国の仲間の通訳やサポートも。困っている人がいれば声をかけます。",
+        "message": "日本語が不安でも大丈夫。母国の仲間が待っています。一緒に頑張りましょう！"
+      }
+    },
+    {
+      "id": "vn-014",
+      "name": "小林瑞子",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/vn-014.png",
+      "comment": "困ったらすぐ聞ける。だから初めてでも前に進めました。",
+      "story": {
+        "joinReason": "母国の家族のためにも、しっかり働ける場所を探していました。",
+        "aDay": "作業の合間に日本語のメモを取りながら、少しずつ言葉も覚えています。",
+        "message": "はじめは誰でも不安。でも、ここには支えてくれる人がいます。"
+      }
+    },
+    {
+      "id": "vn-015",
+      "name": "坪田陽介",
+      "department": "vietnam",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/vn-015.png",
+      "comment": "母国の文化も大事にしながら働けるのがうれしいです。",
+      "story": {
+        "joinReason": "言葉の不安はありましたが、サポートがあると聞いて飛び込みました。",
+        "aDay": "休憩時間は母国の仲間とおしゃべり。午後はまた集中して作業します。",
+        "message": "あなたの『やってみたい』を大切にできる場所です。"
+      }
+    },
+    {
+      "id": "ct-001",
+      "name": "玉城将也",
+      "department": "contract",
+      "role": "リーダー",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ct-001.png",
+      "comment": "段取りを自分たちで組めるのが面白い。任される実感があります。",
+      "story": {
+        "joinReason": "チームで現場をつくる働き方に惹かれて入社しました。",
+        "aDay": "朝に段取りを共有し、チームで分担。品質と納期を確認しながら一日を進めます。",
+        "message": "未経験でも大歓迎。チームで支え合えるので安心してください。"
+      }
+    },
+    {
+      "id": "ct-002",
+      "name": "一ノ瀬莉紗",
+      "department": "contract",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ct-002.png",
+      "comment": "コツコツ正確に。やった分だけ信頼が返ってきます。",
+      "story": {
+        "joinReason": "未経験からでも任せてもらえると聞いて挑戦しました。",
+        "aDay": "午前は作業、午後は進捗チェックと翌日の準備をします。",
+        "message": "コツコツ取り組める人なら、きっと活躍できます。"
+      }
+    },
+    {
+      "id": "ct-003",
+      "name": "黒見竜ニ",
+      "department": "contract",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ct-003.png",
+      "comment": "チームで動くから、ひとりで抱え込まなくていい。",
+      "story": {
+        "joinReason": "チームで現場をつくる働き方に惹かれて入社しました。",
+        "aDay": "朝に段取りを共有し、チームで分担。品質と納期を確認しながら一日を進めます。",
+        "message": "未経験でも大歓迎。チームで支え合えるので安心してください。"
+      }
+    },
+    {
+      "id": "ct-004",
+      "name": "大谷恵利",
+      "department": "contract",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ct-004.png",
+      "comment": "段取りを自分たちで組めるのが面白い。任される実感があります。",
+      "story": {
+        "joinReason": "未経験からでも任せてもらえると聞いて挑戦しました。",
+        "aDay": "午前は作業、午後は進捗チェックと翌日の準備をします。",
+        "message": "コツコツ取り組める人なら、きっと活躍できます。"
+      }
+    },
+    {
+      "id": "ct-005",
+      "name": "増田義二",
+      "department": "contract",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ct-005.png",
+      "comment": "コツコツ正確に。やった分だけ信頼が返ってきます。",
+      "story": {
+        "joinReason": "チームで現場をつくる働き方に惹かれて入社しました。",
+        "aDay": "朝に段取りを共有し、チームで分担。品質と納期を確認しながら一日を進めます。",
+        "message": "未経験でも大歓迎。チームで支え合えるので安心してください。"
+      }
+    },
+    {
+      "id": "dp-001",
+      "name": "岩田民男",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-001.png",
+      "comment": "現場に仲間と入るから、初日から心強かったです。",
+      "story": {
+        "joinReason": "ひとりにしない、という言葉が決め手でした。",
+        "aDay": "現場に入って朝礼に参加。仲間と協力しながら担当業務を進めます。",
+        "message": "ひとりにはしません。一緒に現場で成長しましょう。"
+      }
+    },
+    {
+      "id": "dp-002",
+      "name": "金田美緒",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-002.png",
+      "comment": "いろんな現場を経験できて、できることが増えました。",
+      "story": {
+        "joinReason": "いろいろな現場を経験して成長したいと思い入社しました。",
+        "aDay": "日によって現場が変わることも。新しい環境でも仲間がいるので安心です。",
+        "message": "新しいことに挑戦したい人、待っています。"
+      }
+    },
+    {
+      "id": "dp-003",
+      "name": "村中美花",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-003.png",
+      "comment": "支えてもらった分、今度は新しい人を支えたい。",
+      "story": {
+        "joinReason": "ひとりにしない、という言葉が決め手でした。",
+        "aDay": "現場に入って朝礼に参加。仲間と協力しながら担当業務を進めます。",
+        "message": "ひとりにはしません。一緒に現場で成長しましょう。"
+      }
+    },
+    {
+      "id": "dp-004",
+      "name": "奥山美鈴",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-004.png",
+      "comment": "現場に仲間と入るから、初日から心強かったです。",
+      "story": {
+        "joinReason": "いろいろな現場を経験して成長したいと思い入社しました。",
+        "aDay": "日によって現場が変わることも。新しい環境でも仲間がいるので安心です。",
+        "message": "新しいことに挑戦したい人、待っています。"
+      }
+    },
+    {
+      "id": "dp-005",
+      "name": "楠原安英",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-005.png",
+      "comment": "いろんな現場を経験できて、できることが増えました。",
+      "story": {
+        "joinReason": "ひとりにしない、という言葉が決め手でした。",
+        "aDay": "現場に入って朝礼に参加。仲間と協力しながら担当業務を進めます。",
+        "message": "ひとりにはしません。一緒に現場で成長しましょう。"
+      }
+    },
+    {
+      "id": "dp-006",
+      "name": "山元ヘンリック武馬",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "BR",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-006.png",
+      "comment": "支えてもらった分、今度は新しい人を支えたい。",
+      "story": {
+        "joinReason": "いろいろな現場を経験して成長したいと思い入社しました。",
+        "aDay": "日によって現場が変わることも。新しい環境でも仲間がいるので安心です。",
+        "message": "新しいことに挑戦したい人、待っています。"
+      }
+    },
+    {
+      "id": "dp-007",
+      "name": "吉川公隆",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-007.png",
+      "comment": "現場に仲間と入るから、初日から心強かったです。",
+      "story": {
+        "joinReason": "ひとりにしない、という言葉が決め手でした。",
+        "aDay": "現場に入って朝礼に参加。仲間と協力しながら担当業務を進めます。",
+        "message": "ひとりにはしません。一緒に現場で成長しましょう。"
+      }
+    },
+    {
+      "id": "dp-008",
+      "name": "村村フェリペ",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "BR",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-008.png",
+      "comment": "いろんな現場を経験できて、できることが増えました。",
+      "story": {
+        "joinReason": "いろいろな現場を経験して成長したいと思い入社しました。",
+        "aDay": "日によって現場が変わることも。新しい環境でも仲間がいるので安心です。",
+        "message": "新しいことに挑戦したい人、待っています。"
+      }
+    },
+    {
+      "id": "dp-009",
+      "name": "本村ミシェル",
+      "department": "dispatch",
+      "role": "[要確認]",
+      "origin": "BR",
+      "flagBadge": null,
+      "image": "/public/images/members/dp-009.png",
+      "comment": "支えてもらった分、今度は新しい人を支えたい。",
+      "story": {
+        "joinReason": "ひとりにしない、という言葉が決め手でした。",
+        "aDay": "現場に入って朝礼に参加。仲間と協力しながら担当業務を進めます。",
+        "message": "ひとりにはしません。一緒に現場で成長しましょう。"
+      }
+    },
+    {
+      "id": "sl-001",
+      "name": "河合佑司",
+      "department": "sales",
+      "role": "[要確認] ※内職(hw-001)と同一人物。組織図どおり両部署に重複表示",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/sl-001.png",
+      "comment": "人と企業をつなぐ手応えがある仕事です。",
+      "story": {
+        "joinReason": "人と企業の架け橋になる仕事がしたくて入社しました。",
+        "aDay": "午前は取引先訪問、午後は提案資料の作成や現場との打ち合わせをします。",
+        "message": "人と話すのが好きな人、ぜひ一緒に働きましょう。"
+      }
+    },
+    {
+      "id": "sl-002",
+      "name": "荒川祐治",
+      "department": "sales",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/sl-002.png",
+      "comment": "『続けられる現場』を一緒に探すのがやりがい。",
+      "story": {
+        "joinReason": "人と企業の架け橋になる仕事がしたくて入社しました。",
+        "aDay": "午前は取引先訪問、午後は提案資料の作成や現場との打ち合わせをします。",
+        "message": "人と話すのが好きな人、ぜひ一緒に働きましょう。"
+      }
+    },
+    {
+      "id": "hw-001",
+      "name": "河合佑司",
+      "department": "homework",
+      "role": "[要確認] ※営業(sl-001)と同一人物。組織図どおり両部署に重複表示",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-001.png",
+      "comment": "丁寧さがそのまま評価につながる。自分のペースを大切にできます。",
+      "story": {
+        "joinReason": "丁寧な手作業が得意で、それを活かせると思いました。",
+        "aDay": "ラインで組立・検査を担当。声をかけ合いながら、ていねいに仕上げます。",
+        "message": "ていねいな作業が好きな人にぴったり。気軽にのぞきに来てください。"
+      }
+    },
+    {
+      "id": "hw-002",
+      "name": "能田克己",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-002.png",
+      "comment": "細かい作業が好きな人にぴったりだと思います。",
+      "story": {
+        "joinReason": "自分のペースを大切にしながら働きたくて選びました。",
+        "aDay": "午前と午後で工程を分け、全品チェックを欠かしません。",
+        "message": "自分のペースを大切にしたい人、歓迎します。"
+      }
+    },
+    {
+      "id": "hw-003",
+      "name": "河本愛美",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-003.png",
+      "comment": "全品ていねいに。仲間と声をかけ合いながら進めます。",
+      "story": {
+        "joinReason": "丁寧な手作業が得意で、それを活かせると思いました。",
+        "aDay": "ラインで組立・検査を担当。声をかけ合いながら、ていねいに仕上げます。",
+        "message": "ていねいな作業が好きな人にぴったり。気軽にのぞきに来てください。"
+      }
+    },
+    {
+      "id": "hw-004",
+      "name": "田中由香",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-004.png",
+      "comment": "丁寧さがそのまま評価につながる。自分のペースを大切にできます。",
+      "story": {
+        "joinReason": "自分のペースを大切にしながら働きたくて選びました。",
+        "aDay": "午前と午後で工程を分け、全品チェックを欠かしません。",
+        "message": "自分のペースを大切にしたい人、歓迎します。"
+      }
+    },
+    {
+      "id": "hw-005",
+      "name": "小柳宏治",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-005.png",
+      "comment": "細かい作業が好きな人にぴったりだと思います。",
+      "story": {
+        "joinReason": "丁寧な手作業が得意で、それを活かせると思いました。",
+        "aDay": "ラインで組立・検査を担当。声をかけ合いながら、ていねいに仕上げます。",
+        "message": "ていねいな作業が好きな人にぴったり。気軽にのぞきに来てください。"
+      }
+    },
+    {
+      "id": "hw-006",
+      "name": "青山佳子",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-006.png",
+      "comment": "全品ていねいに。仲間と声をかけ合いながら進めます。",
+      "story": {
+        "joinReason": "自分のペースを大切にしながら働きたくて選びました。",
+        "aDay": "午前と午後で工程を分け、全品チェックを欠かしません。",
+        "message": "自分のペースを大切にしたい人、歓迎します。"
+      }
+    },
+    {
+      "id": "hw-007",
+      "name": "越田美雪",
+      "department": "homework",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/hw-007.png",
+      "comment": "丁寧さがそのまま評価につながる。自分のペースを大切にできます。",
+      "story": {
+        "joinReason": "丁寧な手作業が得意で、それを活かせると思いました。",
+        "aDay": "ラインで組立・検査を担当。声をかけ合いながら、ていねいに仕上げます。",
+        "message": "ていねいな作業が好きな人にぴったり。気軽にのぞきに来てください。"
+      }
+    },
+    {
+      "id": "ac-001",
+      "name": "寺前有希子",
+      "department": "accounting",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ac-001.png",
+      "comment": "現場と会社を数字で裏から支えています。",
+      "story": {
+        "joinReason": "人を裏から支える仕事にやりがいを感じて入社しました。",
+        "aDay": "伝票や勤怠の処理、各種事務を担当。現場からの問い合わせにも対応します。",
+        "message": "正確さを大切にできる人と一緒に働きたいです。"
+      }
+    },
+    {
+      "id": "ac-002",
+      "name": "中出岬",
+      "department": "accounting",
+      "role": "[要確認]",
+      "origin": "JP",
+      "flagBadge": null,
+      "image": "/public/images/members/ac-002.png",
+      "comment": "正確さを大切に、みんなが働きやすいように整えます。",
+      "story": {
+        "joinReason": "人を裏から支える仕事にやりがいを感じて入社しました。",
+        "aDay": "伝票や勤怠の処理、各種事務を担当。現場からの問い合わせにも対応します。",
+        "message": "正確さを大切にできる人と一緒に働きたいです。"
+      }
+    }
+  ],
+  "_demo": true
 }
