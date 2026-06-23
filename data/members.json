@@ -1,13 +1,20 @@
 {
-  "_note": "確定情報は社長エントリのみ。その他は『仲間図鑑』のグリッド/フィルタ/モーダルを動かすための構造プレースホルダ（name は [要確認]）。別添『Nano Bananaプロンプト集』の41名（氏名・所属・国旗）が届き次第、この配列を丸ごと差し替える。営業と内職に同名『河合佑司』が存在する点は見本どおり意図的な重複として扱い、統合しない（[要確認]）。",
+  "_note": "組織図(添付画像)から読み取った41名。圧縮画像からの読み取りのため、氏名の表記には不確実なものを含む（_uncertain 参照）。comment と story.* は未取得のため [要確認]。営業『河合佑司』と内職『河嶋佑司』は似た氏名だが画像上は別表記。指示書では『両方に河合佑司』とあるため、統合せず両方を残し要確認とする。",
+  "_uncertain": [
+    "ceo-001: 画像は『西尾武士』。指示書本文は『西尾武志』。表記要確認。代表取締役は中山浩行（社長表示と別）。",
+    "氏名の漢字読み取りで自信が低い: ct-002(一ノ瀬約秒?), ct-004(大谷利利?), ct-003(黒見兎二?), hw-002(能配克己?), ac-002(中山甲?), sl-002(荒川祐治?)",
+    "vn-010..vn-015(第2列): 勝木健一にタイ国旗表示、谷水洋美/小林瑞子/坪田陽介は日本名。ベトナムチーム所属か要確認。",
+    "派遣事業の最下部 dp-009(本村ミシェル) は画像が見切れており要確認。dp-008(村村フェリペ)・dp-006(山元ヘンリック武馬) の出身/国旗も要確認。",
+    "各メンバーの origin(出身) は氏名・国旗からの推定を含む。"
+  ],
   "departments": {
-    "president":  { "label": "社長",       "labelEn": "President",          "color": "#1F2A44" },
-    "vietnam":    { "label": "ベトナムチーム", "labelEn": "Vietnam Team",      "color": "#D7263D" },
-    "contract":   { "label": "請負事業",     "labelEn": "Contract",           "color": "#E8743B" },
-    "dispatch":   { "label": "派遣事業",     "labelEn": "On-site Dispatch",   "color": "#3FA66A" },
-    "sales":      { "label": "営業",        "labelEn": "Sales",              "color": "#2D7DD2" },
-    "homework":   { "label": "内職事業",     "labelEn": "Homework",           "color": "#F2B705" },
-    "accounting": { "label": "経理事務",     "labelEn": "Accounting",         "color": "#7A4FB5" }
+    "president":  { "label": "社長",       "labelEn": "President",        "color": "#1F2A44" },
+    "vietnam":    { "label": "ベトナムチーム", "labelEn": "Vietnam Team",    "color": "#D7263D" },
+    "contract":   { "label": "請負事業",     "labelEn": "Contract",         "color": "#E8743B" },
+    "dispatch":   { "label": "派遣事業",     "labelEn": "On-site Dispatch", "color": "#3FA66A" },
+    "sales":      { "label": "営業",        "labelEn": "Sales",            "color": "#2D7DD2" },
+    "homework":   { "label": "内職事業",     "labelEn": "Homework",         "color": "#F2B705" },
+    "accounting": { "label": "経理事務",     "labelEn": "Accounting",       "color": "#7A4FB5" }
   },
   "origins": {
     "JP": { "label": "日本",     "flag": "🇯🇵" },
@@ -16,27 +23,53 @@
     "BR": { "label": "ブラジル", "flag": "🇧🇷" }
   },
   "members": [
-    {
-      "id": "ceo-001",
-      "name": "西尾武志",
-      "department": "president",
-      "role": "社長",
-      "origin": "JP",
-      "flagBadge": null,
-      "image": "/public/images/members/ceo-001.png",
-      "comment": "[要確認] ※組織図では社長＝西尾武志。代表取締役は中山浩行。サイト表示はどちらにするか要確認。",
-      "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" }
-    },
-    { "id": "vn-001", "name": "[要確認]", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "vn-002", "name": "[要確認]", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": null, "image": "/public/images/members/vn-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-001", "name": "[要確認]", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ct-002", "name": "[要確認]", "department": "contract", "role": "[要確認]", "origin": "BR", "flagBadge": "BR", "image": "/public/images/members/ct-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-001", "name": "[要確認]", "department": "dispatch", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/dp-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "dp-002", "name": "[要確認]", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "sl-001", "name": "[要確認]", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "sl-002", "name": "[要確認] ※河合佑司（営業／内職に重複・意図的）", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-001", "name": "[要確認]", "department": "homework", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/hw-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "hw-002", "name": "[要確認] ※河合佑司（営業／内職に重複・意図的）", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
-    { "id": "ac-001", "name": "[要確認]", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } }
+    { "id": "ceo-001", "name": "西尾武士", "department": "president", "role": "社長", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ceo-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "vn-001", "name": "Phạm Ngọc Quỳnh Anh", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-002", "name": "チョコン・ドー・タイン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-003", "name": "アン・ティン・チェオン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-004", "name": "グエン・ディン・トン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-005", "name": "ダオ・ズイ・リン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": null, "image": "/public/images/members/vn-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-006", "name": "グエン・スアン・フン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-007", "name": "タ・ティ・ジャン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "VN", "image": "/public/images/members/vn-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-008", "name": "チュコン・ヴァン・カン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "ASEAN", "image": "/public/images/members/vn-008.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-009", "name": "カオ・ミン・ダン", "department": "vietnam", "role": "[要確認]", "origin": "VN", "flagBadge": "ASEAN", "image": "/public/images/members/vn-009.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "vn-010", "name": "Sure Sak Seng-Wi-Luad", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/vn-010.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-011", "name": "勝木健一", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": "TH", "image": "/public/images/members/vn-011.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-012", "name": "シーサンポンパーク", "department": "vietnam", "role": "[要確認]", "origin": "TH", "flagBadge": null, "image": "/public/images/members/vn-012.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-013", "name": "谷水洋美", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-013.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-014", "name": "小林瑞子", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-014.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "vn-015", "name": "坪田陽介", "department": "vietnam", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/vn-015.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "ct-001", "name": "玉城将也", "department": "contract", "role": "リーダー", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-002", "name": "一ノ瀬約秒", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-003", "name": "黒見兎二", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-004", "name": "大谷利利", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ct-005", "name": "増田義二", "department": "contract", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ct-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "dp-001", "name": "岩田民男", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-002", "name": "金田美緒", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-003", "name": "村中美花", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-004", "name": "奥山美鈴", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-005", "name": "楠原安英", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-006", "name": "山元ヘンリック武馬", "department": "dispatch", "role": "[要確認]", "origin": "BR", "flagBadge": "BR", "image": "/public/images/members/dp-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-007", "name": "吉川公隆", "department": "dispatch", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/dp-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-008", "name": "村村フェリペ", "department": "dispatch", "role": "[要確認]", "origin": "BR", "flagBadge": null, "image": "/public/images/members/dp-008.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "dp-009", "name": "本村ミシェル", "department": "dispatch", "role": "[要確認] ※画像見切れ", "origin": "BR", "flagBadge": null, "image": "/public/images/members/dp-009.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "sl-001", "name": "河合佑司", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "sl-002", "name": "荒川祐治", "department": "sales", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/sl-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "hw-001", "name": "河嶋佑司", "department": "homework", "role": "[要確認] ※営業『河合佑司』と類似・別表記。統合せず要確認", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-002", "name": "能配克己", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-003", "name": "河本愛美", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-003.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-004", "name": "田中由香", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-004.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-005", "name": "小柳宏治", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-005.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-006", "name": "青山佳子", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-006.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "hw-007", "name": "越田美雪", "department": "homework", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/hw-007.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+
+    { "id": "ac-001", "name": "寺前有希子", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-001.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } },
+    { "id": "ac-002", "name": "中山甲", "department": "accounting", "role": "[要確認]", "origin": "JP", "flagBadge": null, "image": "/public/images/members/ac-002.png", "comment": "[要確認]", "story": { "joinReason": "[要確認]", "aDay": "[要確認]", "message": "[要確認]" } }
   ]
 }
