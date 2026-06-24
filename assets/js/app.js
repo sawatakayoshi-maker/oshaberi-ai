@@ -94,7 +94,9 @@
         (fOrigin === "all" || m.origin === fOrigin));
       grid.innerHTML = list.length
         ? list.map(cardHTML).join("")
-        : `<p class="member-empty">${t("members.empty", "条件に合う仲間が見つかりませんでした。")}</p>`;
+        : `<div class="member-empty">
+            <img src="/public/images/mascot.png" alt="" style="width:120px;margin:0 auto 10px" onerror="this.remove()">
+            <p>${t("members.empty", "条件に合う仲間が見つかりませんでした。")}</p></div>`;
       grid.querySelectorAll(".member-card").forEach((c) =>
         c.addEventListener("click", () => openModal(c.dataset.id)));
     }

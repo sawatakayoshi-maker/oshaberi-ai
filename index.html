@@ -48,7 +48,10 @@
           </div>
         </div>
         <div class="hero__cast" aria-hidden="true">
-          <div class="cast">
+          <!-- マスコット画像があれば表示。無ければ部署カラーの集合チップにフォールバック。 -->
+          <img class="hero__mascot" src="/public/images/mascot.png" alt="アセアンテクノロジーのマスコット"
+               onerror="this.style.display='none';var f=document.getElementById('hero-cast-fallback');if(f)f.style.display='flex'">
+          <div class="cast" id="hero-cast-fallback" style="display:none">
             <div class="cast__chip" style="background:#1F2A44">社</div>
             <div class="cast__chip" style="background:#D7263D">★</div>
             <div class="cast__chip" style="background:#E8743B">請</div>

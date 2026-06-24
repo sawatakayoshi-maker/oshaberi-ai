@@ -117,7 +117,8 @@ npx serve .
 - [ ] プライバシーポリシーURL（`entry.html`）
 
 ### SEO / 画像
-- [ ] OGP画像 `public/images/ogp.png`
+- [ ] **マスコット画像** `public/images/mascot.png`（トップのヒーロー・仲間図鑑の空状態で表示。未配置時は自動でフォールバック）
+- [ ] OGP画像 `public/images/ogp.png`（書き出し用の下書きは `public/images/ogp.svg`）
 - [ ] `jobs.html` の JobPosting 構造化データ（職種ごとの値）
 
 ### 多言語
