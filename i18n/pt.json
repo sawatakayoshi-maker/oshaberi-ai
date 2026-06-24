@@ -1,35 +1,146 @@
 {
   "_note": "Português — interface geral traduzida. Títulos de página (page.*) e cards de dados fazem fallback para 日本語.",
-  "brand": { "tagline": "Carreiras — conheça seus futuros colegas" },
+  "brand": {
+    "tagline": "Carreiras — conheça seus futuros colegas"
+  },
   "nav": {
-    "home": "Início", "about": "Sobre nós", "members": "Equipe",
-    "jobs": "Vagas", "grow": "Crescer & Pertencer", "future": "Novos desafios",
-    "numbers": "Em números", "faq": "Perguntas frequentes", "entry": "Candidatar-se"
+    "home": "Início",
+    "about": "Sobre nós",
+    "members": "Equipe",
+    "jobs": "Vagas",
+    "grow": "Crescer & Pertencer",
+    "future": "Novos desafios",
+    "numbers": "Em números",
+    "faq": "Perguntas frequentes",
+    "entry": "Candidatar-se"
   },
   "cta": {
-    "entry": "Candidatar-se", "entryLong": "Comece com uma conversa informal",
-    "casual": "Agendar entrevista informal", "viewMembers": "Conheça a equipe",
-    "learnMore": "Saiba mais", "toEntry": "Candidate-se agora"
+    "entry": "Candidatar-se",
+    "entryLong": "Comece com uma conversa informal",
+    "casual": "Agendar entrevista informal",
+    "viewMembers": "Conheça a equipe",
+    "learnMore": "Saiba mais",
+    "toEntry": "Candidate-se agora"
   },
-  "a11y": { "skip": "Pular para o conteúdo", "close": "Fechar", "menu": "Menu" },
-  "footer": { "site": "Mapa do site", "more": "Descubra mais", "note": "Alguns números e programas neste site estão em revisão ou planejamento." },
-  "common": { "todo": "[A confirmar]", "proposal": "Proposto", "wip": "Em planejamento", "demo": "Estes são dados de exemplo (demo), a serem substituídos por conteúdo real." },
+  "a11y": {
+    "skip": "Pular para o conteúdo",
+    "close": "Fechar",
+    "menu": "Menu"
+  },
+  "footer": {
+    "site": "Mapa do site",
+    "more": "Descubra mais",
+    "note": "Alguns números e programas neste site estão em revisão ou planejamento."
+  },
+  "common": {
+    "todo": "[A confirmar]",
+    "proposal": "Proposto",
+    "wip": "Em planejamento",
+    "demo": "Estes são dados de exemplo (demo), a serem substituídos por conteúdo real."
+  },
   "members": {
-    "filterDept": "Departamento", "filterOrigin": "Origem", "all": "Todos",
+    "filterDept": "Departamento",
+    "filterOrigin": "Origem",
+    "all": "Todos",
     "empty": "Nenhum colega corresponde aos filtros.",
-    "story.join": "Por que entrei", "story.day": "Um dia de trabalho", "story.message": "Aos futuros colegas",
+    "story.join": "Por que entrei",
+    "story.day": "Um dia de trabalho",
+    "story.message": "Aos futuros colegas",
     "placeholderName": "[A confirmar]"
   },
-  "jobs": { "fit": "Ideal para", "work": "O que você fará", "experience": "Experiência" },
-  "numbers": { "todo": "Números em revisão" },
+  "jobs": {
+    "fit": "Ideal para",
+    "work": "O que você fará",
+    "experience": "Experiência"
+  },
+  "numbers": {
+    "todo": "Números em revisão"
+  },
   "faq": {},
   "entry": {
-    "methodForm": "Formulário", "methodLine": "Candidatar-se via LINE", "methodCasual": "Agendar entrevista informal", "methodReferral": "Indicação de funcionário",
-    "name": "Nome", "email": "E-mail", "phone": "Telefone",
-    "lang": "Idioma preferido", "job": "Vaga de interesse", "referral": "Código de indicação (opcional)", "message": "Mensagem (opcional)",
-    "namePh": "Seu nome", "referralPh": "ex.: AT-XXXX",
+    "methodForm": "Formulário",
+    "methodLine": "Candidatar-se via LINE",
+    "methodCasual": "Agendar entrevista informal",
+    "methodReferral": "Indicação de funcionário",
+    "name": "Nome",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "lang": "Idioma preferido",
+    "job": "Vaga de interesse",
+    "referral": "Código de indicação (opcional)",
+    "message": "Mensagem (opcional)",
+    "namePh": "Seu nome",
+    "referralPh": "ex.: AT-XXXX",
     "consent": "Concordo com o tratamento dos meus dados pessoais.",
-    "submit": "Revisar e candidatar-se", "required": "Obrigatório",
+    "submit": "Revisar e candidatar-se",
+    "required": "Obrigatório",
     "sent": "Sua inscrição foi revisada (registrada no console nesta demo)."
+  },
+  "page": {
+    "home": {
+      "heroTitle": "Transforme o <span class=\"accent\">\"não-essencial\"</span><br>no seu <span class=\"accent\">papel principal.</span>",
+      "heroLead": "Nacionalidade e experiência tornam-se forças aqui.<br>Colegas do Vietnã, Tailândia, Brasil e mais apoiam a indústria global a partir de Fukui.",
+      "s1Title": "Veja os colegas que trabalham aqui.",
+      "s1Lead": "As pessoas são as protagonistas. Uma galeria de personagens apresenta cada membro — você pode encontrar um veterano do seu país.",
+      "s2Title": "O que fazemos",
+      "s2Lead": "Assumimos o trabalho dos bastidores e apoiamos a linha de frente. Há um lugar para você aqui.",
+      "s3Title": "Não é 'entrar e pronto'.",
+      "s3Lead": "Programa de apoio, suporte multilíngue, habilidades visualizadas… construímos retenção, crescimento e pertencimento como sistemas (alguns propostos / em planejamento).",
+      "s4Title": "Uma equipe multinacional, em números",
+      "s4Lead": "Os números exatos estão em revisão e aparecerão aqui quando confirmados.",
+      "s5Title": "Vozes da nossa equipe",
+      "voiceVn": "— Um colega da equipe do Vietnã",
+      "voiceHw": "— Um colega do setor de trabalho manual",
+      "voiceDp": "— Um colega do setor de alocação",
+      "s6Title": "Encontre seu lugar, aqui mesmo.",
+      "s6Lead": "Tudo bem se seu japonês ainda é fraco. Vamos começar conversando."
+    },
+    "about": {
+      "headTitle": "Sobre nós",
+      "headLead": "'Terceirização', 'alocação', 'trabalho manual' — soa formal, mas o que fazemos é assumir o trabalho de alguém por inteiro e ser confiável.",
+      "philoTitle": "Nossa filosofia",
+      "philoQuote": "Como ponte entre pessoas, bens e empresas,<br>damos suporte total ao negócio global<br>de todos os setores.",
+      "roleTitle": "O que significa ser uma 'ponte'?",
+      "roleLead": "Ficamos entre pessoas, bens e empresas, e os conectamos. Esse é o nosso papel.",
+      "bizTitle": "Nosso negócio, do seu ponto de vista",
+      "bizLead": "Traduzimos o que cada negócio pode significar como um 'lugar' para você.",
+      "companyTitle": "Informações da empresa"
+    },
+    "members": {
+      "headTitle": "Equipe",
+      "headLead": "Apresentamos cada colega. Filtre por departamento ou país de origem para encontrar um veterano próximo de você."
+    },
+    "jobs": {
+      "headTitle": "Vagas",
+      "headLead": "Seja começando do zero ou querendo usar idiomas, você pode escolher um lugar onde suas forças brilham. (Condições detalhadas em revisão.)"
+    },
+    "grow": {
+      "headTitle": "Crescer & Pertencer",
+      "headLead": "Não 'entrar e pronto', mas dias em que você pensa 'quero estar aqui'. Construímos retenção, crescimento e pertencimento como sistemas.",
+      "introTitle": "Primeiro, uma nota:",
+      "intro": "Os programas abaixo incluem alguns já em andamento e outros que propomos ou estamos considerando. Cada card indica seu status (status real a confirmar).",
+      "ctaTitle": "Vamos desenhar seu 'próximo passo', juntos.",
+      "ctaLead": "O caminho de cada um é diferente. Em conversas regulares, o traçamos no seu ritmo."
+    },
+    "future": {
+      "headTitle": "Novos desafios",
+      "headLead": "Adicionando o poder da tecnologia à terceirização, alocação e trabalho manual. Estamos imaginando novos serviços que ajudam tanto trabalhadores quanto clientes.",
+      "noteTitle": "Observe:",
+      "note": "Abaixo não são serviços finalizados, mas ideias em consideração. Viabilidade e prazo indefinidos (evitamos exageros)."
+    },
+    "numbers": {
+      "headTitle": "Em números",
+      "headLead": "Proporção multinacional, retenção e mais — nós, em números. Não publicamos números sem fonte. Valores confirmados aparecerão gradualmente.",
+      "foot": "Os números exibidos são valores de exemplo (demo). Substitua-os quando confirmados com fontes."
+    },
+    "faq": {
+      "headTitle": "Perguntas frequentes",
+      "headLead": "Respostas a dúvidas e preocupações antes de se candidatar. As respostas incluem itens ainda em revisão.",
+      "foot": "As respostas são conteúdo de exemplo (demo); substitua por respostas oficiais. Se algo mais estiver em sua mente, pergunte qualquer coisa em uma entrevista informal."
+    },
+    "entry": {
+      "headTitle": "Candidatar-se",
+      "headLead": "Você escolhe como se candidatar. Tudo bem se seu japonês ainda é fraco — comece 'apenas conversando'."
+    }
   }
 }

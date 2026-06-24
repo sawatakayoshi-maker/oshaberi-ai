@@ -1,35 +1,146 @@
 {
   "_note": "Tiếng Việt — đã dịch phần giao diện chung. Tiêu đề trang (page.*) và thẻ dữ liệu sẽ fallback về 日本語.",
-  "brand": { "tagline": "Tuyển dụng — gặp gỡ những đồng đội tương lai" },
+  "brand": {
+    "tagline": "Tuyển dụng — gặp gỡ những đồng đội tương lai"
+  },
   "nav": {
-    "home": "Trang chủ", "about": "Về chúng tôi", "members": "Đồng đội",
-    "jobs": "Vị trí", "grow": "Phát triển & Gắn bó", "future": "Thử thách mới",
-    "numbers": "Những con số", "faq": "Câu hỏi thường gặp", "entry": "Ứng tuyển"
+    "home": "Trang chủ",
+    "about": "Về chúng tôi",
+    "members": "Đồng đội",
+    "jobs": "Vị trí",
+    "grow": "Phát triển & Gắn bó",
+    "future": "Thử thách mới",
+    "numbers": "Những con số",
+    "faq": "Câu hỏi thường gặp",
+    "entry": "Ứng tuyển"
   },
   "cta": {
-    "entry": "Ứng tuyển", "entryLong": "Bắt đầu bằng một buổi trò chuyện thoải mái",
-    "casual": "Đặt lịch phỏng vấn thân mật", "viewMembers": "Xem đồng đội",
-    "learnMore": "Tìm hiểu thêm", "toEntry": "Ứng tuyển ngay"
+    "entry": "Ứng tuyển",
+    "entryLong": "Bắt đầu bằng một buổi trò chuyện thoải mái",
+    "casual": "Đặt lịch phỏng vấn thân mật",
+    "viewMembers": "Xem đồng đội",
+    "learnMore": "Tìm hiểu thêm",
+    "toEntry": "Ứng tuyển ngay"
   },
-  "a11y": { "skip": "Bỏ qua đến nội dung", "close": "Đóng", "menu": "Menu" },
-  "footer": { "site": "Sơ đồ trang", "more": "Khám phá thêm", "note": "Một số số liệu và chương trình trên trang đang được xem xét hoặc lên kế hoạch." },
-  "common": { "todo": "[Cần xác nhận]", "proposal": "Đề xuất", "wip": "Đang lên kế hoạch", "demo": "Đây là dữ liệu mẫu (demo), sẽ được thay bằng nội dung thực tế." },
+  "a11y": {
+    "skip": "Bỏ qua đến nội dung",
+    "close": "Đóng",
+    "menu": "Menu"
+  },
+  "footer": {
+    "site": "Sơ đồ trang",
+    "more": "Khám phá thêm",
+    "note": "Một số số liệu và chương trình trên trang đang được xem xét hoặc lên kế hoạch."
+  },
+  "common": {
+    "todo": "[Cần xác nhận]",
+    "proposal": "Đề xuất",
+    "wip": "Đang lên kế hoạch",
+    "demo": "Đây là dữ liệu mẫu (demo), sẽ được thay bằng nội dung thực tế."
+  },
   "members": {
-    "filterDept": "Bộ phận", "filterOrigin": "Quốc gia", "all": "Tất cả",
+    "filterDept": "Bộ phận",
+    "filterOrigin": "Quốc gia",
+    "all": "Tất cả",
     "empty": "Không tìm thấy đồng đội phù hợp.",
-    "story.join": "Lý do gia nhập", "story.day": "Một ngày làm việc", "story.message": "Gửi đồng đội tương lai",
+    "story.join": "Lý do gia nhập",
+    "story.day": "Một ngày làm việc",
+    "story.message": "Gửi đồng đội tương lai",
     "placeholderName": "[Cần xác nhận]"
   },
-  "jobs": { "fit": "Phù hợp với", "work": "Công việc", "experience": "Kinh nghiệm" },
-  "numbers": { "todo": "Số liệu đang được xem xét" },
+  "jobs": {
+    "fit": "Phù hợp với",
+    "work": "Công việc",
+    "experience": "Kinh nghiệm"
+  },
+  "numbers": {
+    "todo": "Số liệu đang được xem xét"
+  },
   "faq": {},
   "entry": {
-    "methodForm": "Mẫu ứng tuyển", "methodLine": "Ứng tuyển qua LINE", "methodCasual": "Đặt lịch phỏng vấn thân mật", "methodReferral": "Giới thiệu từ nhân viên",
-    "name": "Họ tên", "email": "Email", "phone": "Điện thoại",
-    "lang": "Ngôn ngữ mong muốn", "job": "Vị trí quan tâm", "referral": "Mã giới thiệu (không bắt buộc)", "message": "Lời nhắn (không bắt buộc)",
-    "namePh": "Tên của bạn", "referralPh": "VD: AT-XXXX",
+    "methodForm": "Mẫu ứng tuyển",
+    "methodLine": "Ứng tuyển qua LINE",
+    "methodCasual": "Đặt lịch phỏng vấn thân mật",
+    "methodReferral": "Giới thiệu từ nhân viên",
+    "name": "Họ tên",
+    "email": "Email",
+    "phone": "Điện thoại",
+    "lang": "Ngôn ngữ mong muốn",
+    "job": "Vị trí quan tâm",
+    "referral": "Mã giới thiệu (không bắt buộc)",
+    "message": "Lời nhắn (không bắt buộc)",
+    "namePh": "Tên của bạn",
+    "referralPh": "VD: AT-XXXX",
     "consent": "Tôi đồng ý với việc xử lý thông tin cá nhân.",
-    "submit": "Xem lại & ứng tuyển", "required": "Bắt buộc",
+    "submit": "Xem lại & ứng tuyển",
+    "required": "Bắt buộc",
     "sent": "Thông tin của bạn đã được xem lại (đã ghi vào console cho bản demo này)."
+  },
+  "page": {
+    "home": {
+      "heroTitle": "Biến <span class=\"accent\">\"phần phụ\"</span><br>thành <span class=\"accent\">vai chính của bạn.</span>",
+      "heroLead": "Quốc tịch và kinh nghiệm đều trở thành thế mạnh ở đây.<br>Đồng đội từ Việt Nam, Thái Lan, Brazil và hơn thế nữa hỗ trợ ngành công nghiệp toàn cầu từ Fukui.",
+      "s1Title": "Hãy nhìn thấy những đồng đội làm việc ở đây.",
+      "s1Lead": "Con người là vai chính. Một bộ sưu tập nhân vật giới thiệu từng thành viên — bạn có thể tìm thấy một tiền bối cùng quê hương.",
+      "s2Title": "Công việc của chúng tôi",
+      "s2Lead": "Chúng tôi đảm nhận công việc hậu trường và hỗ trợ tuyến đầu. Ở đây có chỗ cho bạn.",
+      "s3Title": "Không phải 'vào rồi thôi'.",
+      "s3Lead": "Chương trình đồng hành, hỗ trợ đa ngôn ngữ, kỹ năng được trực quan hóa… chúng tôi xây dựng sự gắn bó, phát triển và thuộc về như những hệ thống (một số là đề xuất / đang lên kế hoạch).",
+      "s4Title": "Một đội ngũ đa quốc gia, qua những con số",
+      "s4Lead": "Số liệu chính xác đang được xem xét và sẽ xuất hiện ở đây khi được xác nhận.",
+      "s5Title": "Tiếng nói của đồng đội",
+      "voiceVn": "— Một đồng đội trong nhóm Việt Nam",
+      "voiceHw": "— Một đồng đội trong bộ phận gia công tại nhà",
+      "voiceDp": "— Một đồng đội trong bộ phận phái cử",
+      "s6Title": "Tìm chỗ của bạn, ngay tại đây.",
+      "s6Lead": "Không sao nếu tiếng Nhật của bạn còn chưa vững. Hãy bắt đầu bằng việc trò chuyện."
+    },
+    "about": {
+      "headTitle": "Về chúng tôi",
+      "headLead": "'Nhận thầu', 'phái cử', 'gia công tại nhà' — nghe có vẻ cứng nhắc, nhưng điều chúng tôi làm là nhận trọn công việc của ai đó và được tin tưởng giao phó.",
+      "philoTitle": "Triết lý của chúng tôi",
+      "philoQuote": "Là cầu nối cho con người, hàng hóa và doanh nghiệp,<br>chúng tôi hỗ trợ toàn diện hoạt động kinh doanh toàn cầu<br>của mọi ngành công nghiệp.",
+      "roleTitle": "'Cầu nối' nghĩa là gì?",
+      "roleLead": "Chúng tôi đứng giữa con người, hàng hóa và doanh nghiệp để kết nối. Đó là vai trò của chúng tôi.",
+      "bizTitle": "Công việc của chúng tôi, từ góc nhìn của bạn",
+      "bizLead": "Chúng tôi đã diễn giải mỗi mảng kinh doanh có thể trở thành 'chỗ đứng' như thế nào cho bạn.",
+      "companyTitle": "Thông tin công ty"
+    },
+    "members": {
+      "headTitle": "Đồng đội",
+      "headLead": "Chúng tôi giới thiệu từng đồng đội. Lọc theo bộ phận hoặc quê hương để tìm một tiền bối gần gũi với bạn."
+    },
+    "jobs": {
+      "headTitle": "Vị trí",
+      "headLead": "Dù bắt đầu từ con số không hay muốn tận dụng ngoại ngữ, bạn có thể chọn nơi phát huy thế mạnh của mình. (Điều kiện chi tiết đang được xem xét.)"
+    },
+    "grow": {
+      "headTitle": "Phát triển & Gắn bó",
+      "headLead": "Không phải 'vào rồi thôi', mà là những ngày bạn nghĩ 'mình muốn ở đây'. Chúng tôi xây dựng sự gắn bó, phát triển và thuộc về như những hệ thống.",
+      "introTitle": "Trước tiên, một lưu ý:",
+      "intro": "Các chương trình dưới đây gồm một số đang vận hành và một số chúng tôi đề xuất hoặc đang cân nhắc. Mỗi thẻ ghi rõ trạng thái (trạng thái thực tế cần xác nhận).",
+      "ctaTitle": "Hãy cùng vẽ nên 'điều tiếp theo' của bạn.",
+      "ctaLead": "Con đường của mỗi người mỗi khác. Trong các buổi trò chuyện định kỳ, chúng tôi vẽ nó theo nhịp của bạn."
+    },
+    "future": {
+      "headTitle": "Thử thách mới",
+      "headLead": "Thêm sức mạnh công nghệ vào nhận thầu, phái cử và gia công tại nhà. Chúng tôi đang hình dung những dịch vụ mới có lợi cho cả người lao động và khách hàng.",
+      "noteTitle": "Xin lưu ý:",
+      "note": "Dưới đây không phải là dịch vụ đã hoàn thiện mà là những ý tưởng đang được cân nhắc. Tính khả thi và thời điểm chưa được quyết định (chúng tôi tránh phóng đại)."
+    },
+    "numbers": {
+      "headTitle": "Những con số",
+      "headLead": "Tỷ lệ đa quốc gia, tỷ lệ gắn bó và hơn thế — chúng tôi, qua những con số. Chúng tôi không đăng số liệu không thể dẫn nguồn. Giá trị đã xác nhận sẽ xuất hiện dần.",
+      "foot": "Các số liệu hiển thị là giá trị mẫu (demo). Vui lòng thay thế khi đã xác nhận kèm nguồn."
+    },
+    "faq": {
+      "headTitle": "Câu hỏi thường gặp",
+      "headLead": "Giải đáp những lo lắng và thắc mắc trước khi ứng tuyển. Câu trả lời bao gồm các mục vẫn đang được xem xét.",
+      "foot": "Nội dung trả lời là mẫu (demo); vui lòng thay bằng câu trả lời chính thức. Nếu còn điều gì băn khoăn, hãy hỏi bất cứ điều gì trong buổi phỏng vấn thân mật."
+    },
+    "entry": {
+      "headTitle": "Ứng tuyển",
+      "headLead": "Bạn chọn cách ứng tuyển. Không sao nếu tiếng Nhật còn chưa vững — hãy bắt đầu bằng việc 'trò chuyện'."
+    }
   }
 }
