@@ -1,0 +1,101 @@
+{
+  "brand": { "tagline": "Careers — meet your future teammates" },
+  "nav": {
+    "home": "Home", "about": "About Us", "members": "Meet the Team",
+    "jobs": "Roles", "grow": "Grow & Belong", "future": "New Challenges",
+    "numbers": "By the Numbers", "faq": "FAQ", "entry": "Apply"
+  },
+  "cta": {
+    "entry": "Apply", "entryLong": "Start with a casual chat",
+    "casual": "Book a casual interview", "viewMembers": "Meet the team",
+    "learnMore": "Learn more", "toEntry": "Apply now"
+  },
+  "a11y": { "skip": "Skip to content", "close": "Close", "menu": "Menu" },
+  "footer": { "site": "Sitemap", "more": "Discover more", "note": "Some figures and programs on this site are under review or in planning." },
+  "common": { "todo": "[TBC]", "proposal": "Proposed", "wip": "In planning", "demo": "This is sample (demo) data, to be replaced with real content." },
+  "members": {
+    "filterDept": "Department", "filterOrigin": "Origin", "all": "All",
+    "empty": "No teammates match your filters.",
+    "story.join": "Why I joined", "story.day": "A day in the life", "story.message": "To future teammates",
+    "placeholderName": "[TBC]"
+  },
+  "jobs": { "fit": "A good fit for", "work": "What you'll do", "experience": "Experience" },
+  "numbers": { "todo": "Figures under review" },
+  "faq": {},
+  "entry": {
+    "methodForm": "Application form", "methodLine": "Apply via LINE", "methodCasual": "Book a casual interview", "methodReferral": "Employee referral",
+    "name": "Name", "email": "Email", "phone": "Phone",
+    "lang": "Preferred language", "job": "Role of interest", "referral": "Referral code (optional)", "message": "A note (optional)",
+    "namePh": "Your name", "referralPh": "e.g. AT-XXXX",
+    "consent": "I agree to the handling of my personal information.",
+    "submit": "Review & apply", "required": "Required",
+    "sent": "Your entry was reviewed (logged to console for this demo)."
+  },
+  "page": {
+    "home": {
+      "heroTitle": "Make the <span class=\"accent\">\"non-core\"</span><br>your <span class=\"accent\">starring role.</span>",
+      "heroLead": "Nationality and experience both become strengths here.<br>Teammates from Vietnam, Thailand, Brazil and more support global industry from Fukui.",
+      "s1Title": "See the teammates who work here.",
+      "s1Lead": "People are the lead. A character gallery introducing each member — you may well find a senior from your own country.",
+      "s2Title": "What we do",
+      "s2Lead": "We take on the work behind the scenes and support the front line. There's a place here for you.",
+      "s3Title": "Not 'join and that's it.'",
+      "s3Lead": "Buddy program, multilingual support, visualised skills… we build retention, growth and belonging as systems (some proposed / in planning).",
+      "s4Title": "A multinational team, in numbers",
+      "s4Lead": "Exact figures are under review and will appear here once confirmed.",
+      "s5Title": "Voices of our teammates",
+      "voiceVn": "— A teammate on the Vietnam team",
+      "voiceHw": "— A teammate in the homework business",
+      "voiceDp": "— A teammate in the dispatch business",
+      "s6Title": "Find your place, right here.",
+      "s6Lead": "It's okay if your Japanese is shaky. Let's just start by talking."
+    },
+    "about": {
+      "headTitle": "About Us",
+      "headLead": "'Contract', 'dispatch', 'homework' — the words sound stiff, but what we do is take on someone's work and be trusted with it, whole.",
+      "philoTitle": "Our philosophy",
+      "philoQuote": "As a bridge for people, goods and companies,<br>we give total support to the global business<br>of every industry.",
+      "roleTitle": "What does being a 'bridge' mean?",
+      "roleLead": "We stand between people, goods and companies, and connect them. That is our role.",
+      "bizTitle": "Our business, from your point of view",
+      "bizLead": "We've translated what each business can mean as a 'place' for you.",
+      "companyTitle": "Company information"
+    },
+    "members": {
+      "headTitle": "Meet the Team",
+      "headLead": "We introduce our teammates one by one. Filter by department or home country to find a senior close to you."
+    },
+    "jobs": {
+      "headTitle": "Roles",
+      "headLead": "Whether you're starting from scratch or want to use your languages, you can choose a place where your strengths come alive. (Detailed conditions under review.)"
+    },
+    "grow": {
+      "headTitle": "Grow & Belong",
+      "headLead": "Not 'join and that's it', but days where you think 'I want to be here.' We build retention, growth and belonging as systems.",
+      "introTitle": "First, a note:",
+      "intro": "The programs below include some already running and some we propose to introduce or are still considering. Each card states its status (actual status TBC).",
+      "ctaTitle": "Let's shape your 'what's next', together.",
+      "ctaLead": "Everyone's path is different. In regular talks, we map it at your pace."
+    },
+    "future": {
+      "headTitle": "New Challenges",
+      "headLead": "Adding the power of technology to contract, dispatch and homework. We're envisioning new services that help workers and clients alike.",
+      "noteTitle": "Please note:",
+      "note": "The following are not finalised services but ideas under consideration. Feasibility and timing are undecided (we avoid exaggeration)."
+    },
+    "numbers": {
+      "headTitle": "By the Numbers",
+      "headLead": "Multinational ratio, retention and more — us, in numbers. We don't post figures we can't source. Confirmed values will appear over time.",
+      "foot": "The figures shown are sample (demo) values. Please replace them once confirmed with sources."
+    },
+    "faq": {
+      "headTitle": "FAQ",
+      "headLead": "Answers to worries and questions before you apply. Answers include items still under review.",
+      "foot": "Answers are sample (demo) content; please replace them with official replies. If anything else is on your mind, ask us anything in a casual interview."
+    },
+    "entry": {
+      "headTitle": "Apply",
+      "headLead": "You choose how to apply. It's okay if your Japanese is shaky — please start by 'just talking.'"
+    }
+  }
+}

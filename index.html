@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>アセアンテクノロジー 採用サイト｜"ノンコア"を、"あなたの主役"に。</title>
+  <meta name="description" content="アセアンテクノロジー株式会社の採用サイト。業務請負・オンサイト派遣・内職・職業紹介。国籍も経験も、ここでは強みになる。多国籍チームで働く仲間を募集中。" />
+  <!-- OGP（画像URLは[要確認]） -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="アセアンテクノロジー 採用サイト" />
+  <meta property="og:description" content="国籍も、経験も、ここでは強みになる。" />
+  <meta property="og:image" content="/public/images/ogp.png" />
+  <meta property="og:locale" content="ja_JP" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <!-- 構造化データ（採用＝JobPosting）の雛形。値は[要確認] -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "アセアンテクノロジー株式会社",
+    "foundingDate": "2006-07",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "新田塚1丁目25番18号 葵ビル4F",
+      "addressLocality": "福井市",
+      "addressRegion": "福井県",
+      "addressCountry": "JP"
+    },
+    "description": "人・モノ・企業のブリッジ役として、あらゆる産業のグローバルビジネスをトータルにサポートする。"
+  }
+  </script>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main id="main">
+    <!-- ヒーロー -->
+    <section class="hero">
+      <div class="container hero__inner">
+        <div>
+          <p class="eyebrow">ASEAN TECHNOLOGY — RECRUIT</p>
+          <h1 data-i18n-html="page.home.heroTitle"><span class="accent">"ノンコア"</span>を、<br><span class="accent">"あなたの主役"</span>に。</h1>
+          <p class="hero__lead" data-i18n-html="page.home.heroLead">国籍も、経験も、ここでは強みになる。<br>
+            ベトナム・タイ・ブラジル…さまざまな国の仲間が、福井から世界の産業を支えています。</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary btn--lg" href="/entry.html" data-i18n="cta.entryLong">まずはカジュアルに話してみる</a>
+            <a class="btn btn--ghost btn--lg" href="/members.html" data-i18n="cta.viewMembers">仲間図鑑を見る</a>
+          </div>
+        </div>
+        <div class="hero__cast" aria-hidden="true">
+          <!-- マスコット画像があれば表示。無ければ部署カラーの集合チップにフォールバック。 -->
+          <img class="hero__mascot" src="/public/images/mascot.png" alt="アセアンテクノロジーのマスコット"
+               onerror="this.style.display='none';var f=document.getElementById('hero-cast-fallback');if(f)f.style.display='flex'">
+          <div class="cast" id="hero-cast-fallback" style="display:none">
+            <div class="cast__chip" style="background:#1F2A44">社</div>
+            <div class="cast__chip" style="background:#D7263D">★</div>
+            <div class="cast__chip" style="background:#E8743B">請</div>
+            <div class="cast__chip" style="background:#3FA66A">派</div>
+            <div class="cast__chip" style="background:#F2B705">内</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ① 仲間図鑑への導線 -->
+    <section class="section">
+      <div class="container">
+        <p class="eyebrow">MEET THE TEAM</p>
+        <h2 class="section-title" data-i18n="page.home.s1Title">ここで働く"仲間"が、見える。</h2>
+        <p class="section-lead" data-i18n="page.home.s1Lead">主役は、人。社員一人ひとりをキャラクターで紹介する「仲間図鑑」。
+          あなたと同じ国の先輩も、きっと見つかります。</p>
+        <a class="btn btn--primary" href="/members.html" data-i18n="cta.viewMembers">仲間図鑑を見る</a>
+      </div>
+    </section>
+
+    <!-- ② 事業を一言で -->
+    <section class="section section--tint">
+      <div class="container">
+        <p class="eyebrow">WHAT WE DO</p>
+        <h2 class="section-title" data-i18n="page.home.s2Title">わたしたちの仕事</h2>
+        <p class="section-lead" data-i18n="page.home.s2Lead">企業の「裏方」を引き受け、現場を支える。あなたの居場所が、きっとあります。</p>
+        <div id="services-grid" class="grid grid--2" style="margin-top:24px"></div>
+      </div>
+    </section>
+
+    <!-- ③ 定着・成長ダイジェスト -->
+    <section class="section">
+      <div class="container">
+        <p class="eyebrow">GROW &amp; BELONG</p>
+        <h2 class="section-title" data-i18n="page.home.s3Title">"入って終わり"にしない。</h2>
+        <p class="section-lead" data-i18n="page.home.s3Lead">バディ制度、多言語サポート、スキルの見える化…
+          定着・成長・帰属を「仕組み」として用意します（一部は導入提案／検討中）。</p>
+        <a class="btn btn--ghost" href="/grow.html" data-i18n="cta.learnMore">もっと見る</a>
+      </div>
+    </section>
+
+    <!-- ④ 多国籍の数字 -->
+    <section class="section section--tint">
+      <div class="container">
+        <p class="eyebrow">BY THE NUMBERS</p>
+        <h2 class="section-title" data-i18n="page.home.s4Title">数字で見る、多国籍チーム</h2>
+        <p class="section-lead" data-i18n="page.home.s4Lead">正確な数値は確認中です。確定し次第、このページに反映します。</p>
+        <div id="counter-grid" class="counter-grid" style="margin-top:24px"></div>
+      </div>
+    </section>
+
+    <!-- ⑤ 社員の声 -->
+    <section class="section">
+      <div class="container">
+        <p class="eyebrow">VOICE</p>
+        <h2 class="section-title" data-i18n="page.home.s5Title">仲間の声</h2>
+        <div class="grid grid--3" style="margin-top:24px">
+          <blockquote class="card"><p class="todo-inline">[要確認]</p><p class="muted" data-i18n="page.home.voiceVn">— ベトナムチームの仲間</p></blockquote>
+          <blockquote class="card"><p class="todo-inline">[要確認]</p><p class="muted" data-i18n="page.home.voiceHw">— 内職事業の仲間</p></blockquote>
+          <blockquote class="card"><p class="todo-inline">[要確認]</p><p class="muted" data-i18n="page.home.voiceDp">— 派遣事業の仲間</p></blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑥ エントリー -->
+    <section class="section section--tint">
+      <div class="container text-center">
+        <p class="eyebrow" style="justify-content:center">JOIN US</p>
+        <h2 class="section-title" data-i18n="page.home.s6Title">あなたの居場所を、ここで。</h2>
+        <p class="section-lead" style="margin-inline:auto" data-i18n="page.home.s6Lead">日本語に不安があっても大丈夫。まずは気軽に話すところから。</p>
+        <a class="btn btn--primary btn--lg" href="/entry.html" data-i18n="cta.toEntry" style="margin-top:8px">エントリーする</a>
+      </div>
+    </section>
+  </main>
+
+  <a class="btn btn--primary cta-fixed" href="/entry.html" data-i18n="cta.entry">エントリー</a>
+  <div id="site-footer"></div>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/layout.js"></script>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

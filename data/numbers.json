@@ -1,0 +1,12 @@
+{
+  "_note": "数値は『デモ用のサンプル（創作）』です。実績値ではありません（_demo: true）。確定値に差し替えてください。",
+  "_demo": true,
+  "stats": [
+    { "id": "nationalities", "label": "在籍国籍数",       "value": 4,  "unit": "カ国", "hint": "デモ値（日本・ベトナム・タイ・ブラジル）" },
+    { "id": "foreign-ratio", "label": "多国籍メンバー比率", "value": 39, "unit": "%",   "hint": "デモ値" },
+    { "id": "retention",     "label": "定着率",           "value": 88, "unit": "%",   "hint": "デモ値" },
+    { "id": "tenure",        "label": "平均勤続年数",       "value": 6,  "unit": "年",  "hint": "デモ値" },
+    { "id": "members",       "label": "仲間の人数",        "value": 41, "unit": "名",  "hint": "デモ値（組織図の枠数）" },
+    { "id": "female-ratio",  "label": "女性比率",          "value": 46, "unit": "%",   "hint": "デモ値" }
+  ]
+}

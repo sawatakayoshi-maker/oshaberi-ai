@@ -1,0 +1,57 @@
+{
+  "_note": "事業内容は確定情報（指示書1章）。求職者目線の翻訳文は提案ベース。数値は載せない。*En は英語表示用。",
+  "services": [
+    {
+      "id": "contract",
+      "icon": "📦",
+      "color": "#E8743B",
+      "title": "業務請負",
+      "titleEn": "Contract / Outsourcing",
+      "lead": "企業のノンコア業務を、チームごと丸ごと引き受ける。",
+      "leadEn": "We take on companies' non-core work as a whole team.",
+      "forSeeker": "「裏方の主役」になれる仕事。あなたの段取り力や正確さが、そのまま取引先の安心になります。",
+      "forSeekerEn": "Be the lead role behind the scenes. Your planning and precision become a client's peace of mind.",
+      "points": ["ノンコア業務のアウトソーシング請負", "チーム単位で現場を運営", "段取り・品質・納期を自分たちで設計"],
+      "pointsEn": ["Outsourced non-core operations", "Run the site as a team", "Design the flow, quality and delivery yourselves"]
+    },
+    {
+      "id": "dispatch",
+      "icon": "🤝",
+      "color": "#3FA66A",
+      "title": "オンサイト派遣",
+      "titleEn": "On-site Dispatch",
+      "lead": "現場に入って、一緒に支える。労働者派遣事業。",
+      "leadEn": "We join the site and support it together. A worker dispatch business.",
+      "forSeeker": "ひとりにしない働き方。先輩や仲間と同じ現場に入るから、はじめての人も安心して始められます。",
+      "forSeekerEn": "A way of working that never leaves you alone. You join the same site as your peers, so beginners can start with confidence.",
+      "points": ["労働者派遣事業", "現場に入って支援", "未経験から始める人が多数 [要確認]"],
+      "pointsEn": ["Worker dispatch business", "Support from within the site", "Many start with no experience [TBC]"]
+    },
+    {
+      "id": "homework",
+      "icon": "🧵",
+      "color": "#F2B705",
+      "title": "内職事業",
+      "titleEn": "Homework / Handwork Line",
+      "lead": "手作業ラインの精度で、ものづくりを支える。",
+      "leadEn": "We support manufacturing with the precision of a handwork line.",
+      "forSeeker": "丁寧さが評価される場所。コツコツ取り組むのが好きな人、自分のペースを大切にしたい人へ。",
+      "forSeekerEn": "A place where care is valued. For those who like steady work and want to keep their own pace.",
+      "points": ["手作業ライン", "全品検査・即納の強み [要確認]", "丁寧さ・正確さが武器になる"],
+      "pointsEn": ["Handwork line", "Full inspection and fast delivery [TBC]", "Care and accuracy are your strengths"]
+    },
+    {
+      "id": "agency",
+      "icon": "🌉",
+      "color": "#2D7DD2",
+      "title": "有料職業紹介",
+      "titleEn": "Job Placement",
+      "lead": "人と仕事を、最適につなぐ。有料職業紹介事業。",
+      "leadEn": "We connect people and jobs in the best way. A licensed placement business.",
+      "forSeeker": "あなたに合う現場を一緒に探す。「とりあえず入る」ではなく「続けられる」を大切にします。",
+      "forSeekerEn": "We look for the right site together. Not just 'get in', but 'keep going'.",
+      "points": ["有料職業紹介事業", "適性に合わせたマッチング", "ミスマッチを減らす"],
+      "pointsEn": ["Licensed job placement", "Matching by aptitude", "Reducing mismatches"]
+    }
+  ]
+}

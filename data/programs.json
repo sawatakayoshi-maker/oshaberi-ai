@@ -1,0 +1,54 @@
+{
+  "_note": "定着と成長の仕組み。実在制度かは [要確認]。サイト上は『導入提案／検討中』と明示すること。*En は英語表示用。",
+  "programs": [
+    {
+      "id": "buddy", "icon": "🧑‍🤝‍🧑", "color": "#E8743B",
+      "title": "バディ／メンター制度", "titleEn": "Buddy / Mentor program",
+      "desc": "入社直後から先輩が伴走。困ったときにすぐ聞ける相手がいる安心を。",
+      "descEn": "A senior walks beside you from day one — someone to ask the moment you're stuck.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    },
+    {
+      "id": "multilingual", "icon": "🌐", "color": "#D7263D",
+      "title": "多言語サポート＆母国文化への配慮", "titleEn": "Multilingual support & cultural care",
+      "desc": "母国の祝日や文化を大切に。多言語での連絡・マニュアルで、言葉の不安を減らします。",
+      "descEn": "We value home holidays and culture, and ease language worries with multilingual notices and manuals.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    },
+    {
+      "id": "skilltree", "icon": "🌱", "color": "#3FA66A",
+      "title": "スキルの見える化", "titleEn": "Visualised skills",
+      "desc": "身につけたスキルをスキルツリー／デジタルバッジで可視化。成長が目に見える。",
+      "descEn": "See the skills you gain as a skill tree and digital badges. Growth you can actually see.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    },
+    {
+      "id": "peerbonus", "icon": "💌", "color": "#F2B705",
+      "title": "ピアボーナス「ありがとうカード」", "titleEn": "Peer bonus 'Thank-you cards'",
+      "desc": "仲間同士で感謝を贈り合う。小さな『ありがとう』が、居心地のよさをつくります。",
+      "descEn": "Teammates send thanks to each other. Small 'thank-you's build a place you want to stay.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    },
+    {
+      "id": "avatar", "icon": "🎮", "color": "#7A4FB5",
+      "title": "キャラアバターで成長を可視化", "titleEn": "Growth shown through your avatar",
+      "desc": "自分のキャラアバターが、経験とともに成長。ゲーミフィケーションで楽しく続ける。",
+      "descEn": "Your character avatar grows with your experience — gamification that keeps it fun.",
+      "status": "構想・検討中 [要確認]", "statusEn": "In planning [TBC]"
+    },
+    {
+      "id": "oneonone", "icon": "🗣️", "color": "#2D7DD2",
+      "title": "定期1on1・キャリア面談", "titleEn": "Regular 1-on-1 & career talks",
+      "desc": "定期的にじっくり話す時間を。あなたの『次にやりたい』を一緒に描きます。",
+      "descEn": "Regular time to talk things through, mapping your 'what's next' together.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    },
+    {
+      "id": "awards", "icon": "🎉", "color": "#1F2A44",
+      "title": "表彰・社内イベント", "titleEn": "Awards & company events",
+      "desc": "がんばりを称え合う表彰や、国を越えて楽しむ社内イベントで一体感を。",
+      "descEn": "Awards that celebrate effort and events enjoyed across nationalities build togetherness.",
+      "status": "導入提案 [要確認]", "statusEn": "Proposed [TBC]"
+    }
+  ]
+}

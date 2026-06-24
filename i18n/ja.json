@@ -1,0 +1,34 @@
+{
+  "brand": { "tagline": "仲間を集める採用サイト" },
+  "nav": {
+    "home": "トップ", "about": "私たちについて", "members": "仲間図鑑",
+    "jobs": "働き方・職種", "grow": "定着と成長", "future": "新しい挑戦",
+    "numbers": "数字で見る", "faq": "よくある質問", "entry": "エントリー"
+  },
+  "cta": {
+    "entry": "エントリー", "entryLong": "まずはカジュアルに話してみる",
+    "casual": "カジュアル面談を予約", "viewMembers": "仲間図鑑を見る",
+    "learnMore": "もっと見る", "toEntry": "エントリーする"
+  },
+  "a11y": { "skip": "本文へスキップ", "close": "閉じる", "menu": "メニュー" },
+  "footer": { "site": "サイトマップ", "more": "もっと知る", "note": "本サイトの一部の数値・制度は検討中／確認中の項目を含みます。" },
+  "common": { "todo": "[要確認]", "proposal": "導入提案", "wip": "構想・検討中", "demo": "これはデモ用のサンプルデータです（実際の内容に差し替え予定）。" },
+  "members": {
+    "filterDept": "部署", "filterOrigin": "出身", "all": "すべて",
+    "empty": "条件に合う仲間が見つかりませんでした。",
+    "story.join": "入社理由", "story.day": "1日の流れ", "story.message": "これから入る仲間へ",
+    "placeholderName": "[要確認]"
+  },
+  "jobs": { "fit": "向いている人", "work": "仕事内容", "experience": "未経験可否" },
+  "numbers": { "todo": "数値は確認中" },
+  "faq": {},
+  "entry": {
+    "methodForm": "応募フォーム", "methodLine": "LINEで応募", "methodCasual": "カジュアル面談予約", "methodReferral": "社員紹介（リファラル）",
+    "name": "お名前", "email": "メールアドレス", "phone": "電話番号",
+    "lang": "希望する言語", "job": "気になる職種", "referral": "紹介コード（任意）", "message": "ひとこと（任意）",
+    "namePh": "山田 太郎", "referralPh": "例：AT-XXXX",
+    "consent": "個人情報の取り扱いに同意します。",
+    "submit": "送信内容を確認して応募する", "required": "必須",
+    "sent": "送信内容を確認しました（デモのためコンソールに出力しました）。"
+  }
+}

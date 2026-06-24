@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仲間図鑑｜アセアンテクノロジー 採用サイト</title>
+  <meta name="description" content="アセアンテクノロジーで働く仲間をキャラクターで紹介。部署・出身国でしぼり込み。あなたと同じ国の先輩が、きっと見つかります。" />
+  <meta property="og:title" content="仲間図鑑｜アセアンテクノロジー" />
+  <meta property="og:description" content="ここで働く仲間が、見える。" />
+  <meta property="og:image" content="/public/images/ogp.png" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main id="main">
+    <section class="page-head">
+      <div class="container page-head__inner">
+        <p class="eyebrow">MEET THE TEAM</p>
+        <h1 data-i18n="page.members.headTitle">仲間図鑑</h1>
+        <p data-i18n="page.members.headLead">ここで働く仲間を、一人ひとり紹介します。部署や出身国でしぼり込んで、
+          あなたに近い先輩を探してみてください。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="card" style="background:#fff4e0;border-color:#f3d9b3;margin:0 0 20px">
+          <p style="margin:0"><strong>🧪 DEMO</strong>
+            <span data-i18n="common.demo">これはデモ用のサンプルデータです（実際の内容に差し替え予定）。</span>
+            <span class="muted">氏名・所属・国旗は組織図どおり（確認済み）／コメント・ストーリーは創作のサンプルです。</span></p>
+        </div>
+
+        <!-- フィルタ -->
+        <div class="member-filters" style="margin:20px 0 8px">
+          <div class="filter-group" id="filter-dept"></div>
+        </div>
+        <div class="member-filters" style="margin-bottom:24px">
+          <div class="filter-group" id="filter-origin"></div>
+        </div>
+
+        <!-- グリッド -->
+        <div id="member-grid" class="member-grid" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- カード詳細モーダル -->
+  <div class="modal-backdrop" id="member-modal" role="dialog" aria-modal="true" aria-label="仲間の詳細">
+    <div class="modal" id="modal-content"></div>
+  </div>
+
+  <a class="btn btn--primary cta-fixed" href="/entry.html" data-i18n="cta.entry">エントリー</a>
+  <div id="site-footer"></div>
+
+  <script src="/assets/js/i18n.js"></script>
+  <script src="/assets/js/layout.js"></script>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>
