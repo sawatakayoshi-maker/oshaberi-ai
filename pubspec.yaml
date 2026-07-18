@@ -1,0 +1,35 @@
+name: oshaberi_scanner
+description: "書類スキャナー（フェーズ0 MVP）: 撮影→四隅検出→台形補正→PDF保存→端末内一覧。"
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 端末ネイティブのドキュメントスキャナ (Android: ML Kit / iOS: VisionKit)。
+  # 四隅検出・台形補正・PDF化はこのプラグインが提供する。OpenCV自作/TFLiteは不使用。
+  flutter_doc_scanner: ^0.0.21
+
+  # 状態管理
+  flutter_riverpod: ^2.5.1
+
+  # 端末内メタデータ保存
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  # 一覧からの再表示（アプリ内 PDF ビューア。ネイティブレンダラを使用）
+  pdfx: ^2.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
