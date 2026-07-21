@@ -1,0 +1,16 @@
+{
+  "name": "おしゃべりAI — 話し相手",
+  "short_name": "おしゃべりAI",
+  "description": "AIと声で話せる相棒。セカンドブレイン・予定・通知つき。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6efe3",
+  "theme_color": "#c9683d",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

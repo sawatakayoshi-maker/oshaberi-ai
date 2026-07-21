@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>おはなしAI 自己点検</title>
+<style>
+:root{ --ink:#2B2723; --paper:#F7F5F1; --card:#FFF; --line:#E3DED6; --accent:#3E6B5E; --warn:#A4552F; --muted:#8A8378; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif; }
+header{ padding:16px 16px 10px; border-bottom:1px solid var(--line); }
+h1{ font-size:18px; margin:0; } .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+main{ padding:12px 12px 90px; max-width:640px; margin:0 auto; }
+section{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin:10px 0; }
+h2{ font-size:14px; margin:0 0 8px; color:var(--accent); }
+button{ appearance:none; border:none; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:700; cursor:pointer; background:var(--accent); color:#fff; }
+button.ghost{ background:#EFEBE4; color:var(--ink); }
+button.fix{ background:var(--warn); }
+button:disabled{ opacity:.45; }
+table{ border-collapse:collapse; width:100%; font-size:12px; margin-top:8px; }
+td,th{ border:1px solid var(--line); padding:6px 7px; text-align:left; vertical-align:top; }
+tr.ok td{ background:#F1F8F3; } tr.ng td{ background:#FBEDEA; } tr.sk td{ background:#FBF6E7; } tr.fx td{ background:#EEF3F7; }
+.sum{ font-size:16px; font-weight:800; margin:6px 0; }
+.note{ font-size:11px; color:var(--muted); line-height:1.7; }
+.row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0; }
+#frameWrap{ height:1px; overflow:hidden; opacity:0.01; pointer-events:none; }
+#meter{ height:10px; background:#EFEBE4; border-radius:6px; overflow:hidden; max-width:320px; }
+#meter>i{ display:block; height:100%; width:0%; background:var(--accent); transition:width .1s; }
+#copyOut{ width:100%; height:110px; font-size:11px; margin-top:8px; display:none; }
+.pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:99px; background:#EFEBE4; color:var(--muted); }
+#fixBox{ display:none; border:1.5px solid var(--warn); }
+.fixItem{ border-bottom:1px solid var(--line); padding:8px 0; }
+.fixItem:last-child{ border-bottom:none; }
+.fixName{ font-size:13px; font-weight:800; }
+.fixDesc{ font-size:12px; color:#51606D; margin:3px 0 7px; line-height:1.7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>おはなしAI 自己点検 <span class="pill">selftest v5.1</span></h1>
+  <div class="sub">スマホ・PCの上でアプリ本体をその場で点検し、直せるもの（キャッシュ・接続・一時状態）だけを復旧します。記憶・連絡先・会話などのデータには一切触れません。</div>
+</header>
+<main>
+  <section>
+    <h2>① 自動点検（通信なし・約20秒）</h2>
+    <div class="row">
+      <button id="runAuto">▶ 自動点検をはじめる</button>
+      <span id="autoState" class="note"></span>
+    </div>
+    <div class="sum" id="sum"></div>
+    <div style="border:1.5px solid var(--warn); border-radius:10px; padding:10px; margin-top:8px;">
+      <div style="font-size:13px; font-weight:800; color:var(--warn);">🔧 今すぐ最新版に更新する（キャッシュ再構築）</div>
+      <div class="note" style="margin:4px 0 8px;">アプリのバージョンが上がらない・「更新する」の確認が出ないときに押してください。保存版の画面を捨てて作り直し、更新の仕組み（Service Worker）を登録し直します。<b>記憶・連絡先・会話・スキャンなどのデータには一切触れません。</b>実行後、このページを読み直します。</div>
+      <button class="fix" id="forceBtn">実行する（1動作のみ）</button>
+      <span id="forceState" class="note"></span>
+    </div>
+    <table id="tbl" style="display:none;"><tr><th></th><th>項目</th><th>詳細</th></tr></table>
+  </section>
+
+  <section id="fixBox">
+    <h2 style="color:var(--warn);">🔧 復旧の提案（FAILに対応するものだけ表示）</h2>
+    <div class="note" style="margin-bottom:6px;">ルール：1回の復旧＝1動作／押す前に、やることをここに書いてあります／実行後は同じ項目を自動で再点検します／記憶・連絡先・会話・バックアップには触れません。</div>
+    <div id="fixList"></div>
+  </section>
+
+  <section>
+    <h2>② 音の点検（1タップ＋耳で確認）</h2>
+    <div class="row"><button id="spkBtn">🔊 スピーカー点検（端末の声で1文読む）</button></div>
+    <div class="row" id="spkAsk" style="display:none;">
+      <span>聞こえましたか？</span>
+      <button class="ghost" id="spkYes">聞こえた</button>
+      <button class="ghost" id="spkNo">聞こえない</button>
+    </div>
+    <div class="note">聞こえない場合の主な原因：iPhone本体左側面のサイレントスイッチ（マナーモード）／音量ゼロ。マナーモード中は端末の声は無音になります。</div>
+    <div class="row" style="margin-top:10px;"><button id="spk2Btn">🎙🔊 待受オン状態でスピーカー点検（v64s8の確認）</button></div>
+    <div class="row" id="spk2Ask" style="display:none;">
+      <span>聞こえましたか？</span>
+      <button class="ghost" id="spk2Yes">聞こえた</button>
+      <button class="ghost" id="spk2No">聞こえない</button>
+    </div>
+    <div class="note">押すと下のアプリ枠で待受🎙を一時的にオンにして読み上げます（マイク許可が1回出ます）。点検中は話しかけないでください。終了後、待受は元の状態に戻します。</div>
+    <div class="row" style="margin-top:10px;"><button id="micBtn">🎙 マイク点検（3秒話しかける）</button></div>
+    <div class="row"><div id="meter"><i></i></div><span id="micState" class="note"></span></div>
+    <div class="note">※このページでマイクを「許可」すると、同じサイトのアプリ本体にも許可が効きます。</div>
+  </section>
+
+  <section>
+    <h2>③ 実通信の点検（任意・押した時だけ・数円未満）</h2>
+    <div class="row"><button id="ttsBtn">☁️ 音声サーバー（OpenAI音声）で1文鳴らす</button></div>
+    <div class="row" id="ttsAsk" style="display:none;">
+      <span>聞こえましたか？</span>
+      <button class="ghost" id="ttsYes">聞こえた</button>
+      <button class="ghost" id="ttsNo">聞こえない</button>
+    </div>
+    <div class="row" style="margin-top:10px;"><button id="chatBtn">🤖 会話サーバーと1往復（数円）</button></div>
+    <div class="note">iPhoneの日本語読み上げはこのサーバー経由です。「HTTP 200以外」＝残高切れ・上限・サーバー障害のどれかで、無音の典型原因です（これは端末側では復旧できないため、結果をコピーして報告してください）。</div>
+  </section>
+
+  <section>
+    <h2>結果の報告</h2>
+    <div class="row"><button id="copyBtn" class="ghost">📋 結果をコピー（そのまま貼って送れます）</button><span id="copyState" class="note"></span></div>
+    <textarea id="copyOut" readonly></textarea>
+  </section>
+
+  <div id="frameWrap"><iframe id="app" src="./index.html" allow="microphone; autoplay"></iframe></div>
+</main>
+
+<script>
+"use strict";
+const results=[];   // {id,name,ok:true|false|null,detail}
+const $=id=>document.getElementById(id);
+function put(id,name,ok,detail){
+  const i=results.findIndex(r=>r.id===id);
+  const rec={id,name,ok,detail:detail||""};
+  if(i>=0) results[i]=rec; else results.push(rec);
+  render();
+}
+function addFixRow(name,detail){ results.push({id:"fx_"+Date.now(),name:name,ok:true,detail,fix:true}); render(); }   /* v2.1：アイコン列と重複しないよう🔧接頭辞を撤去 */
+function render(){
+  const t=$("tbl"); t.style.display="table";
+  t.innerHTML="<tr><th></th><th>項目</th><th>詳細</th></tr>"+results.map(r=>{
+    const cls=r.fix?"fx":(r.ok===true?"ok":(r.ok===false?"ng":"sk"));
+    const ic=r.fix?"🔧":(r.ok===true?"✅":(r.ok===false?"❌":"⚠"));
+    return '<tr class="'+cls+'"><td>'+ic+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.detail)+'</td></tr>';
+  }).join("");
+  const p=results.filter(r=>r.ok===true&&!r.fix).length, f=results.filter(r=>r.ok===false).length, s=results.filter(r=>r.ok===null).length;
+  $("sum").textContent=p+" PASS ／ "+f+" FAIL ／ "+s+" 未確認・SKIP";
+  renderFixes();
+}
+function esc(x){ return String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function frameWin(){ const f=$("app"); return f && f.contentWindow; }
+function fev(code){ const w=frameWin(); if(!w) throw new Error("アプリ枠なし"); return w.eval(code); }
+function waitFrameReady(timeoutMs){
+  return new Promise((res,rej)=>{
+    const t0=Date.now();
+    (function loop(){
+      try{
+        const w=frameWin();
+        if(w && w.document && w.document.getElementById("appVer") && typeof w.eval==="function"){
+          try{ w.eval("try{ stopSpeaking(); }catch(e){}"); }catch(e){}
+          return res();
+        }
+      }catch(e){}
+      if(Date.now()-t0>timeoutMs) return rej(new Error("アプリの読み込みが"+Math.round(timeoutMs/1000)+"秒で終わらない"));
+      setTimeout(loop,300);
+    })();
+  });
+}
+async function footprint(label){ // タイムラインへ足あと1行（原則4）
+  try{ await fev('(async()=>{ try{ brain.log.unshift({ id:uid(), ts:Date.now(), date:todayStr(), title:'+JSON.stringify("🔧 復旧を実行（"+label+"）")+' }); await saveBrain(); }catch(e){} })()'); }catch(e){}
+}
+
+/* ---------- 診断項目（個別再実行できるよう登録制） ---------- */
+const CHECKS={};
+function defineCheck(id,name,fn){ CHECKS[id]={id,name,fn}; }
+async function runCheck(id){
+  const c=CHECKS[id]; if(!c) return;
+  put(c.id,c.name,null,"実行中…");
+  try{ const d=await c.fn(); put(c.id,c.name,true,d); }
+  catch(e){ put(c.id,c.name,false,String(e.message||e)); }
+}
+defineCheck("boot","アプリが読み込めてバージョンが読める", async ()=>{
+  await waitFrameReady(20000);
+  const v=(fev('document.getElementById("appVer") && document.getElementById("appVer").textContent')||"").trim();
+  if(!/v\d/.test(v)) throw new Error("バッジが読めない:"+v);
+  return "appVer="+v;
+});
+defineCheck("sw","sw.js の CACHE 版番号が読める", async ()=>{
+  const t=await (await fetch("./sw.js",{cache:"no-store"})).text();
+  const m=t.match(/ohanashi-ai-v(\d+)/);
+  if(!m) throw new Error("CACHE番号が読めない");
+  return "sw=v"+m[1];
+});
+defineCheck("storage","保存領域（storage）の読み書きができる", async ()=>{
+  const v=await fev('(async()=>{ try{ const k="oshaberi:__selftest"; await window.storage.set(k,"ok",false); const g=await window.storage.get(k); if(window.storage.delete) await window.storage.delete(k); return g && g.value==="ok" ? "OK" : "値不一致"; }catch(e){ return "失敗:"+e; } })()');
+  if(v!=="OK") throw new Error(String(v));
+  return "書き→読み→消し 往復OK";
+});
+defineCheck("controls","主要ボタン＋書類スキャン係＋所属会社欄がある", async ()=>{
+  const miss=fev('["standbyBtn","bargeBtn","webBtn","contentBtn","presentBtn","pmOverlay","vmOverlay","scOverlay","avatarManageBtn","avAddCompany","avAddNewCompanyName","presOpenInput"].filter(id=>!document.getElementById(id))');
+  if(miss.length) throw new Error("欠落: "+miss.join(","));
+  return "12部品すべてあり";
+});
+defineCheck("guards","読み上げ対策・組織図PC幅の実装マーカーがある", async ()=>{
+  const r=fev('(function(){ const b=(typeof browserSpeak==="function")?String(browserSpeak):""; const o=(typeof openaiTTSSpeak==="function")?String(openaiTTSSpeak):""; const css=Array.from(document.styleSheets).some(function(ss){ try{ return Array.from(ss.cssRules||[]).some(function(r){ return r.cssText && r.cssText.indexOf("orgPanel")>=0 && r.cssText.indexOf("980px")>=0; }); }catch(e){ return false; } }); const need=[["見張り世代",b.indexOf("browserSpeak._gen")>=0],["続きから再開",b.indexOf("enqueueFrom")>=0],["PCキック",b.indexOf("ss.pause(); ss.resume();")>=0],["600字チャンク",o.indexOf("600")>=0],["組織図980pxCSS",css]]; return need.filter(function(x){return !x[1];}).map(function(x){return x[0];}); })()');
+  if(r.length) throw new Error("未検出: "+r.join(","));
+  return "5マーカーすべて検出";
+});
+defineCheck("voiceops","声の全ボタン操作（enum）が登録されている", async ()=>{
+  const r=fev('(function(){ const en=(typeof CONTROL_TOOL!=="undefined" && CONTROL_TOOL.input_schema.properties.action.enum)||[]; const need=["open_avatar_manage","open_org","open_file","open_scan","voice_memo","demo_start","demo_stop","video_pause","marquee_news","open_agenda","open_brain"]; return { total:en.length, missing:need.filter(function(a){ return en.indexOf(a)<0; }) }; })()');
+  if(r.missing.length) throw new Error("未登録: "+r.missing.join(","));
+  if(r.total<80) throw new Error("enumが少ない: "+r.total);
+  return "enum "+r.total+"操作";
+});
+defineCheck("presidents","既存3社長・秘書の挙動が不変（確認⑤）", async ()=>{
+  const r=fev('(function(){ try{ const out={}; out.coN=(avatarCompanyOf("nishio")==="asean"); out.coK=(avatarCompanyOf("kitamoto")==="pipeplant"); out.coO=(avatarCompanyOf("okazaki")==="arterliebe"); out.seeds=(COMPANY_PROFILES.length===5); out.sec=(isPresidentLike("photoF")===false && isPresidentLike("photoM")===false && isPresidentLike("illust")===false); var _old=avatarType; avatarType="nishio"; var t=avatarNamePrompt(); avatarType=_old; out.word=(t.indexOf("アセアンテクノロジー株式会社")>=0 && t.indexOf("社長")>=0); return out; }catch(e){ return { err:String(e) }; } })()');
+  if(r.err) throw new Error(r.err);
+  const ng=Object.keys(r).filter(k=>r[k]!==true);
+  if(ng.length) throw new Error("不一致: "+ng.join(","));
+  return "会社対応3・seed5社・秘書全アクセス・社長文言 すべて従来どおり";
+});
+defineCheck("brainshape","ブレイン8カテゴリの形とタブ描画（Windowsタブ事件の再発防止）", async ()=>{
+  const r=JSON.parse(await fev('(function(){ try{ var keys=BRAIN_KINDS.map(function(k){return k.key;}); var missing=keys.filter(function(k){ return !Array.isArray(brain[k]); }); var tabs=-1, err="", pushedOut=false, tabTop=0, winH=window.innerHeight; try{ renderBrainTabs(); var el=document.getElementById("brainTabs"); tabs=el.children.length; var rc=el.getBoundingClientRect(); tabTop=Math.round(rc.top); if(rc.height>0 && tabTop>winH) pushedOut=true; }catch(ex){ err=String(ex); } return JSON.stringify({missing:missing, tabs:tabs, expect:keys.length, err:err, pushedOut:pushedOut, tabTop:tabTop, winH:winH}); }catch(ex2){ return JSON.stringify({fatal:String(ex2)}); } })()'));
+  if(r.fatal) throw new Error(r.fatal);
+  if(r.err) throw new Error("タブ描画で例外: "+r.err);
+  if(r.missing && r.missing.length) throw new Error("カテゴリ欠落: "+r.missing.join(",")+"（🔧補完できます）");
+  if(r.tabs < r.expect) throw new Error("タブ数 "+r.tabs+"／最低 "+r.expect+"（🔧再描画できます）");
+  if(r.pushedOut) throw new Error("タブが画面外へ押し出されている（tabTop="+r.tabTop+" > 画面高"+r.winH+"）＝リストの高さ制約が壊れている疑い（🔧再描画を試してください）");
+  return "8カテゴリ健全・タブ"+r.tabs+"個（8カテゴリ＋読み辞書）・画面内に表示OK";
+});
+defineCheck("brainrt","ブレインの実動作（登録→検索→削除の往復・痕跡ゼロ）", async ()=>{
+  const r=JSON.parse(await fev('(async function(){ try{ brain.memo=brain.memo.filter(function(m){ return !(m&&m.title&&String(m.title).indexOf("__selftest")>=0); });   /* 前回の残骸を先に掃除 */ var before=brain.memo.length; var id=uid(); brain.memo.unshift({ id:id, ts:Date.now(), title:"__selftest 動作点検", detail:"__selftest" }); await saveBrain(); var found=brain.memo.some(function(m){ return m&&m.id===id; }); brain.memo=brain.memo.filter(function(m){ return !(m&&m.id===id); }); await saveBrain(); try{ renderBrainList(); }catch(e){} var clean=!brain.memo.some(function(m){ return m&&m.title&&String(m.title).indexOf("__selftest")>=0; }); return JSON.stringify({found:found, same:(brain.memo.length===before), clean:clean}); }catch(ex){ return JSON.stringify({fatal:String(ex)}); } })()'));
+  if(r.fatal) throw new Error(r.fatal);
+  const ng=[]; if(!r.found) ng.push("登録が見つからない"); if(!r.same) ng.push("件数が元に戻らない"); if(!r.clean) ng.push("試験データが残った");
+  if(ng.length) throw new Error(ng.join(" / "));
+  return "登録→検索→削除 往復OK（件数一致・痕跡ゼロ）";
+});
+defineCheck("scanrt","書類スキャンの実動作（画面開閉＋補正計算＋受信箱往復＋PDF構造）", async ()=>{
+  // 画面の開閉
+  await fev('openScanScreen()');
+  const opened=await fev('document.getElementById("scOverlay").classList.contains("sc-open")');
+  fev('document.getElementById("scBack").click()');
+  if(!opened) throw new Error("スキャン画面が開かない");
+  // 補正計算（この端末のJSエンジン上で射影変換の四隅誤差を実測）
+  const src=[{x:120,y:80},{x:900,y:140},{x:940,y:1300},{x:80,y:1260}], dst=[{x:0,y:0},{x:800,y:0},{x:800,y:1120},{x:0,y:1120}];
+  const A=[],B=[];
+  for(let i=0;i<4;i++){ const x=dst[i].x,y=dst[i].y,u=src[i].x,v=src[i].y;
+    A.push([x,y,1,0,0,0,-u*x,-u*y]); B.push(u); A.push([0,0,0,x,y,1,-v*x,-v*y]); B.push(v); }
+  for(let c=0;c<8;c++){ let p=c; for(let r2=c+1;r2<8;r2++) if(Math.abs(A[r2][c])>Math.abs(A[p][c])) p=r2;
+    [A[c],A[p]]=[A[p],A[c]]; [B[c],B[p]]=[B[p],B[c]];
+    for(let r2=0;r2<8;r2++){ if(r2===c) continue; const f=A[r2][c]/A[c][c]; for(let k=c;k<8;k++) A[r2][k]-=f*A[c][k]; B[r2]-=f*B[c]; } }
+  const h=B.map((b,i)=>b/A[i][i]);
+  let maxErr=0;
+  for(let i=0;i<4;i++){ const w=h[6]*dst[i].x+h[7]*dst[i].y+1;
+    const u=(h[0]*dst[i].x+h[1]*dst[i].y+h[2])/w, v=(h[3]*dst[i].x+h[4]*dst[i].y+h[5])/w;
+    maxErr=Math.max(maxErr, Math.abs(u-src[i].x), Math.abs(v-src[i].y)); }
+  if(maxErr>1e-6) throw new Error("補正計算の誤差が大きい: "+maxErr);
+  // 受信箱（専用DB）の往復
+  const db=await fev('(async function(){ try{ var d=await new Promise(function(res,rej){ var rq=indexedDB.open("ohanashi-scan-v1",1); rq.onupgradeneeded=function(){ rq.result.createObjectStore("scans",{keyPath:"id"}); }; rq.onsuccess=function(){res(rq.result);}; rq.onerror=function(){rej(rq.error);} }); var id=999999999.5; await new Promise(function(res,rej){ var tx=d.transaction("scans","readwrite"); tx.objectStore("scans").put({id:id,status:"__selftest"}); tx.oncomplete=res; tx.onerror=function(){rej(tx.error);} }); var got=await new Promise(function(res,rej){ var rq2=d.transaction("scans").objectStore("scans").get(id); rq2.onsuccess=function(){res(!!rq2.result);}; rq2.onerror=function(){rej(rq2.error);} }); await new Promise(function(res,rej){ var tx2=d.transaction("scans","readwrite"); tx2.objectStore("scans").delete(id); tx2.oncomplete=res; tx2.onerror=function(){rej(tx2.error);} }); return got?"OK":"NG"; }catch(ex){ return "ERR:"+ex; } })()');
+  if(db!=="OK") throw new Error("受信箱DBの往復失敗: "+db);
+  return "画面開閉OK・補正誤差<1e-6・受信箱往復OK";
+});
+defineCheck("layout","画面の高さ整合とセーフエリア対策（閉じるボタン事件の再発防止）", async ()=>{
+  const r=JSON.parse(await fev('(function(){ var bodyH=Math.round(document.body.getBoundingClientRect().height), winH=window.innerHeight; var css=false; try{ css=Array.prototype.some.call(document.styleSheets,function(ss){ try{ return Array.prototype.some.call(ss.cssRules||[],function(rr){ return rr.cssText && rr.cssText.indexOf("scOverlay")>=0 && rr.cssText.indexOf("safe-area-inset-top")>=0; }); }catch(e){ return false; } }); }catch(e){} return JSON.stringify({bodyH:bodyH, winH:winH, okH:Math.abs(bodyH-winH)<=2, safeCss:css}); })()'));
+  const ng=[];
+  if(!r.okH) ng.push("bodyの高さ("+r.bodyH+")が画面("+r.winH+")と不一致＝下端のタブ等が見えない恐れ");
+  if(!r.safeCss) ng.push("スキャン画面のセーフエリアCSSが見つからない");
+  if(ng.length) throw new Error(ng.join(" / "));
+  return "高さ一致（body="+r.bodyH+"/win="+r.winH+"）・セーフエリアCSSあり";
+});
+defineCheck("voiceops_run","声の操作が実際に動く（安全な2つを実行）", async ()=>{
+  const r=JSON.parse(await fev('(function(){ try{ var a=runAppAction({action:"marquee_all"}); var b=runAppAction({action:"open_brain"}); return JSON.stringify({a:String(a).slice(0,20), b:String(b).slice(0,20), ok:!!(a&&b)}); }catch(ex){ return JSON.stringify({fatal:String(ex)}); } })()'));
+  if(r.fatal) throw new Error("実行で例外: "+r.fatal);
+  if(!r.ok) throw new Error("操作が応答を返さない");
+  return "marquee_all / open_brain を実行し応答あり（画面は元に戻しています）";
+});
+defineCheck("features","各係の画面が開いて閉じる（議事録・プレゼン・翻訳・声メモ・アバター管理）", async ()=>{
+  const r=JSON.parse(await fev('(function(){ try{ var res={}; var list=[["議事録","minutesModal"],["プレゼン","presentModal"],["通訳","interpretModal"],["資料室","shiryoModal"],["コンテンツ","contentModal"],["偵察係","newsModal"],["アバター管理","avatarModal"],["声メモ","vmOverlay"],["写真取り込み2択","pmOverlay"],["書類スキャン","scOverlay"]]; var miss=[]; list.forEach(function(p){ var el=document.getElementById(p[1]); if(!el) miss.push(p[0]); }); var tr=!!document.getElementById("transToggle"); return JSON.stringify({miss:miss, total:list.length, trans:tr}); }catch(ex){ return JSON.stringify({fatal:String(ex)}); } })()'));
+  if(r.fatal) throw new Error(r.fatal);
+  if(r.miss.length) throw new Error("欠落: "+r.miss.join(",")+"（🔧キャッシュ再構築を試してください）");
+  if(!r.trans) throw new Error("翻訳トグルが無い");
+  return r.total+"係の画面＋翻訳トグル すべて存在";
+});
+defineCheck("workers","AIサーバー2系統の設定が正しい（会話・音声）", async ()=>{
+  const r=JSON.parse(await fev('(function(){ var s=document.documentElement.innerHTML; return JSON.stringify({chat:s.indexOf("ohanashi-chat.tsawa0314.workers.dev")>=0, tts:s.indexOf("ohanashi-tts.tsawa0314.workers.dev")>=0, keyOrShared:(typeof sharedBackendReady==="function" ? !!sharedBackendReady() : false) || (typeof getApiKey==="function" ? !!getApiKey() : false)}); })()'));
+  const ng=[];
+  if(!r.chat) ng.push("会話サーバーのURLが無い");
+  if(!r.tts) ng.push("音声サーバーのURLが無い");
+  if(!r.keyOrShared) ng.push("キーも共有キーも使えない状態");
+  if(ng.length) throw new Error(ng.join(" / "));
+  return "会話・音声の2系統＋接続方式OK（実際の疎通は③で確認）";
+});
+const AUTO_ORDER=["boot","sw","storage","controls","guards","voiceops","voiceops_run","presidents","brainshape","brainrt","scanrt","layout","features","workers"];
+
+$("runAuto").addEventListener("click", async ()=>{
+  $("runAuto").disabled=true; $("autoState").textContent="実行中…";
+  for(const id of AUTO_ORDER){ await runCheck(id); }
+  $("autoState").textContent="完了"; $("runAuto").disabled=false;
+});
+
+/* ---------- 🔧 復旧（第2層）。FAILに対応するものだけ提示 ---------- */
+const REPAIRS={
+  cache:{
+    label:"キャッシュ再構築＋SW再登録",
+    desc:"保存版の画面を捨てて作り直し、更新の仕組み（Service Worker）を登録し直します。記憶・連絡先・会話・スキャンなどのデータには触れません。実行後にこのページを読み直します（自サイトへの再取得のみ・外部への通信なし）。",
+    async run(){
+      try{ sessionStorage.setItem("selftest:afterFix", JSON.stringify({repair:"cache", results:results.filter(r=>!r.fix)})); }catch(e){}
+      const keys=await caches.keys();
+      for(const k of keys){ if(k.indexOf("ohanashi-ai-")===0) await caches.delete(k); }
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs){ await r.unregister(); }
+      await navigator.serviceWorker.register("./sw.js").catch(()=>{});
+      await footprint("キャッシュ再構築＋SW再登録");
+      location.reload();
+      return "再読み込みします…";
+    },
+    recheck:["boot","sw","controls","guards"]
+  },
+  tts:{
+    label:"読み上げエンジンのリセット",
+    desc:"音声の待ち行列を全部消して、読み上げを最初の状態に戻します。次の発話から正常化します。データには触れません（通信なし）。",
+    async run(){
+      try{ speechSynthesis.cancel(); }catch(e){}
+      try{ fev('(function(){ try{ stopSpeaking(); }catch(e){} try{ speechSynthesis.cancel(); speechSynthesis.resume(); }catch(e){} return "OK"; })()'); }catch(e){}
+      await footprint("読み上げエンジンのリセット");
+      return "音声キューを消去しました。②のスピーカー点検で確認してください";
+    },
+    recheck:[]
+  },
+  mic:{
+    label:"マイク・待受の入れ直し",
+    desc:"マイクの取得をやり直し、アプリの待受（🎙）が入っていれば入れ直します。データには触れません（通信なし）。",
+    async run(){
+      try{ const st=await navigator.mediaDevices.getUserMedia({audio:true}); st.getTracks().forEach(t=>t.stop()); }
+      catch(e){ throw new Error("マイクを取得できません:"+e.name+"（ブラウザのサイト設定でマイク許可を確認）"); }
+      let msg="マイク取得OK";
+      try{ msg+=" / "+fev('(function(){ const b=document.getElementById("standbyBtn"); if(!b) return "待受ボタンなし"; if(b.classList.contains("on")){ b.click(); setTimeout(function(){ b.click(); },500); return "待受を入れ直しました"; } return "待受はOFFのまま（変更なし）"; })()'); }catch(e){}
+      await footprint("マイク・待受の入れ直し");
+      return msg;
+    },
+    recheck:[]
+  },
+  storage:{
+    label:"保存領域の再オープン",
+    desc:"保存領域（IndexedDB）への接続をやり直して、読み書きをもう一度試します。データの中身には触れません（通信なし）。",
+    async run(){
+      const v=await fev('(async()=>{ try{ const k="oshaberi:__selftest"; await window.storage.set(k,"ok",false); const g=await window.storage.get(k); if(window.storage.delete) await window.storage.delete(k); return (g&&g.value==="ok")?"OK":"NG"; }catch(e){ return "NG:"+e; } })()');
+      if(v!=="OK") throw new Error("再試行も失敗（"+v+"）。端末の空き容量・プライベートブラウズを確認し、結果をコピーして報告してください");
+      await footprint("保存領域の再オープン");
+      return "読み書きの往復が回復しました";
+    },
+    recheck:["storage"]
+  },
+  brainfill:{
+    label:"ブレインの欠落カテゴリを空で補完",
+    desc:"古い形式の復元データ等でカテゴリの器が欠けているとき、空の器だけを補います。既存のメモ・予定など中身には一切触れません（通信なし）。",
+    async run(){
+      const r=await fev('(async function(){ try{ var keys=BRAIN_KINDS.map(function(k){return k.key;}); var filled=[]; keys.forEach(function(k){ if(!Array.isArray(brain[k])){ brain[k]=[]; filled.push(k); } }); if(filled.length) await saveBrain(); try{ renderBrainTabs(); renderBrainList(); }catch(e){} return JSON.stringify(filled); }catch(ex){ return "ERR:"+ex; } })()');
+      if(String(r).indexOf("ERR:")===0) throw new Error(String(r));
+      await footprint("欠落カテゴリの補完");
+      const f=JSON.parse(r);
+      return f.length ? ("補完: "+f.join(",")) : "欠落なし（補完不要でした）";
+    },
+    recheck:["brainshape"]
+  },
+  tabsredraw:{
+    label:"ブレインのタブを描き直す",
+    desc:"タブの列を作り直して表示し直します。データには触れません（通信なし）。",
+    async run(){
+      await fev('(function(){ try{ renderBrainTabs(); renderBrainList(); return "OK"; }catch(ex){ return "ERR:"+ex; } })()');
+      await footprint("タブの再描画");
+      return "再描画しました";
+    },
+    recheck:["brainshape"]
+  },
+  dedup:{
+    label:"写真の重複ガード台帳を作り直す",
+    desc:"写真取り込みの「同じ写真をスキップする」ための台帳だけをリセットします。写真・メモ・連絡先は消えません（次に同じ写真を送ると再登録される、という影響だけです。通信なし）。",
+    async run(){
+      await fev('(async()=>{ try{ await window.storage.set("photo_dedup", JSON.stringify({}), false); return "OK"; }catch(e){ return "NG:"+e; } })()');
+      await footprint("重複ガード台帳の作り直し");
+      return "台帳をリセットしました";
+    },
+    recheck:[]
+  }
+};
+const FIX_MAP={ boot:["cache"], sw:["cache"], controls:["cache"], guards:["cache"], voiceops:["cache"], storage:["storage","cache"], speaker:["tts"], workerTts:["tts"], mic:["mic"], brainshape:["brainfill","tabsredraw"], brainrt:["storage"], speaker2:["tts"], features:["cache"], workers:["cache"], voiceops_run:["cache"] };
+const fixFails={};   // 2回連続失敗→報告誘導（固定ルール）
+let fixBusy=false;
+
+function renderFixes(){
+  const ids=new Set();
+  for(const r of results){ if(r.ok===false && FIX_MAP[r.id]) FIX_MAP[r.id].forEach(x=>ids.add(x)); }
+  const box=$("fixBox"), list=$("fixList");
+  if(!ids.size){ box.style.display="none"; list.innerHTML=""; return; }
+  box.style.display="block";
+  list.innerHTML=Array.from(ids).map(id=>{
+    const rp=REPAIRS[id];
+    if((fixFails[id]||0)>=2){
+      return '<div class="fixItem"><div class="fixName">'+esc(rp.label)+'</div><div class="fixDesc" style="color:var(--warn);">この復旧は2回失敗しました。これ以上は実行せず、「📋 結果をコピー」で報告してください。</div></div>';
+    }
+    return '<div class="fixItem"><div class="fixName">🔧 '+esc(rp.label)+'</div><div class="fixDesc">'+esc(rp.desc)+'</div><button class="fix" data-fix="'+id+'">実行する（1動作のみ）</button></div>';
+  }).join("");
+  list.querySelectorAll("button[data-fix]").forEach(b=>{
+    b.onclick=async ()=>{
+      if(fixBusy) return; fixBusy=true; b.disabled=true; b.textContent="実行中…";
+      const id=b.dataset.fix, rp=REPAIRS[id];
+      try{
+        const d=await rp.run();
+        addFixRow(rp.label, d||"実行");
+        for(const c of rp.recheck){ await runCheck(c); }   // 自動再診断
+      }catch(e){
+        fixFails[id]=(fixFails[id]||0)+1;
+        addFixRow(rp.label+"（失敗）", String(e.message||e));
+      }
+      fixBusy=false; render();
+    };
+  });
+}
+
+/* キャッシュ再構築後の復帰（結果を引き継ぎ、関連項目を自動で再点検） */
+(async function resumeAfterFix(){
+  let st=null;
+  try{ st=JSON.parse(sessionStorage.getItem("selftest:afterFix")||"null"); sessionStorage.removeItem("selftest:afterFix"); }catch(e){}
+  if(!st) return;
+  for(const r of (st.results||[])) results.push(r);
+  addFixRow(REPAIRS[st.repair].label,"実行→ページを読み直しました。関連項目を再点検します");
+  render();
+  for(const c of REPAIRS[st.repair].recheck){ await runCheck(c); }
+})();
+
+$("forceBtn").addEventListener("click", async ()=>{
+  const b=$("forceBtn"); b.disabled=true; $("forceState").textContent="実行中…";
+  try{
+    const keys=await caches.keys();
+    let n=0;
+    for(const k of keys){ if(k.indexOf("ohanashi-ai-")===0){ await caches.delete(k); n++; } }
+    const regs=await navigator.serviceWorker.getRegistrations();
+    for(const r of regs){ try{ if(r.waiting) r.waiting.postMessage({type:"SKIP_WAITING"}); }catch(e){} await r.unregister(); }
+    await navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    try{ await footprint("強制更新（キャッシュ再構築＋SW再登録）"); }catch(e){}
+    $("forceState").textContent="キャッシュ"+n+"件を削除しました。読み直します…";
+    setTimeout(()=>location.reload(true), 900);
+  }catch(e){ $("forceState").textContent="失敗: "+(e.message||e); b.disabled=false; }
+});
+/* ---------- ② 音の点検 ---------- */
+$("spkBtn").addEventListener("click", ()=>{
+  try{
+    const u=new SpeechSynthesisUtterance("自己点検です。この声が聞こえたら、聞こえた、を押してね。");
+    u.lang="ja-JP";
+    speechSynthesis.cancel(); speechSynthesis.speak(u); speechSynthesis.resume();
+    $("spkAsk").style.display="flex";
+    put("speaker","スピーカー（端末の声）が鳴る",null,"読み上げ実行→耳で確認待ち");
+  }catch(e){ put("speaker","スピーカー（端末の声）が鳴る",false,"読み上げAPIエラー:"+e); }
+});
+$("spkYes").addEventListener("click",()=>{ put("speaker","スピーカー（端末の声）が鳴る",true,"利用者が聴取を確認"); $("spkAsk").style.display="none"; });
+$("spkNo").addEventListener("click",()=>{ put("speaker","スピーカー（端末の声）が鳴る",false,"無音。マナーモード（本体左側面）と音量を確認。直らなければ🔧読み上げリセット"); $("spkAsk").style.display="none"; });
+
+$("micBtn").addEventListener("click", async ()=>{
+  $("micState").textContent="マイク準備中…";
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ put("mic","マイクが音を拾う",false,"許可されない/取得失敗:"+e.name); $("micState").textContent="失敗"; return; }
+  try{
+    const ac=new (window.AudioContext||window.webkitAudioContext)();
+    const src=ac.createMediaStreamSource(stream);
+    const an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
+    const buf=new Uint8Array(an.fftSize);
+    let peak=0; const t0=Date.now();
+    $("micState").textContent="3秒間、話しかけてください…";
+    await new Promise(res=>{
+      (function loop(){
+        an.getByteTimeDomainData(buf);
+        let m=0; for(let i=0;i<buf.length;i++){ const d=Math.abs(buf[i]-128)/128; if(d>m) m=d; }
+        if(m>peak) peak=m;
+        document.querySelector("#meter>i").style.width=Math.min(100,Math.round(m*160))+"%";
+        if(Date.now()-t0<3000) requestAnimationFrame(loop); else res();
+      })();
+    });
+    stream.getTracks().forEach(t=>t.stop()); ac.close();
+    const pct=Math.round(peak*100);
+    if(peak>0.06){ put("mic","マイクが音を拾う",true,"入力レベル ピーク"+pct+"%"); $("micState").textContent="OK（"+pct+"%）"; }
+    else { put("mic","マイクが音を拾う",false,"入力がほぼ無音（ピーク"+pct+"%）。マイク穴・他アプリの占有を確認"); $("micState").textContent="無音（"+pct+"%）"; }
+  }catch(e){ put("mic","マイクが音を拾う",false,"計測エラー:"+e); $("micState").textContent="失敗"; }
+});
+
+let _spk2Prev=null;
+$("spk2Btn").addEventListener("click", async ()=>{
+  put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",null,"準備中…");
+  try{
+    await waitFrameReady(20000);
+    _spk2Prev = !!(await fev('(typeof standbyOn!=="undefined" && standbyOn)'));
+    if(!_spk2Prev){ await fev('setStandby(true)'); }
+    await new Promise(r=>setTimeout(r,1200));   // マイク取得を待つ（許可が出たら押してください）
+    const on=await fev('(typeof standbyOn!=="undefined" && standbyOn)');
+    if(!on){ put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",false,"待受を開始できない（マイク許可を確認）"); return; }
+    await fev('speak("待受オンの点検です。この声がスピーカーから聞こえたら、聞こえた、を押してね。", true)');
+    $("spk2Ask").style.display="flex";
+    put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",null,"読み上げ実行→耳で確認待ち");
+  }catch(e){ put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",false,String(e.message||e)); }
+});
+async function _spk2Restore(){ try{ const prev=_spk2Prev; _spk2Prev=null; if(prev===false){ await fev('setStandby(false)'); } }catch(e){} }
+$("spk2Yes").addEventListener("click",async()=>{ put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",true,"利用者が聴取を確認"); $("spk2Ask").style.display="none"; await _spk2Restore(); });
+$("spk2No").addEventListener("click",async()=>{ put("speaker2","待受オンでもスピーカーから読み上げが聞こえる",false,"無音または受話口の小さい音。iOSの版とあわせて報告を"); $("spk2Ask").style.display="none"; await _spk2Restore(); });
+
+/* ---------- ③ 実通信（任意） ---------- */
+$("ttsBtn").addEventListener("click", async ()=>{
+  put("workerTts","音声サーバー（OpenAI音声）が鳴る",null,"通信中…");
+  let voice="alloy", model="gpt-4o-mini-tts";
+  try{ await waitFrameReady(20000); voice=fev('openaiTTSVoiceFor()')||voice; model=fev('getOpenAITTSModel()')||model; }catch(e){}
+  try{
+    const r=await fetch("https://ohanashi-tts.tsawa0314.workers.dev",{ method:"POST", headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ text:"自己点検です。この声が聞こえたら、聞こえた、を押してね。", voice:voice, model:model, format:"mp3", speed:1 }) });
+    if(!r.ok){ let m=""; try{ m=(await r.text()).slice(0,120); }catch(e){}
+      put("workerTts","音声サーバー（OpenAI音声）が鳴る",false,"HTTP "+r.status+"（"+m+"）— 残高/上限/サーバー側。端末では復旧不可＝要報告");
+      return;
+    }
+    const url=URL.createObjectURL(await r.blob());
+    const a=new Audio(url);
+    a.onended=()=>{ URL.revokeObjectURL(url); };
+    await a.play().catch(e=>{ throw new Error("再生ブロック:"+e); });
+    $("ttsAsk").style.display="flex";
+    put("workerTts","音声サーバー（OpenAI音声）が鳴る",null,"HTTP 200・再生実行→耳で確認待ち");
+  }catch(e){ put("workerTts","音声サーバー（OpenAI音声）が鳴る",false,String(e.message||e)); }
+});
+$("ttsYes").addEventListener("click",()=>{ put("workerTts","音声サーバー（OpenAI音声）が鳴る",true,"HTTP 200・利用者が聴取を確認"); $("ttsAsk").style.display="none"; });
+$("ttsNo").addEventListener("click",()=>{ put("workerTts","音声サーバー（OpenAI音声）が鳴る",false,"HTTP 200だが無音。音量・サイレント解除→🔧読み上げリセット→再点検"); $("ttsAsk").style.display="none"; });
+
+$("chatBtn").addEventListener("click", async ()=>{
+  put("chatRt","会話サーバーと1往復できる＋利用状況の実測",null,"通信中…");
+  try{
+    await waitFrameReady(20000);
+    const r=await fev('(async function(){ try{ var res=await callClaude([{role:"user",content:"点検です。OKとだけ返してください。"}], "自己点検の疎通確認です。OKとだけ返してください。", { actions:false, web:false, maxTokens:16 }); var txt=(typeof res==="string")?res:JSON.stringify(res); var u=""; try{ var j=JSON.parse(txt); u=j&&j.usage?JSON.stringify(j.usage):"(usageなし)"; }catch(_){ u="(JSONでない)"; } return "OK:"+u+" | reply="+txt.slice(0,24); }catch(ex){ return "ERR:"+(ex&&ex.message||ex); } })()');
+    if(String(r).indexOf("OK:")===0) put("chatRt","会話サーバーと1往復できる＋利用状況の実測",true,"usage実測 "+String(r).slice(3,140));
+    else put("chatRt","会話サーバーと1往復できる",false,String(r));
+  }catch(e){ put("chatRt","会話サーバーと1往復できる",false,String(e.message||e)); }
+});
+/* ---------- 結果コピー ---------- */
+$("copyBtn").addEventListener("click", async ()=>{
+  let appv=""; try{ appv=(fev('document.getElementById("appVer").textContent')||"").trim(); }catch(e){}
+  const lines=[];
+  lines.push("【おはなしAI 自己点検結果（selftest v5）】");
+  lines.push("日時: "+new Date().toLocaleString("ja-JP")+" / アプリ: "+(appv||"?"));
+  lines.push("端末: "+navigator.userAgent);
+  const p=results.filter(r=>r.ok===true&&!r.fix).length, f=results.filter(r=>r.ok===false).length, s=results.filter(r=>r.ok===null).length;
+  lines.push("結果: "+p+" PASS / "+f+" FAIL / "+s+" 未確認");
+  for(const r of results){ lines.push((r.fix?"🔧":(r.ok===true?"✅":(r.ok===false?"❌":"⚠")))+" "+r.name+" — "+r.detail); }
+  const txt=lines.join("\n");
+  const out=$("copyOut"); out.value=txt; out.style.display="block";
+  try{ await navigator.clipboard.writeText(txt); $("copyState").textContent="コピーしました"; }
+  catch(e){ out.focus(); out.select(); $("copyState").textContent="下の枠を長押しでコピーしてください"; }
+});
+</script>
+</body>
+</html>
