@@ -996,7 +996,7 @@ body.night-mode::after{
     <div class="brand">
       <b>はなしＡＩ</b>
       <span>きみの話し相手 · 前回の続きも覚えてるよ</span>
-      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s87</span>
+      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s88</span>
     </div>
     <div class="tools">
       <!-- ↓この4つ（待受・割り込み・言語・検索）はJSでアバター横メニューへ移動します。ここでの位置は表示に影響しません。 -->
@@ -1198,7 +1198,9 @@ body.night-mode::after{
         <div class="toolgroup-btns">
           <button class="tool" id="saveBtn" title="会話をテキストファイルで保存する">💾 保存</button>
           <button class="tool" id="copyAllBtn" title="会話を全部コピー">📋 全部コピー</button>
+          <button class="tool" id="shareAllBtn" title="会話をLINEやメールなどに共有する">📤 共有</button>
           <button class="tool" id="slideBtn" title="AIと一緒にPowerPointスライドを作る">📊 スライド</button>
+          <button class="tool" id="icsBtn" title="これからの予定と期限つきタスクを、iPhone/Googleのカレンダーに登録できるファイルで書き出す">📅 カレンダーへ</button>
         </div>
       </div>
       <div class="toolgroup-row2">
@@ -2141,6 +2143,7 @@ body.night-mode::after{
       <div class="modal-actions">
         <button class="btn-ghost" id="sumSaveEdit">✎ この内容で上書き保存</button>
         <button class="btn-ghost" id="sumLibSave">💾 名前をつけて保存</button>
+        <button class="btn-ghost" id="sumShareBtn">📤 共有</button>
       </div>
       <div class="modal-actions">
         <button class="btn-ghost" id="sumClose">閉じる</button>
@@ -4543,7 +4546,8 @@ function openMinutesEditor(id){
     +'<button type="button" class="cf-mini" id="minExpDocx">📄 ワード</button>'
     +'<button type="button" class="cf-mini" id="minExpXlsx">📊 エクセル</button>'
     +'<button type="button" class="cf-mini" id="minExpCsv">📋 CSV</button>'
-    +'<button type="button" class="cf-mini" id="minExpTxt">📝 テキスト</button></div>'
+    +'<button type="button" class="cf-mini" id="minExpTxt">📝 テキスト</button>'
+    +'<button type="button" class="cf-mini" id="minShareBtn" title="この議事録をLINEやメールなどに共有">📤 共有</button></div>'
     +'<div id="minRecBar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 4px 8px;padding:8px 10px;border:1px solid #e2c4c4;border-radius:10px;background:#fff6f6;">'
       +'<button type="button" id="minRecBtn" style="flex:0 0 auto;font-size:14px;font-weight:800;color:#fff;background:#c0392b;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;">🔴 録音を開始</button>'
       +'<span id="minRecInd" style="display:none;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#c0392b;"></span>'
@@ -4603,6 +4607,7 @@ function openMinutesEditor(id){
   var _expx=$("minExpXlsx"); if(_expx) _expx.addEventListener("click", function(){ minExportXlsx(id); });
   var _expc=$("minExpCsv"); if(_expc) _expc.addEventListener("click", function(){ minExportCsv(id); });
   var _expt=$("minExpTxt"); if(_expt) _expt.addEventListener("click", function(){ minExportTxt(id); });
+  var _mshr=$("minShareBtn"); if(_mshr) _mshr.addEventListener("click", function(){ minShareText(id); });   /* v64s88 */
   Array.prototype.forEach.call(document.querySelectorAll(".min-level"), function(b){
     b.addEventListener("click", function(){
       minSumLevel=parseInt(b.getAttribute("data-lv"),10)||2; syncMinLevelUI();
@@ -4961,6 +4966,13 @@ async function minExportCsv(id){   // v59x: UTF-8 BOM付き（Excelの文字化�
   var csv="\uFEFF"+head+"\r\n"+data+"\r\n";
   minDownloadBlob(new Blob([csv], { type:"text/csv;charset=utf-8" }), minExportName(id,"csv"));
   minExpStat("CSVを書き出しました ✓");
+}
+/* v64s88：議事録を共有シートへ（書き出しのテキストと同じ内容） */
+async function minShareText(id){
+  await saveMinuteFromForm(id, true);
+  var rows=minExportRows(id); if(!rows) return;
+  var txt=rows.map(function(kv){ var v=String(kv[1]||""); return v.indexOf("\n")>=0 ? (kv[0]+"：\n"+v) : (kv[0]+"："+v); }).join("\n");
+  shareSmart("議事録", txt);
 }
 async function minExportTxt(id){   // v59x: 「項目名：内容」／v59y: 複数行項目は次行から「・」付き箇条書き
   await saveMinuteFromForm(id, true);
@@ -11843,16 +11855,86 @@ if(quitBtn){
 
 // 会話を全部コピー
 const copyAllBtn=document.getElementById("copyAllBtn");
-if(copyAllBtn) copyAllBtn.addEventListener("click", async ()=>{
+/* v64s88：会話全文のテキスト化を共通関数に（コピーと共有で共用） */
+function buildConversationText(){
   const youLbl = appLang==="ja"?"あなた": appLang==="ko"?"나": appLang==="th"?"คุณ": appLang==="vi"?"Bạn":"You";
   const aiLbl  = (I18N[appLang]||I18N.en).appName;
-  const lines = history.filter(m=>m && m.content)
-    .map(m=>(m.role==="user"?youLbl:aiLbl)+": "+m.content);
-  const ok = await copyText(lines.join("\n\n"));
-  const old = copyAllBtn.textContent;
+  return history.filter(m=>m && m.content)
+    .map(m=>(m.role==="user"?youLbl:aiLbl)+": "+m.content).join("\n\n");
+}
+if(copyAllBtn) copyAllBtn.addEventListener("click", async ()=>{
+  const ok = await copyText(buildConversationText());
   copyAllBtn.textContent = ok ? "✓" : "✗";
   setTimeout(()=>{ copyAllBtn.textContent = "📋 "+tt("copyAll"); }, 1200);
 });
+/* ===== v64s88：共有（Web Share）。LINE・メール等のアプリへワンタップで渡す ===== */
+async function shareSmart(title, text){
+  if(!String(text||"").trim()){ setStatus("共有する内容がまだありません"); return; }
+  if(navigator.share){
+    try{ await navigator.share({ title: title||"おはなしAI", text: text }); return; }
+    catch(e){ if(e && (e.name==="AbortError"||/abort/i.test(String(e)))) return; }  // 利用者が共有をやめた＝正常
+  }
+  /* 共有シートが使えない環境（古いブラウザ等）はコピーに切替えて案内 */
+  const ok = await copyText(text);
+  setStatus(ok ? "この端末は共有画面が使えないため、文章をコピーしました。貼り付けて送ってね" : "共有もコピーもできませんでした");
+}
+{ const b=document.getElementById("shareAllBtn");
+  if(b) b.addEventListener("click", ()=> shareSmart("会話の記録", buildConversationText())); }
+
+/* ===== v64s88：カレンダー書き出し（.ics）。予定と期限つきタスクを標準カレンダーへ ===== */
+function icsEscape(v){ return String(v||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n"); }
+function icsDate(d){ return String(d||"").replace(/-/g,""); }
+function buildICS(items){
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").replace(/\..+/,"Z");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//ohanashiai//JP","CALSCALE:GREGORIAN"];
+  items.forEach(function(it, i){
+    L.push("BEGIN:VEVENT");
+    L.push("UID:ohanashiai-"+stamp+"-"+i+"@local");
+    L.push("DTSTAMP:"+stamp);
+    if(it.time && /^\d{1,2}:\d{2}$/.test(it.time)){
+      const hm=it.time.split(":"); const t=("0"+hm[0]).slice(-2)+hm[1];
+      L.push("DTSTART:"+icsDate(it.date)+"T"+t+"00");           // 端末の時刻のまま（floating）
+      const endH=(parseInt(hm[0],10)+1)%24;                      // 終了未指定は1時間枠
+      L.push("DTEND:"+icsDate(it.date)+"T"+("0"+endH).slice(-2)+hm[1]+"00");
+    }else{
+      L.push("DTSTART;VALUE=DATE:"+icsDate(it.date));            // 終日
+    }
+    L.push("SUMMARY:"+icsEscape(it.title));
+    if(it.detail) L.push("DESCRIPTION:"+icsEscape(it.detail));
+    if(it.remind!=null && it.remind>0){
+      L.push("BEGIN:VALARM","TRIGGER:-PT"+Math.round(it.remind)+"M","ACTION:DISPLAY","DESCRIPTION:"+icsEscape(it.title),"END:VALARM");
+    }
+    L.push("END:VEVENT");
+  });
+  L.push("END:VCALENDAR");
+  return L.join("\r\n");
+}
+function collectCalendarItems(){
+  const today = new Date(); const pad=n=>("0"+n).slice(-2);
+  const t0 = today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  const out=[];
+  ((typeof brain!=="undefined"&&brain.schedule)||[]).forEach(function(sc){
+    if(sc && sc.date && sc.date>=t0) out.push({date:sc.date, time:sc.time||"", title:sc.title||"予定", detail:sc.detail||"", remind:sc.remind});
+  });
+  ((typeof brain!=="undefined"&&brain.task)||[]).forEach(function(tk){
+    if(tk && !tk.done && tk.due && tk.due>=t0) out.push({date:tk.due, time:tk.time||"", title:"【期限】"+(tk.title||"タスク"), detail:tk.detail||"", remind:tk.remind});
+  });
+  out.sort(function(a,b){ return (a.date+a.time) < (b.date+b.time) ? -1 : 1; });
+  return out;
+}
+{ const b=document.getElementById("icsBtn");
+  if(b) b.addEventListener("click", function(){
+    try{
+      const items=collectCalendarItems();
+      if(!items.length){ alert("カレンダーに書き出せる、これからの予定・期限つきタスクがまだありません。\nAIに「明日の10時に◯◯、予定に入れて」のように話すと登録できます。"); return; }
+      const blob=new Blob([buildICS(items)], { type:"text/calendar;charset=utf-8" });
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a"); a.href=url; a.download="おはなしAIの予定.ics";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(_){ } }, 5000);
+      setStatus("📅 "+items.length+"件を書き出しました。ダウンロードしたファイルを開くと、カレンダーに登録できます");
+    }catch(e){ alert("カレンダー書き出しがうまくいきませんでした。"+plainErr(e)); }
+  }); }
 
 /* ---------- start ---------- */
 function greet(reset){
@@ -15088,6 +15170,8 @@ syncRspeedBtn();
 /* ---------- これまでの話のまとめ表示 ---------- */
 const sumModal=$("sumModal"), sumText=$("sumText"), sumClose=$("sumClose"),
       sumRefresh=$("sumRefresh"), sumNote=$("sumNote");
+/* v64s88：まとめを共有（LINE・メール等へ） */
+{ const b=$("sumShareBtn"); if(b) b.addEventListener("click", ()=> shareSmart("これまでの話のまとめ", (sumText&&sumText.value)||"")); }
 const SUM_NOTE_DEFAULT="※AIが会話から「覚えておくこと」を自動でまとめたものです。";
 const SUM_NOTE_LOCKED="🔒 会話を消したとき、このまとめを残しました。AIは自動で書き換えません（「いま作り直す」を押すと、いまの会話から作り直します）。";   // v60o
 { const b=$("sumBtn"); if(b) b.addEventListener("click", ()=>{

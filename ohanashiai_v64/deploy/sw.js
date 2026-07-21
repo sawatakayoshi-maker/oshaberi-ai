@@ -5,7 +5,7 @@
    ★リリースのたびに CACHE の番号を必ず1つ上げること（例 v20 → v21）。これが更新の合図になる。
    ※ AIの返答は Anthropic API への通信が必要なので、完全オフラインでは会話できません。
    ※ iOS/Safari対策：redirected なレスポンスは表示を拒否されるため、必ず通常レスポンスに作り直す。 */
-const CACHE = "ohanashi-ai-v420";   // ★リリースごとに必ず番号を1つ上げる
+const CACHE = "ohanashi-ai-v421";   // ★リリースごとに必ず番号を1つ上げる
 const ASSETS = ["./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./demo.pdf", "./videos/demo_intro.mp4"];   /* v64s13g：デモ用の資料。これが無いと通信が不調な会場でプレゼンが出ない */
 
 /* redirected フラグ付きレスポンスは Safari がナビゲーションで拒否するため、通常レスポンスへ作り直す */
