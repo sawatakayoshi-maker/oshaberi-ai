@@ -902,6 +902,33 @@
 
 /* ===== v64s2：組織図＝PC(761px以上)は横幅を980pxへ拡大（3列カードの文字詰まり解消。スマホは従来どおり720px/2列） ===== */
 @media (min-width:761px){ #orgPanel{ max-width:980px !important; } }
+
+/* ===== v64s86：使用感向上（実機計測に基づく改修） =====
+   計測：スマホ表示で可視ボタン23個すべてが高さ44px未満（27〜38px）、
+   押下時の視覚反応(:active)がほぼ無し。高齢者の「押せたか分からない」対策。 */
+/* ① 押した感：押下時に沈む＋わずかに暗く（全ボタン共通・無効時は除く） */
+button:not(:disabled):active, .tool:active, .cf-mini:active{
+  transform: scale(.96);
+  filter: brightness(.93);
+}
+button{ touch-action: manipulation; }   /* ダブルタップ拡大の誤発動を防ぐ（連打操作向け） */
+html{ -webkit-tap-highlight-color: rgba(164,78,42,.16); }
+/* ② 指で使う端末はタップ目標を大きく（Apple推奨44px）。マウスのPCは従来の密度を維持 */
+@media (pointer:coarse){
+  .tool{ min-height:44px; min-width:44px; padding-top:8px; padding-bottom:8px; }
+  .toolgroup-row2 .tool{ min-width:44px; }   /* 通常則の min-width:0 より詳細度で勝たせる */
+  .btn-ghost.sp-voice-iconly{ min-width:44px; }   /* アイコンだけの声ボタンも指幅を確保 */
+  .qbtn{ min-height:44px; }                        /* 停止・ファイル・ヒント等の会話まわり */
+  #transToggle, #interpretBtn{ min-height:44px; }  /* 翻訳・通訳（inline styleにはmin-heightが無いので効く） */
+  .crm-btn{ min-height:36px; }                     /* 上部の顧客/PJチップ：密度を保ちつつ拡大 */
+  .copybtn{ min-width:34px; min-height:30px; }     /* 吹き出しのコピー📋：押し外し防止 */
+  .side-grid > .qbtn, .side-grid > .qbtn.icon-only{ min-height:44px; }   /* 停止・ファイル（既存0,3,0則に勝つ） */
+  .avatar-side .qbtn{ min-height:44px; }           /* 組織図・用途モード・案内・ヒント */
+  .avatar-news .anb{ min-height:36px; }            /* 業界ニュースの帯：密度維持しつつ拡大 */
+  .toolgroup .tool{ min-height:44px; }
+  .btn-ghost, .btn-main{ min-height:44px; }
+  .cf-mini{ min-height:38px; padding:7px 10px; }
+}
 </style>
   <script>
   /* 外部ライブラリの読み込み：アーティファクト表示枠で許可されている cdnjs を優先し、
@@ -960,7 +987,7 @@
     <div class="brand">
       <b>はなしＡＩ</b>
       <span>きみの話し相手 · 前回の続きも覚えてるよ</span>
-      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s85</span>
+      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s86</span>
     </div>
     <div class="tools">
       <!-- ↓この4つ（待受・割り込み・言語・検索）はJSでアバター横メニューへ移動します。ここでの位置は表示に影響しません。 -->
@@ -5453,10 +5480,10 @@ function showContentBanner(mode){
     const title=document.createElement("strong"); title.textContent=ccBannerHead(it);
     const btns=document.createElement("div"); btns.style.cssText="display:flex;gap:4px;flex:0 0 auto;";
     const next=document.createElement("button"); next.type="button"; next.textContent="↻ 別の一言"; next.title="ランダムで別の項目を表示";
-    next.style.cssText="border:1px solid #9db8d6;background:#fff;border-radius:999px;padding:2px 10px;font-size:12px;line-height:1.2;cursor:pointer;color:#0B3556;";
+    next.style.cssText="border:1px solid #9db8d6;background:#fff;border-radius:999px;padding:2px 10px;font-size:12px;line-height:1.2;cursor:pointer;color:#0B3556;min-height:34px;";   /* v64s86：押しやすく */
     next.addEventListener("click",function(){ showContentBanner("random"); });
     const close=document.createElement("button"); close.type="button"; close.textContent="×"; close.title="閉じる";
-    close.style.cssText="border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#0B3556;";
+    close.style.cssText="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;color:#0B3556;min-width:38px;min-height:34px;";   /* v64s86：×の押し外し防止 */
     close.addEventListener("click",function(){ banner.remove(); });
     btns.appendChild(next); btns.appendChild(close);
     head.appendChild(title); head.appendChild(btns); banner.appendChild(head);
@@ -11636,7 +11663,19 @@ async function setZones(menuHidden, brainHidden){
   try{ await window.storage.set("oshaberi:zones", JSON.stringify({menu:zoneMenuHidden, brain:zoneBrainHidden, chat:zoneChatHidden}), false); }catch(e){}
 }
 async function loadZonePref(){
-  try{ const v=await window.storage.get("oshaberi:zones"); if(v&&v.value){ const o=JSON.parse(v.value); zoneMenuHidden=!!o.menu; zoneBrainHidden=!!o.brain; zoneChatHidden=!!o.chat; } }catch(e){}
+  let saved=false;
+  try{ const v=await window.storage.get("oshaberi:zones"); if(v&&v.value){ const o=JSON.parse(v.value); zoneMenuHidden=!!o.menu; zoneBrainHidden=!!o.brain; zoneChatHidden=!!o.chat; saved=true; } }catch(e){}
+  /* v64s86：初回（保存なし）のスマホは「チャットのみ」で開始。
+     実機計測で、初回表示がメニュー・設定パネルの壁になり会話と入力欄が見えなかったため。
+     メニュー／ブレインへは画面のタブ（secTabs）や「📋 メニュー」からいつでも切替可能。
+     一度でもタブを触れば選択が保存され、以後はその表示で開く（従来どおり）。 */
+  if(!saved){
+    try{
+      if(window.matchMedia("(max-width:760px) and (pointer:coarse)").matches){
+        zoneMenuHidden=true; zoneBrainHidden=true; zoneChatHidden=false;
+      }
+    }catch(e){}
+  }
   applyZones();
 }
 document.addEventListener("click", (e)=>{
@@ -13333,7 +13372,13 @@ function brainSearchText(query, extraTerms){
 async function aiExpandQuery(text){
   try{
     const sys="次の質問から、登録メモを検索するためのキーワードと同義語・別名を、日本語と英略語の両方で5〜12個、カンマ区切りで出力。質問の言い換え・関連語も含める。説明や文は書かず、キーワードのみをカンマ区切りで返す。";
-    const r=await callClaude([{role:"user",content:String(text).slice(0,500)}], sys, {actions:false, web:false});
+    /* v64s86：この呼び出しは本命の返答の前に“直列”で走るため、体感遅延に直結していた（実測+1秒超）。
+       ・速いモデル(MODEL_FAST)で十分な作業（同義語出し）なので速い方を使う
+       ・2.5秒で見切る（間に合わなければ拡張なしで検索続行＝返答を人質にしない） */
+    const r=await Promise.race([
+      callClaude([{role:"user",content:String(text).slice(0,500)}], sys, {actions:false, web:false, model:(typeof MODEL_FAST!=="undefined"?MODEL_FAST:undefined)}),
+      new Promise(function(res){ setTimeout(function(){ res(null); }, 2500); })
+    ]);
     const raw=(r&&r.reply)?r.reply:"";
     return raw.split(/[,、，\n]+/).map(t=>t.trim()).filter(t=>t.length>=2).slice(0,20);
   }catch(e){ return []; }
