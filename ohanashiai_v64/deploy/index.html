@@ -925,6 +925,15 @@ html{ -webkit-tap-highlight-color: rgba(164,78,42,.16); }
   .side-grid > .qbtn, .side-grid > .qbtn.icon-only{ min-height:44px; }   /* 停止・ファイル（既存0,3,0則に勝つ） */
   .avatar-side .qbtn{ min-height:44px; }           /* 組織図・用途モード・案内・ヒント */
   .avatar-news .anb{ min-height:36px; }            /* 業界ニュースの帯：密度維持しつつ拡大 */
+}
+/* ===== v64s87：夜間モード（簡易・安全設計） =====
+   body に filter をかけると fixed 配置（モーダル・下部バー等）が崩れる既知の罠があるため、
+   画面の最前面に「触れない減光レイヤー」を重ねる方式。文字の可読性は multiply 合成で維持。 */
+body.night-mode::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:2147483647;
+  background:rgba(46,32,16,.42); mix-blend-mode:multiply;
+}
+@media (pointer:coarse){ /* 夜間ボタンも44px対象（.toolなので自動適用） */
   .toolgroup .tool{ min-height:44px; }
   .btn-ghost, .btn-main{ min-height:44px; }
   .cf-mini{ min-height:38px; padding:7px 10px; }
@@ -987,7 +996,7 @@ html{ -webkit-tap-highlight-color: rgba(164,78,42,.16); }
     <div class="brand">
       <b>はなしＡＩ</b>
       <span>きみの話し相手 · 前回の続きも覚えてるよ</span>
-      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s86</span>
+      <span id="appVer" style="font-size:12px;font-weight:700;color:#fff;background:#0B3556;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.3px;">v64s87</span>
     </div>
     <div class="tools">
       <!-- ↓この4つ（待受・割り込み・言語・検索）はJSでアバター横メニューへ移動します。ここでの位置は表示に影響しません。 -->
@@ -1157,6 +1166,7 @@ html{ -webkit-tap-highlight-color: rgba(164,78,42,.16); }
             <option value="ai">🎨 あい（アシスタント）</option>
           </select>
           <button class="tool" id="fsizeBtn" title="文字の大きさを変える（標準→大→特大）">🔠 文字:標準</button>
+          <button class="tool" id="nightBtn" title="画面全体を目にやさしい明るさにする（夜間モード）">🌙 夜間</button>
           <button class="tool" id="rspeedBtn" title="返答の速さを変える（おまかせ→賢さ優先→速さ優先）。おまかせ＝内容で自動切替（かんたんな会話は速いAI・複雑な話や重要な操作は賢いAI）／賢さ優先＝従来どおり／速さ優先＝いつも速いAI（賢さは少し下がる）。議事録の要約・プレゼン台本はいつも賢いAIを使うよ">⚡ 返答:おまかせ</button><!-- v62z -->
           <button class="tool" id="avatarManageBtn" title="アバターの追加・削除・特徴">🧑‍🎨 アバター管理</button>
         </div>
@@ -3041,7 +3051,7 @@ async function addVideoFromForm(){
   const file=f.file&&f.file.files&&f.file.files[0];
   const tags=((f.tags||{}).value||"").split(/[,、\s]+/).map(s=>s.trim()).filter(Boolean);
   const meta={ title, place:((f.place||{}).value||"").trim(), desc:((f.desc||{}).value||"").trim(), mode:((f.mode||{}).value||""), tags };
-  if(file && !/^video\//.test(file.type||"")){ alert("動画ファイル（video/*）を選んでください。"); return; }
+  if(file && !/^video\//.test(file.type||"")){ alert("動画ファイルを選んでください。"); return; }
   if(_vidEditId){
     const v=videosList.find(x=>x.id===_vidEditId); if(!v){ _vidClearForm(); return; }
     if(v.source==="builtin"){ alert("既定動画は更新できません。"); _vidClearForm(); return; }   // 既定は保護
@@ -3390,7 +3400,7 @@ async function vidMakeSubs(id, btn){
     const ac=new AC();
     let ab;
     try{ ab=await ac.decodeAudioData(await blob.arrayBuffer()); }
-    catch(e){ try{ ac.close(); }catch(_){} alert("この動画から音声を取り出せませんでした（対応形式：mp4・webm等）。"); return; }
+    catch(e){ try{ ac.close(); }catch(_){} alert("この動画からは音声を取り出せませんでした。一般的な形式（mp4）の動画でお試しください。"); return; }
     try{ ac.close(); }catch(e){}
     const total=ab.duration;
     if(total>1900){ alert("30分を超える動画は現在未対応です（分割して登録してください）。"); return; }
@@ -3407,7 +3417,7 @@ async function vidMakeSubs(id, btn){
       const b64=await blobToBase64(wav);
       const r=await fetchWithTimeout(STT_URL,{ method:"POST", headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({ mode:"stt", audio:b64, mime:"audio/wav", lang:"ja", prompt:hint }) });
-      if(!r.ok){ alert("文字起こしに失敗しました（"+r.status+"）。字幕は保存せず終了します。"); return; }
+      if(!r.ok){ alert("文字起こしがうまくいきませんでした。電波の良いところでもう一度お試しください。（字幕は保存せず終了します）"); return; }
       const data=await r.json();
       const t=(data&&data.text)?String(data.text).trim():"";
       if(t) subs.push({ s:Math.round(st*10)/10, e:Math.round(en*10)/10, t:t });
@@ -3415,7 +3425,7 @@ async function vidMakeSubs(id, btn){
     v.subs=subs; v.subsTr=null;
     await saveVideos();
     alert("字幕を作成しました（"+subs.length+"区間）。再生すると表示されます。");
-  }catch(e){ alert("字幕の作成に失敗しました: "+((e&&e.message)||e)); }
+  }catch(e){ alert("字幕の作成に失敗しました: "+plainErr(e)); }
   finally{ try{ if(btn) btn.disabled=false; }catch(e){} try{ renderVideoList(); }catch(e){} }
 }
 const SUB_LANGS=[["英語","🇺🇸"],["中国語","🇨🇳"],["韓国語","🇰🇷"],["ベトナム語","🇻🇳"],["タガログ語","🇵🇭"],["インドネシア語","🇮🇩"],["タイ語","🇹🇭"],["ポルトガル語","🇧🇷"],["スペイン語","🇪🇸"],["ミャンマー語","🇲🇲"]];   // v57z: 国旗ピッカー
@@ -3479,7 +3489,7 @@ async function vidTranslateSubs(id, lang, flag){   // v57z: ⑤分割翻訳＋�
     else v.subsTrList.push({ lang:lang, flag:flag||"🌐", items:items });
     await saveVideos(); renderVideoList(); setStatus("");
     alert((flag||"🌐")+lang+"の翻訳字幕を保存しました（保存済み: "+v.subsTrList.length+"言語）。再生画面の「字幕」ボタンで切り替えられます。");
-  }catch(e){ setStatus(""); alert("翻訳に失敗しました: "+((e&&e.message)||e)); }
+  }catch(e){ setStatus(""); alert("翻訳に失敗しました: "+plainErr(e)); }
 }
 function _vidMigrateSubs(v){   // v57z: 旧形式（単一subsTr）→複数翻訳リスト（subsTrList）へ引き継ぎ
   try{ if(v && v.subsTr && v.subsTr.items && !(v.subsTrList&&v.subsTrList.length)){ v.subsTrList=[{ lang:v.subsTr.lang||"翻訳", flag:"🌐", items:v.subsTr.items }]; v.subsTr=null; saveVideos(); } }catch(e){}
@@ -3689,7 +3699,7 @@ async function srOpenAtt(att){   // v57w-2: 添付の閲覧（写真=拡大／PD
     cl.addEventListener("click", close);
     ov.addEventListener("click", function(ev){ if(ev.target===ov) close(); });
     document.body.appendChild(ov);
-  }catch(e){ alert("表示に失敗しました: "+((e&&e.message)||e)); }
+  }catch(e){ alert("表示に失敗しました: "+plainErr(e)); }
 }
 function openShiryoModal(){ const m=$("shiryoModal"); if(!m) return; const o=$("srOwner"); if(o) o.value=shiryoOwner||""; renderShiryo(); m.hidden=false; }
 function closeShiryoModal(){ const m=$("shiryoModal"); if(m) m.hidden=true; }
@@ -3749,7 +3759,7 @@ function renderShiryo(){
         }
         shiryoJis.push({ id:"j"+Date.now(), name:name, ym:(ym.value||"").trim(), place:(pl.value||"").trim(), desc:(ds.value||"").trim(), client:(cl.value||"").trim(), atts:atts, by:shiryoOwner||"", at:srStamp() });
         await saveShiryoJis(); renderShiryo();
-      }catch(e){ alert("登録に失敗しました: "+((e&&e.message)||e)); add.disabled=false; add.textContent="＋ 実績を登録"; }
+      }catch(e){ alert("登録に失敗しました: "+plainErr(e)); add.disabled=false; add.textContent="＋ 実績を登録"; }
     });
     [nm,ym,pl,ds,cl].forEach(function(el){ form.appendChild(el); }); form.appendChild(fw); form.appendChild(add);
     body.appendChild(list); body.appendChild(form); return;
@@ -4235,7 +4245,7 @@ async function newsRefreshNow(){
     if(st) st.textContent=msg;
     if(!res.kept.length) alert("表示できるニュースが見つかりませんでした。\n（許可した情報源のページだけを対象にしています）");
   }catch(e){
-    if(st) st.textContent="取得できませんでした："+((e&&e.message)||"エラー");
+    if(st) st.textContent="取得できませんでした："+plainErr(e);
   }
   if(btn) btn.disabled=false;
 }
@@ -4653,10 +4663,10 @@ async function minAddAttachments(files){   // v59r: 写真/PDFをjpeg画像化�
           var im=await prepareImageForClaude(file);
           if(im&&im.b64) minAttachments.push({ name:file.name, b64:im.b64, media_type:im.media_type||"image/jpeg" });
           else skipped.push(file.name+"（変換できませんでした）");
-        }catch(e){ skipped.push(file.name+"（"+((e&&e.message)||"読み込めませんでした")+"）"); }
+        }catch(e){ skipped.push(file.name+"（"+plainErr(e)+"）"); }
       }
     }
-  }catch(e){ skipped.push("処理エラー："+((e&&e.message)||e)); }
+  }catch(e){ skipped.push("処理エラー："+plainErr(e)); }
   renderMinAttachList();
   var msg="資料 "+minAttachments.length+"枚を添付しました（要約時に送信・保存はされません）。";
   if(skipped.length) msg+="\nスキップ："+skipped.join(" / ");
@@ -4783,7 +4793,7 @@ async function genMinuteSummary(id){
     if(box) box.innerHTML=renderMinSummaryHTML(r);
     if(stat) stat.textContent="3レベルを一括作成しました ✓（要点／箇条書き／詳しい説明をボタンで即切替できます・保存済み）";
   }catch(e){
-    if(stat) stat.textContent="要約でエラーが発生しました："+((e&&e.message)||e);
+    if(stat) stat.textContent="要約でエラーが発生しました："+plainErr(e);
   }finally{
     if(btn) btn.disabled=false;
   }
@@ -5254,7 +5264,7 @@ async function transcribeFilesToMinuteBody(id, files){   // v59q: 音声/動画�
     if(skipped.length) msg += "\nスキップ："+skipped.join(" / ");
     setStat(msg.split("\n")[0]);
     if(skipped.length) alert(msg);
-  }catch(e){ setStat("文字起こしに失敗しました: "+((e&&e.message)||e)); }
+  }catch(e){ setStat("文字起こしに失敗しました: "+plainErr(e)); }
   finally{ try{ if(btn) btn.disabled=false; }catch(e){} }
 }
 function importInputToMinuteBody(id){
@@ -6302,14 +6312,14 @@ async function cfRunImport(mode){
   cfCloseImportChoice();
   cfSetImportStatus("…資料を読み込み中");
   let text="";
-  try{ text=await extractFileText(f); }catch(e){ cfSetImportStatus("読み取り失敗："+((e&&e.message)||e)); cfImportPending=null; return; }
+  try{ text=await extractFileText(f); }catch(e){ cfSetImportStatus("読み取り失敗："+plainErr(e)); cfImportPending=null; return; }
   if(keepOriginal){ try{ const url=await readFileDataURL(f); cfFiles.push({name:f.name, type:f.type||"", dataURL:url}); }catch(e){} }
   const body=(text||"").slice(0,FILE_MAX);
   if(mode==="2"){
     cfSetImportStatus("…AIが要約中");
     let summary="";
     try{ const r=await callClaude([{role:"user",content:body||"（本文なし）"}], "次の資料を、日本語で簡潔に（箇条書き可）要約してください。要約のみを出力し、前置きは不要です。", {actions:false, web:false}); summary=((r&&r.reply)||"").trim(); }
-    catch(e){ cfSetImportStatus("要約に失敗："+((e&&e.message)||e)); }
+    catch(e){ cfSetImportStatus("要約に失敗："+plainErr(e)); }
     cfDocs.push({ name:f.name, fullText:text||"", summary:summary });
     renderCfDocs(); cfSetImportStatus("②要約して保存しました（保存ボタンで確定）。");
   } else {
@@ -6442,7 +6452,7 @@ async function storeOneAttachment(f){
 async function meishiClassify(f){
   meishiSetStatus("…名刺を読み込み中");
   let text="";
-  try{ text=await extractFileText(f); }catch(e){ meishiSetStatus("読み取り失敗："+((e&&e.message)||e)); return; }
+  try{ text=await extractFileText(f); }catch(e){ meishiSetStatus("読み取り失敗："+plainErr(e)); return; }
   if(!text || !text.trim()){ meishiSetStatus("文字を読み取れませんでした。明るく真上から撮り直すか、補正をお試しください。"); return; }
   meishiSetStatus("…AIが項目に振り分け中");
   let obj=null;
@@ -7693,7 +7703,7 @@ async function mvExportCurrentPdf(){
   }catch(e){
     try{ setStatus(""); }catch(_){}
     var b=document.getElementById("presToVideoBtn"); if(b){ b.disabled=false; b.textContent="🎬 動画にする"; }
-    alert("動画の作成に失敗しました：\n"+((e&&e.message)||e));
+    alert("動画の作成に失敗しました：\n"+plainErr(e));
   }
 }
 try{ var _vbtn=document.getElementById("presToVideoBtn"); if(_vbtn) _vbtn.addEventListener("click", mvExportCurrentPdf); }catch(e){}
@@ -7944,7 +7954,7 @@ async function mvExportScenario(id, btnEl){
     try{ setStatus(""); }catch(_){}
   }catch(e){
     try{ setStatus(""); }catch(_){}
-    alert("シナリオの動画作成に失敗しました：\n"+((e&&e.message)||e));
+    alert("シナリオの動画作成に失敗しました：\n"+plainErr(e));
   }
   if(btnEl){ btnEl.disabled=false; btnEl.textContent=oldText||"🎬 動画"; }
 }
@@ -9659,7 +9669,7 @@ async function openBrainItem(inp){
       const file=new File([blob], fn, {type:"application/pdf"});
       if(window.presentOpenFile){ await window.presentOpenFile(file); try{ window.__keepViewTurn=true; }catch(e){} return "「"+nm+"」をプレゼンで開いたよ。（▶自動送りで発表を始められるよ）"; }
       return "プレゼン画面を起動できなかったよ。";
-    }catch(e){ return "プレゼンを開けなかったよ（"+((e&&e.message)||e)+"）。"; }
+    }catch(e){ return "プレゼンを開けなかったよ（"+plainErr(e)+"）。"; }
   }
   /* (b) 📎添付あり → ビューアで表示（画像・PDF・テキスト・Excel/PowerPoint文字） */
   const files=(found.files||[]);
@@ -9774,7 +9784,13 @@ async function callClaude(messages, system, opts){
       if(!res.ok){
         let detail = "HTTP "+res.status;
         try{ const e=await res.json(); if(e&&e.error&&e.error.message) detail=res.status+" "+e.error.message; }catch(_){}
-        const err=new Error("AIに接続できませんでした（"+detail+"）"); err.status=res.status; throw err;
+        try{ console.warn("AI接続エラー詳細:", detail); }catch(_){ }
+        /* v64s87：英語の技術文言を画面に出さず、状況別の平易な言葉で伝える */
+        let say="AIに接続できませんでした。電波の良いところでもう一度お試しください。";
+        if(res.status===401||res.status===403) say="AIに接続できませんでした。APIキーが正しいか、🔑（管理）から確認してください。";
+        else if(res.status===429) say="いま混み合っているみたいです。少し待ってからもう一度お試しください。";
+        else if(res.status>=500) say="AI側が一時的に不調のようです。少し待ってからもう一度お試しください。";
+        const err=new Error(say); err.status=res.status; throw err;
       }
       const data = await res.json();
       if(data.usage){ _uIn += data.usage.input_tokens||0; _uOut += data.usage.output_tokens||0; }   // ①usage加算（往復ぶん合算）
@@ -10283,7 +10299,7 @@ function clearInputText(){
       genScripts[n]=out; pageMode[n]="auto"; saveGen(); try{ refreshUseBadges(n); }catch(e){}
       if(st) st.textContent="生成しました ✓（このページは自動生成を使用）";
     }catch(e){
-      if(st) st.textContent="生成に失敗しました："+((e&&e.message)||e);
+      if(st) st.textContent="生成に失敗しました："+plainErr(e);
     }finally{
       if(btn){ btn.disabled=!pdfDoc; }
     }
@@ -10441,7 +10457,7 @@ function clearInputText(){
       var em=g("presEmpty"); if(em) em.hidden=true;
       pageNum=n; syncNav(); showScriptForPage(n); setAutoBtn();
     }catch(e){
-      try{ setStatus("PDFの表示でエラー: "+((e&&e.message)||e)); }catch(_){}
+      try{ setStatus("PDFの表示でエラー: "+plainErr(e)); }catch(_){}
     }finally{ rendering=false; }
   }
   async function loadPdf(file){
@@ -10468,7 +10484,7 @@ function clearInputText(){
       try{ updatePresLangUI(); }catch(e){}
       await renderPage(1);
     }catch(e){
-      try{ setStatus("PDFを開けなかった: "+((e&&e.message)||e)); }catch(_){}
+      try{ setStatus("PDFを開けなかった: "+plainErr(e)); }catch(_){}
     }
   }
   /* ===== v64s13g：外からプレゼンへ資料を入れる窓口 =====
@@ -10694,7 +10710,7 @@ function presNarrow(){ try{ return window.matchMedia("(max-width:760px)").matche
         var a=document.createElement("a"); a.href=url; a.download=file.name||"presentation.pdf";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(_){} }, 4000);
-      }catch(e){ alert("保存に失敗しました："+((e&&e.message)||e)); }
+      }catch(e){ alert("保存に失敗しました："+plainErr(e)); }
     }
     /* v61o：このプレゼンをタイムライン(log)に名前付きで保存（PDFを添付＋台本復元用のメタを記録） */
     var tb=g("presToBrainBtn"); if(tb) tb.addEventListener("click", saveToTimeline);
@@ -10719,7 +10735,7 @@ function presNarrow(){ try{ return window.matchMedia("(max-width:760px)").matche
         try{ renderBrain(); }catch(e){}
         alert("タイムラインに保存しました：「"+name+"」\n\nあとで📚セカンドブレインの🕒タイムラインで、この項目の ✏ を開くと「▶ プレゼンで開く」から台本ごと再開できます。");
         try{ if(confirm("共有・機種変更・人に渡す用に、PDFをファイルにも保存しますか？\n（タイムラインの添付はこの端末内のみで、JSONバックアップには含まれません）")){ savePresPdf(); } }catch(e){}   /* v62s：💾ボタンの役割をここに統合（普段は「キャンセル」でOK） */
-      }catch(e){ alert("タイムラインへの保存に失敗しました："+((e&&e.message)||e)); }
+      }catch(e){ alert("タイムラインへの保存に失敗しました："+plainErr(e)); }
     }
     /* v61o：外部（タイムラインの「▶ プレゼンで開く」）からPDFを渡してプレゼンを開く＝ファイル名一致で台本も自動復元 */
     window.presentOpenFile=async function(file){ try{ openPres(); if(file) await loadPdf(file); }catch(e){} };
@@ -10843,7 +10859,7 @@ function presNarrow(){ try{ return window.matchMedia("(max-width:760px)").matche
         var bytes=await doc.save();
         var file=new File([bytes], "images_"+doc.getPageCount()+"p.pdf", {type:"application/pdf"});
         await loadPdf(file);
-      }catch(e){ if(st) st.innerHTML=prev; alert("画像からのPDF作成に失敗しました："+((e&&e.message)||e)); }
+      }catch(e){ if(st) st.innerHTML=prev; alert("画像からのPDF作成に失敗しました："+plainErr(e)); }
     }
     /* ===== v62u：開いているプレゼンの末尾に写真を自動追加（台本・自動生成・翻訳を引き継ぎ） =====
        「写真を撮る」は1枚ずつのため、撮る→追加→撮る→追加…で積み上げられるようにする。新しく作るときは✕で閉じてから📂で開く */
@@ -10883,7 +10899,7 @@ function presNarrow(){ try{ return window.matchMedia("(max-width:760px)").matche
         }catch(e){}
         try{ await renderPage(oldPages+1); }catch(e){}   /* 追加した最初のページを表示＝「反映された」が見える */
         try{ setStatus("📷 スライドを"+added+"枚追加したよ（全"+(oldPages+added)+"ページ）"); }catch(e){}
-      }catch(e){ if(pinfo) pinfo.textContent=prevInfo; alert("写真の追加に失敗しました："+((e&&e.message)||e)); }
+      }catch(e){ if(pinfo) pinfo.textContent=prevInfo; alert("写真の追加に失敗しました："+plainErr(e)); }
     }
     /* ===== v62r：パワポ(pptx)→簡易スライドPDF（端末内・費用ゼロ）。文字と画像を元の座標に配置して描画。
        図形の塗り・グラフ・SmartArt・特殊フォントは対象外（案内文とツールチップで明示）。忠実版はPowerPointのPDF書き出し（案B）を案内 ===== */
@@ -11001,7 +11017,7 @@ function presNarrow(){ try{ return window.matchMedia("(max-width:760px)").matche
         var bytes=await doc.save();
         var pdfFile=new File([bytes], file.name.replace(/\.pptx$/i,"")+".pdf", {type:"application/pdf"});
         await loadPdf(pdfFile);
-      }catch(e){ if(st) st.innerHTML=prev; alert("パワポからのPDF作成に失敗しました："+((e&&e.message)||e)+"\nPowerPointで「エクスポート→PDF」した資料なら確実に開けます。"); }
+      }catch(e){ if(st) st.innerHTML=prev; alert("パワポからのPDF作成に失敗しました："+plainErr(e)+"\nPowerPointで「エクスポート→PDF」した資料なら確実に開けます。"); }
     }
     /* v62s：旧presPptxInputの配線は📂開く（openPresFiles）に統合 */
     var fb=g("presFirstBtn"); if(fb) fb.addEventListener("click", function(){ stopAuto(); if(pdfDoc && pageNum>1) renderPage(1); });
@@ -11583,7 +11599,7 @@ fileInput.addEventListener("change", async ()=>{
       setStatus("写真を読み込んだよ。送るボタンか、ひとこと添えて送ってね");
       setTimeout(()=>{ if(statusEl.textContent.indexOf("写真")===0) setStatus(""); }, 4000);
     }catch(e){
-      addBubble("assistant","ごめん、その写真を読み込めなかった…（"+((e&&e.message)||e)+"）。JPEGやPNGで撮り直すか、別の写真で試してね。");
+      addBubble("assistant","ごめん、その写真を読み込めなかった…（"+plainErr(e)+"）。JPEGやPNGで撮り直すか、別の写真で試してね。");
       setStatus("");
     }
     return;
@@ -11973,6 +11989,39 @@ async function fetchWithTimeout(url, init, ms){
   try{ return await fetch(url, Object.assign({}, init||{}, { signal: ac.signal })); }
   finally{ clearTimeout(t); }
 }
+/* v64s87：エラー表示の平易化。英語の技術メッセージやコードをそのまま
+   高齢者に見せない。詳細は点検用に console に残す（画面には出さない）。 */
+/* v64s87：夜間モード（画面全体をやさしい明るさに）。設定は端末に保存。 */
+const K_NIGHT="oshaberi:night";
+function applyNight(on){
+  document.body.classList.toggle("night-mode", !!on);
+  var b=document.getElementById("nightBtn");
+  if(b){ b.textContent = on ? "☀️ 明るく" : "🌙 夜間"; b.classList.toggle("on", !!on);
+         b.title = on ? "通常の明るさに戻す" : "画面全体を目にやさしい明るさにする（夜間モード）"; }
+}
+(function(){
+  function wire(){
+    var b=document.getElementById("nightBtn"); if(!b) return;
+    var on=false; try{ on=(localStorage.getItem(K_NIGHT)==="1"); }catch(_){ }
+    applyNight(on);
+    b.addEventListener("click", function(){
+      var now=!document.body.classList.contains("night-mode");
+      applyNight(now);
+      try{ localStorage.setItem(K_NIGHT, now?"1":"0"); }catch(_){ }
+    });
+  }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", wire); } else { wire(); }
+})();
+function plainErr(e){
+  try{ console.warn("エラー詳細:", e); }catch(_){ }
+  var m=String((e&&e.message)||e||"");
+  if(/quota|容量/i.test(m)) return "保存できる容量がいっぱいのようです。不要なデータを消してからお試しください";
+  if(/abort|timeout/i.test(m)) return "時間がかかりすぎたため、いったん中断しました。もう一度お試しください";
+  if(/fetch|network|failed to|load|接続|cors/i.test(m)) return "通信がうまくいきませんでした。電波の良いところでもう一度お試しください";
+  if(/notallowed|permission|denied|許可/i.test(m)) return "許可が得られませんでした。ブラウザの許可設定をご確認ください";
+  if(/decode|format|対応外|unsupported/i.test(m)) return "この形式のファイルは読み取れませんでした";
+  return "うまくいきませんでした。時間をおいてもう一度お試しください";
+}
 let recMR=null, recChunks=[], recStream=null, recording=false;
 let recAutoSend=false;   // プッシュ・トゥ・トーク用：録音停止後に自動送信するか
 function pickRecMime(){
@@ -12223,7 +12272,7 @@ async function handleChatAttach(files){
       if(obj){ text=String(obj.text||""); if(obj.is_card && obj.name) card=obj; }
       if(!text || !text.trim()){ try{ text=await extractFileText(f); }catch(e2){ text=""; } }   // AI失敗時は端末内OCRにフォールバック
     }else{
-      try{ text=await extractFileText(f); }catch(e){ addBubble("assistant","「"+f.name+"」を読み取れませんでした（"+((e&&e.message)||e)+"）。"); cntFail++; continue; }
+      try{ text=await extractFileText(f); }catch(e){ addBubble("assistant","「"+f.name+"」を読み取れませんでした（"+plainErr(e)+"）。"); cntFail++; continue; }
     }
     if(!text || !text.trim()){ addBubble("assistant","「"+f.name+"」から文字を読み取れませんでした。明るく真上から撮り直すか、別の形式でお試しください。"); cntFail++; continue; }
     // v63e-photo：EXIF撮影情報を1行に整形（画像のみ）
@@ -12584,7 +12633,7 @@ async function runMonthlyReview(){
     out.textContent="📊 月次ふりかえり（"+workLogYMLabel(ym)+" 作成）\n\n"+text;
     if(bar) bar.hidden=false;
   }catch(e){
-    out.textContent="⚠ ふりかえりを作成できませんでした："+((e&&e.message)||e);
+    out.textContent="⚠ ふりかえりを作成できませんでした："+plainErr(e);
   }finally{
     if(btn) btn.disabled=false;
   }
@@ -12595,7 +12644,7 @@ function saveMonthlyReview(){ try{
   brain.log.unshift({ id:uid(), ts:Date.now(), title:workLogYMLabel(workLogYM(new Date()))+" 月次ふりかえり", date:todayStr(), detail:t });
   saveBrain(); updateBrainBadge(); renderBrain();
   alert("タイムラインに保存しました。");
-}catch(e){ alert("保存に失敗しました："+((e&&e.message)||e)); } }
+}catch(e){ alert("保存に失敗しました："+plainErr(e)); } }
 
 /* ===== バックアップ・受け渡し（全データのJSON書き出し/復元・CSV・自動バックアップ） =====
    JSONフォーマットは Windows版と完全共通（PC⇔スマホでデータ受け渡し可能）。
@@ -12608,7 +12657,7 @@ function bkDownload(text, filename, mime){
     const blob=new Blob([text],{type:(mime||"application/octet-stream")+";charset=utf-8"});
     const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>{ try{URL.revokeObjectURL(url);}catch(e){} },2000);
-  }catch(e){ alert("書き出しに失敗しました: "+((e&&e.message)||e)); }
+  }catch(e){ alert("書き出しに失敗しました: "+plainErr(e)); }
 }
 /* ===== v60n: データ消去画面（前半＝表示と選択のみ。storage.delete は行わない） =====
    分類ごとに「どのキーが該当するか」を明示列挙する。
@@ -12791,7 +12840,7 @@ async function wipeGoRun(){
   if(go) go.disabled=true;
   let report=[];
   try{ report=await wipeRun(ids); }
-  catch(e){ alert("消去中にエラーが起きました："+((e&&e.message)||"不明")); if(go) go.disabled=false; return; }
+  catch(e){ alert("消去中にエラーが起きました："+plainErr(e)); if(go) go.disabled=false; return; }
   alert("消しました。\n\n"+report.join("\n"));
   const note=document.getElementById("wipeNote");
   if(note){ note.textContent="✅ 消しました。画面の表示を正しく戻すため、下の「🔄 読み込み直す」を押してください。"; note.style.color="#1f7a4d"; }
@@ -12882,7 +12931,7 @@ async function wipeAllGoRun(){
   const btn=document.getElementById("wipeAllGo"); if(btn) btn.disabled=true;
   let report=[];
   try{ report=await wipeAll(); }
-  catch(e){ alert("消去中にエラーが起きました："+((e&&e.message)||"不明")); if(btn) btn.disabled=false; return; }
+  catch(e){ alert("消去中にエラーが起きました："+plainErr(e)); if(btn) btn.disabled=false; return; }
   showWipeAllDone(report);
 }
 function showWipeAllDone(report){
@@ -13725,7 +13774,7 @@ async function saveEditItem(){
       const file=new File([blob], fname, {type:"application/pdf"});
       m.hidden=true; editItem=null;
       if(window.presentOpenFile){ await window.presentOpenFile(file); }
-    }catch(e){ alert("プレゼンを開けませんでした："+((e&&e.message)||e)); }
+    }catch(e){ alert("プレゼンを開けませんでした："+plainErr(e)); }
   });
   const dv=document.getElementById("edDiveBtn"); if(dv) dv.addEventListener("click", runProjectDive);
   if(m) m.addEventListener("click",(e)=>{ if(e.target===m){ m.hidden=true; editItem=null; } }); }
@@ -13791,7 +13840,7 @@ async function runProjectDive(){
   try{
     const r=await callClaude([{role:"user",content:material.slice(0,FILE_MAX)}], sys, {actions:false, web:false});
     reply=((r&&r.reply)||"").trim();
-  }catch(e){ errMsg="APIエラー："+((e&&e.message)||e); }
+  }catch(e){ errMsg="APIエラー："+plainErr(e); }
   if(errMsg){ setSt("深掘りに失敗（"+errMsg+"）。もう一度お試しください。"); if(btn) btn.disabled=false; return; }
   // ラベル行で分割（［ ］でも [ ] でも拾う）
   const parsed=parseDiveLabels(reply);
@@ -13851,7 +13900,7 @@ async function openGuide(){
   try{
     const r=await callClaude([{role:"user",content:material.slice(0,FILE_MAX)}], sys, {actions:false, web:false, maxTokens:4096});
     guideSteps=parseGuideSteps((r&&r.reply)||"");
-  }catch(e){ setGuideMsg("案内","案内の作成に失敗（"+((e&&e.message)||e)+"）。「🔄 作り直す」でお試しください。"); return; }
+  }catch(e){ setGuideMsg("案内","案内の作成に失敗（"+plainErr(e)+"）。「🔄 作り直す」でお試しください。"); return; }
   if(!guideSteps.length){ setGuideMsg("案内","案内を作成できませんでした。「🔄 作り直す」でお試しください。"); return; }
   guideIdx=0; renderGuideStep();
 }
@@ -14129,7 +14178,7 @@ async function storeAttachments(fileInput){
       const ok=await Media.putBlob(aid, f);
       if(ok!==false){ out.push({ id:aid, name:f.name, type:f.type||"", size:f.size }); }
       else{ alert("保存容量が足りず「"+f.name+"」を添付できませんでした。"); }
-    }catch(e){ alert("「"+f.name+"」を添付できませんでした（"+((e&&e.message)||e)+"）。"); }
+    }catch(e){ alert("「"+f.name+"」を添付できませんでした（"+plainErr(e)+"）。"); }
   }
   return out;
 }
@@ -14755,7 +14804,7 @@ async function loadVVSpeakers(opts){
     fill(vvSpeakerMaleSelEl, vvSpeakerMaleEl.value);
     if(!silent && vvHintEl) vvHintEl.textContent="声の一覧を読み込みました。上のメニューから選ぶと番号が自動で入ります。";
   }catch(e){
-    if(!silent && vvHintEl) vvHintEl.textContent="一覧を読み込めませんでした（"+((e&&e.message)||e)+"）。VOICEVOXを起動してから「🔄 一覧を読み込む」を押すか、番号で指定してね。";
+    if(!silent && vvHintEl) vvHintEl.textContent="一覧を読み込めませんでした（"+plainErr(e)+"）。VOICEVOXを起動してから「🔄 一覧を読み込む」を押すか、番号で指定してね。";
   }finally{
     if(vvLoadSpeakersEl) vvLoadSpeakersEl.disabled=false;
   }
@@ -14793,7 +14842,7 @@ if(vvTest) vvTest.addEventListener("click", async ()=>{
     await voicevoxSpeak("こんにちは。これはボイスボックスのテストです。");
     if(vvHintEl) vvHintEl.textContent="鳴りました！この声でお話しします。";
   }catch(e){
-    if(vvHintEl) vvHintEl.textContent="つながりませんでした（"+((e&&e.message)||e)+"）。この環境では通信できないか、VOICEVOXエンジンが起動していない可能性があります。";
+    if(vvHintEl) vvHintEl.textContent="つながりませんでした（"+plainErr(e)+"）。この環境では通信できないか、VOICEVOXエンジンが起動していない可能性があります。";
   }
 });
 // ---- 音声診断（どの声が使われるか確認＋端末音声を試聴） ----
@@ -14850,7 +14899,7 @@ if(openaiTestEl) openaiTestEl.addEventListener("click", async ()=>{
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({ text:"こんにちは。これはオープンエーアイ音声のテストです。", voice:openaiTTSVoiceFor(), model:getOpenAITTSModel(), format:"mp3", speed:speechRate() })
     }, 30000);   // v64s85：無応答でもテストUIが固まらないようタイムアウト
-    if(!r.ok){ let t=""; try{ t=(await r.text()).slice(0,160); }catch(_){ } if(openaiHintEl) openaiHintEl.textContent="今は使えませんでした（"+r.status+"）。読み上げは自動で端末の声になります。 "+t; return; }
+    if(!r.ok){ let t=""; try{ t=(await r.text()).slice(0,160); }catch(_){ } try{ console.warn("TTSテスト失敗:", r.status, t); }catch(_){ } if(openaiHintEl) openaiHintEl.textContent="今は使えませんでした。読み上げは自動で端末の声になります。"; return; }
     const url=URL.createObjectURL(await r.blob());
     const a=new Audio(url);
     a.onended=()=>{ try{ URL.revokeObjectURL(url); }catch(_){ } };
@@ -14858,7 +14907,7 @@ if(openaiTestEl) openaiTestEl.addEventListener("click", async ()=>{
     await a.play();
     if(openaiHintEl) openaiHintEl.textContent="鳴りました！この音声でお話しします。";
   }catch(e){
-    if(openaiHintEl) openaiHintEl.textContent="つながりませんでした（"+((e&&e.message)||e)+"）。そのときは読み上げが自動で端末の声になります。";
+    if(openaiHintEl) openaiHintEl.textContent="つながりませんでした（"+plainErr(e)+"）。そのときは読み上げが自動で端末の声になります。";
   }
 });
 async function loadVVPref(){
