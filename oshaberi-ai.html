@@ -196,6 +196,14 @@
   .dl-link{display:inline-block; margin-top:8px; background:var(--sage); color:#fff; text-decoration:none; padding:10px 15px; border-radius:12px; font-size:14px;}
   .dl-link:hover{filter:brightness(.95);}
 
+  /* ---- VBA code bubble ---- */
+  .vba-block{margin-top:10px; background:#332c24; border-radius:12px; overflow:hidden;}
+  .vba-block pre{margin:0; padding:12px 14px; overflow:auto; max-height:280px; font-family:ui-monospace,"SF Mono",Consolas,Menlo,monospace; font-size:12.5px; line-height:1.6; color:#f2e8d8; white-space:pre;}
+  .vba-actions{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .copy-btn{border:none; background:var(--accent); color:#fff; border-radius:12px; padding:10px 15px; font-size:14px; font-family:inherit; cursor:pointer;}
+  .copy-btn:hover{filter:brightness(.95);}
+  .vba-steps{margin:8px 0 0; padding-left:20px; font-size:13px; color:var(--ink-soft); line-height:1.7;}
+
   /* ---- mic ---- */
   .mic{flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:#fffdf8; cursor:pointer; display:grid; place-items:center; transition:.18s;}
   .mic:hover{border-color:var(--accent); background:#fff5ec;}
@@ -215,6 +223,7 @@
     <div class="tools">
       <button class="tool on" id="voiceBtn" title="読み上げ切り替え">🔊 <span id="voiceLbl">声オン</span></button>
       <button class="tool" id="slideBtn" title="スライドを作る">📊</button>
+      <button class="tool" id="vbaBtn" title="ExcelのVBAマクロを作る">📗</button>
       <button class="tool" id="resetBtn" title="記憶を消す">🧹 記憶を消す</button>
     </div>
   </header>
@@ -242,6 +251,18 @@
         <button class="btn-main" id="slideMake">作成</button>
       </div>
       <div class="modal-note" id="slideNote"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="vbaModal" hidden>
+    <div class="modal-card">
+      <div class="modal-title">📗 ExcelのVBAマクロを作る</div>
+      <textarea id="vbaTopic" rows="3" placeholder="どんなマクロ? 例：選択した範囲の空白行をまとめて削除する / A列の重複を消して件数を数える"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="vbaCancel">閉じる</button>
+        <button class="btn-main" id="vbaMake">作成</button>
+      </div>
+      <div class="modal-note" id="vbaNote"></div>
     </div>
   </div>
 
@@ -409,11 +430,11 @@ function speak(text){
 }
 
 /* ---------- API ---------- */
-async function callClaude(messages, system){
+async function callClaude(messages, system, maxTokens){
   const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({ model:MODEL, max_tokens:1024, system, messages })
+    body:JSON.stringify({ model:MODEL, max_tokens:maxTokens||1024, system, messages })
   });
   if(!res.ok){ let detail=""; try{ detail=await res.text(); }catch(e){} throw new Error("API "+res.status+(detail?(": "+detail.slice(0,180)):"")); }
   const data=await res.json();
@@ -712,6 +733,110 @@ async function makeSlides(){
   }
 }
 slideMake.addEventListener("click", makeSlides);
+
+/* ---------- VBA macro creation (Excel) ---------- */
+const vbaBtn=document.getElementById("vbaBtn");
+const vbaModal=document.getElementById("vbaModal");
+const vbaTopic=document.getElementById("vbaTopic");
+const vbaMake=document.getElementById("vbaMake");
+const vbaCancel=document.getElementById("vbaCancel");
+const vbaNote=document.getElementById("vbaNote");
+
+vbaBtn.addEventListener("click",()=>{ vbaModal.hidden=false; setTimeout(()=>vbaTopic.focus(),50); });
+vbaCancel.addEventListener("click",()=>{ vbaModal.hidden=true; });
+vbaModal.addEventListener("click",(e)=>{ if(e.target===vbaModal) vbaModal.hidden=true; });
+
+const VBA_SYS = `あなたはExcel VBAの熟練プログラマーです。次の依頼に基づき、Excelで動くVBAマクロをJSONだけで出力してください。
+出力はJSONのみ。前後に説明文やコードブロック記号(\`\`\`)を絶対に付けないこと。
+スキーマ:
+{"title":"マクロの短い名前(日本語可)","module":"半角英数のモジュール名(例: RemoveBlankRows)","description":"何をするマクロかの短い説明(1〜2文・日本語)","code":"VBAコード全文","howto":["使い方の手順1","手順2"]}
+ルール:
+・codeはOption Explicitから始め、Subプロシージャ名は半角英数にする。
+・要所に短い日本語コメントを付け、基本的なエラー処理(On Error)を入れる。
+・画面のちらつき防止(Application.ScreenUpdating)など、実務で安全に動く書き方にする。
+・依頼にない機能を勝手に追加しない。破壊的な処理(削除・上書き)には実行前の確認(MsgBox)を入れる。
+・howtoは初心者向けに3〜5手順、1行ずつ簡潔に。`;
+
+function addVbaBubble(json){
+  const code=String(json.code||"");
+  const moduleName=String(json.module||"Macro1").replace(/[^A-Za-z0-9_]/g,"") || "Macro1";
+  const row=document.createElement("div"); row.className="row ai";
+  const mini=document.createElement("div"); mini.className="mini"; mini.textContent="話";
+  const b=document.createElement("div"); b.className="bubble";
+
+  const t=document.createElement("div");
+  t.textContent="VBAマクロができたよ！「"+(json.title||"マクロ")+"」\n"+String(json.description||"");
+  t.style.whiteSpace="pre-wrap";
+  b.appendChild(t);
+
+  const block=document.createElement("div"); block.className="vba-block";
+  const pre=document.createElement("pre"); pre.textContent=code;
+  block.appendChild(pre); b.appendChild(block);
+
+  const actions=document.createElement("div"); actions.className="vba-actions";
+  const copyBtn=document.createElement("button"); copyBtn.className="copy-btn"; copyBtn.textContent="📋 コードをコピー";
+  copyBtn.addEventListener("click", async ()=>{
+    try{
+      await navigator.clipboard.writeText(code);
+      copyBtn.textContent="✅ コピーしたよ";
+    }catch(e){
+      const r=document.createRange(); r.selectNodeContents(pre);
+      const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      copyBtn.textContent="コードを選択したよ。長押し/右クリックでコピーしてね";
+    }
+    setTimeout(()=>{ copyBtn.textContent="📋 コードをコピー"; }, 2500);
+  });
+  actions.appendChild(copyBtn);
+
+  const basText='Attribute VB_Name = "'+moduleName+'"\r\n'+code.replace(/\r?\n/g,"\r\n")+"\r\n";
+  const url=URL.createObjectURL(new Blob([basText],{type:"text/plain"}));
+  const a=document.createElement("a"); a.href=url; a.download=moduleName+".bas"; a.className="dl-link"; a.style.marginTop="0";
+  a.textContent="📥 "+moduleName+".bas"; a.target="_blank"; a.rel="noopener";
+  actions.appendChild(a);
+  b.appendChild(actions);
+
+  const steps=(Array.isArray(json.howto)&&json.howto.length)?json.howto:[
+    "Excelを開いて Alt + F11 を押す（VBAの画面が開くよ）",
+    "メニューの「挿入」→「標準モジュール」を選ぶ",
+    "上のコードをコピーして貼り付ける",
+    "F5キーを押すか、Excelに戻って「表示」→「マクロ」から実行してね"
+  ];
+  const ol=document.createElement("ol"); ol.className="vba-steps";
+  steps.forEach(s=>{ const li=document.createElement("li"); li.textContent=String(s); ol.appendChild(li); });
+  b.appendChild(ol);
+
+  const note=document.createElement("div");
+  note.textContent="※ .basファイルはVBA画面の「ファイル」→「ファイルのインポート」で読み込めるよ。日本語が文字化けするときはコピー&貼り付けが確実だよ。";
+  note.style.cssText="font-size:12px; color:var(--ink-soft); margin-top:8px;";
+  b.appendChild(note);
+
+  row.appendChild(mini); row.appendChild(b);
+  logEl.appendChild(row); mainEl.scrollTop=mainEl.scrollHeight;
+}
+
+async function makeVba(){
+  const topic=vbaTopic.value.trim();
+  if(!topic){ vbaNote.textContent="作りたいマクロの内容を書いてね。"; return; }
+  vbaMake.disabled=true; vbaNote.textContent="…コードを考えてるよ";
+  try{
+    const raw=await callClaude([{role:"user", content:topic}], VBA_SYS, 3000);
+    let txt=(raw||"").replace(/```json/gi,"").replace(/```/g,"").trim();
+    const a=txt.indexOf("{"), z=txt.lastIndexOf("}");
+    if(a>=0 && z>a) txt=txt.slice(a,z+1);
+    const json=JSON.parse(txt);
+    if(!json.code) throw new Error("コードが空だった");
+    vbaModal.hidden=true; vbaMake.disabled=false; vbaNote.textContent=""; vbaTopic.value="";
+    addVbaBubble(json);
+    history.push({role:"assistant", content:"「"+(json.title||topic)+"」のVBAマクロを作ったよ。"});
+    await saveMemory();
+  }catch(err){
+    vbaMake.disabled=false;
+    const m=(err&&err.message)?err.message:"原因不明";
+    vbaNote.textContent="うまく作れなかった…（"+m+"）";
+    console.error("makeVba failed:", err);
+  }
+}
+vbaMake.addEventListener("click", makeVba);
 
 (async function init(){
   setState("idle");
