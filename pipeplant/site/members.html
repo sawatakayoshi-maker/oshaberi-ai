@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>メンバー紹介｜株式会社パイプラント</title>
+<meta name="description" content="パイプラント号の乗組員（メンバー）紹介。配管のプロフェッショナルたちが、チームワークでひとつの現場をかたちにします。福井・坂井市の株式会社パイプラント。" />
+<meta property="og:title" content="メンバー紹介｜株式会社パイプラント" />
+<meta property="og:description" content="パイプラント号の乗組員たちをご紹介。クリックでひとりずつ会いに行けます。" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="株式会社パイプラント" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+<meta name="theme-color" content="#0B2942" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta property="og:image" content="assets/crew.png" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Ccircle cx=%2720%27 cy=%2720%27 r=%2719%27 fill=%27%230B2942%27 stroke=%27%23E8923A%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 14h10a5 5 0 0 1 5 5 5 5 0 0 1-5 5H11%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%272.4%27 stroke-linecap=%27round%27/%3E%3Ccircle cx=%2729%27 cy=%2719%27 r=%272.4%27 fill=%27%23E8923A%27/%3E%3C/svg%3E" />
+</head>
+<body>
+<a class="skip" href="#main">本文へスキップ</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="index.html" class="brand" aria-label="株式会社パイプラント ホーム">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" stroke="#E8923A" stroke-width="2"/>
+        <path d="M11 14h10a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H11" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="11" cy="14" r="2.4" fill="#3FB6C7"/>
+        <circle cx="11" cy="24" r="2.4" fill="#3FB6C7"/>
+        <circle cx="29" cy="19" r="2.4" fill="#E8923A"/>
+      </svg>
+      <span class="bt"><b>株式会社パイプラント</b><span>PIPE PLANT ／ NAKATEC GROUP</span></span>
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a class="lk" href="about.html">私たちについて</a>
+      <a class="lk" href="business.html">事業内容</a>
+      <a class="lk" href="works.html">施工事例</a>
+      <a class="lk" href="hydrogen.html">水素への挑戦</a>
+      <a class="lk" href="clients.html">発注をお考えの方へ</a>
+      <a class="lk" href="recruit.html">採用情報</a>
+      <a class="lk" href="members.html">メンバー</a>
+      <a class="lk" href="company.html">会社概要</a>
+      <div class="nav-cta">
+        <a class="btn btn-primary" href="contact.html">工事のご相談</a>
+      </div>
+    </nav>
+    <button class="nav-toggle" id="navtoggle" aria-label="メニュー"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="page-hero">
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <nav class="breadcrumb" aria-label="パンくず"><a href="index.html">ホーム</a><span class="sep">›</span><span>メンバー紹介</span></nav>
+    <span class="eyebrow on-dark">MEMBERS ／ CREW</span>
+    <h1>パイプラント号の、乗組員たち。</h1>
+    <p class="ph-lead">ひとつの現場は、ひとりでは完成しません。設計・製作・施工──それぞれの持ち場を守る仲間をご紹介します。<br><b>全体図の顔をクリック（タップ）すると、その人の紹介へジャンプします。</b></p>
+  </div>
+</div>
+
+<!-- ===== 全体イラスト（顔クリックでジャンプ） ===== -->
+<section class="recruit" style="padding-top:56px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">CREW MAP</span>
+      <h2 class="sec-title">全員集合。気になる顔をクリック。</h2>
+      <p class="lead">マウスを乗せると名前が表示されます。クリックすると下の紹介パネルに移動します。</p>
+    </div>
+    <div class="crew-map reveal" id="crewMap">
+      <img src="assets/crew.png" alt="パイプラントのメンバー全員集合イラスト" id="crewImg" />
+      <!-- ホットスポット（クリック領域）は members.html 下部のスクリプトが自動生成 -->
+    </div>
+    <p class="crew-note" id="crewNote" style="display:none">
+      ※ 集合イラスト（assets/crew.png）が未設置です。画像を <code>assets/crew.png</code> という名前で設置すると、全体図と顔の切り出しが表示されます。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 個別紹介パネル ===== -->
+<section class="recruit" style="padding-top:48px;background:linear-gradient(180deg,var(--ice-2),#fff)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">PROFILES</span>
+      <h2 class="sec-title">ひとりずつ、ご紹介。</h2>
+      <p class="lead">顔写真は上の集合イラストから切り出して表示しています。名前・役割・紹介文は管理画面（admin.html）の「🚢 乗組員」タブから編集できます。</p>
+    </div>
+    <div class="member-grid" id="memberGrid">
+      <!-- パネルはスクリプトが CREW リストから自動生成 -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== 次のページへ ===== -->
+<section class="next-nav">
+  <div class="wrap">
+    <div class="next-grid">
+      <a class="next-card reveal" href="recruit.html">
+        <div><i>RECRUIT</i><b>この船に乗りたい方へ（採用情報）</b></div>
+        <span class="ar">›</span>
+      </a>
+      <a class="next-card reveal" href="about.html">
+        <div><i>ABOUT</i><b>私たちについて知る</b></div>
+        <span class="ar">›</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT band ===== -->
+<section class="contact">
+  <div class="wrap">
+    <span class="eyebrow on-dark" style="justify-content:center">CONTACT</span>
+    <h2>一緒に働く仲間も、<br><span class="hl">いつでも</span>募集しています。</h2>
+    <p>「話を聞いてみたい」「現場を見てみたい」——どんなことでも、お気軽にどうぞ。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="recruit.html#entry">かんたんエントリーへ</a>
+      <a class="btn btn-ghost" href="tel:0776-51-9550">0776-51-9550</a>
+    </div>
+    <p class="meta">〒919-0411　福井県坂井市春江町藤鷲塚37-18　／　FAX 0776-51-9551</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="ft">
+  <div class="wrap">
+    <div class="ft-in">
+      <a href="index.html" class="brand">
+        <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="19" stroke="#E8923A" stroke-width="2"/>
+          <path d="M11 14h10a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H11" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="11" cy="14" r="2.4" fill="#3FB6C7"/><circle cx="11" cy="24" r="2.4" fill="#3FB6C7"/><circle cx="29" cy="19" r="2.4" fill="#E8923A"/>
+        </svg>
+        <span class="bt"><b>株式会社パイプラント</b><span>PIPE PLANT ／ NAKATEC GROUP</span></span>
+      </a>
+      <nav class="ft-links">
+        <a href="about.html">私たちについて</a>
+        <a href="business.html">事業内容</a>
+        <a href="works.html">施工事例</a>
+        <a href="hydrogen.html">水素への挑戦</a>
+        <a href="clients.html">発注をお考えの方へ</a>
+        <a href="recruit.html">採用情報</a>
+        <a href="members.html">メンバー紹介</a>
+        <a href="company.html">会社概要</a>
+        <a href="news.html">お知らせ</a>
+        <a href="contact.html">お問い合わせ</a>
+      </nav>
+    </div>
+    <div class="ft-copy">© <span data-year>2026</span> 株式会社パイプラント（ナカテックグループ）　福井県坂井市春江町藤鷲塚37-18 ／ TEL 0776-51-9550</div>
+  </div>
+</footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/crew.js"></script>
+<script src="assets/site.js"></script>
+<script>
+/* ============================================================
+   メンバー紹介ページ
+   ★ 管理者の方へ：メンバーの追加・編集は管理画面（admin.html）の
+     「🚢 乗組員」タブから行えます（初期データは assets/crew.js）。
+   ============================================================ */
+(function(){
+"use strict";
+/* 初期データ(crew.js) ← 管理画面の保存内容(localStorage)があれば上書き */
+var CREW=(window.CREW||[]).slice();
+try{
+  var ov=JSON.parse(localStorage.getItem('pp_crew')||'null');
+  if(Array.isArray(ov)&&ov.length) CREW=ov;
+}catch(e){}
+
+var mapEl=document.getElementById('crewMap');
+var img=document.getElementById('crewImg');
+var grid=document.getElementById('memberGrid');
+var note=document.getElementById('crewNote');
+var AR=4/3; /* 画像の縦横比（読み込み後に実寸で更新） */
+
+function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function num(v,d){var n=parseFloat(v);return isFinite(n)?n:d;}
+function hasFace(m){return num(m.cx,-1)>=0 && num(m.cy,-1)>=0;}
+
+/* 顔の切り出し（CSSスプライト）：正方形パネルに cx,cy 中心・幅fw で表示 */
+function faceStyle(m){
+  var fw=num(m.fw,0.095), fh=fw*AR;
+  var x0=num(m.cx,0)-fw/2, y0=num(m.cy,0)-fh/2;
+  var posX=(fw>=1)?0:x0/(1-fw)*100;
+  var posY=(fh>=1)?0:y0/(1-fh)*100;
+  return 'background-image:url(assets/crew.png);background-size:'+(100/fw)+'% auto;'+
+         'background-position:'+posX+'% '+posY+'%;';
+}
+
+function render(){
+  /* 1) 全体図の上にクリック領域（ホットスポット）を生成（顔位置のあるメンバーのみ） */
+  mapEl.querySelectorAll('.crew-hot').forEach(function(el){el.remove();});
+  CREW.filter(hasFace).forEach(function(m){
+    /* クリック領域は顔の実寸に合わせて切り出し枠より少し小さく（隣と重ならないように） */
+    var hw=num(m.fw,0.095)*0.62, hh=hw*AR;
+    var a=document.createElement('a');
+    a.className='crew-hot';
+    a.href='#'+m.id;
+    a.setAttribute('data-name',m.name);
+    a.setAttribute('aria-label',m.name+'（'+(m.role||'')+'）の紹介へ');
+    a.style.cssText='left:'+((num(m.cx,0)-hw/2)*100)+'%;top:'+((num(m.cy,0)-hh/2)*100)+'%;'+
+                    'width:'+(hw*100)+'%;height:'+(hh*100)+'%;';
+    mapEl.appendChild(a);
+  });
+  /* 2) 個別紹介パネルを生成（顔位置が無いメンバーは頭文字アバターで表示） */
+  grid.innerHTML=CREW.map(function(m){
+    var face=hasFace(m)
+      ? '<div class="m-face" style="'+faceStyle(m)+'" role="img" aria-label="'+esc(m.name)+'のイラスト"></div>'
+      : '<div class="m-face m-face-blank" aria-hidden="true">'+esc(String(m.name||'？').charAt(0))+'</div>';
+    return '<article class="member-card" id="'+esc(m.id)+'">'+face+
+      '<h3>'+esc(m.name)+'</h3>'+
+      (m.role?'<span class="m-role">'+esc(m.role)+'</span>':'')+
+      (m.msg?'<p>'+esc(m.msg)+'</p>':'<p class="m-empty">紹介文は準備中です。</p>')+
+      '<a class="m-back" href="#crewMap">↑ 全体図にもどる</a>'+
+      '</article>';
+  }).join('');
+}
+
+if(img.complete && img.naturalWidth>0){ AR=img.naturalWidth/img.naturalHeight; render(); }
+else{
+  img.addEventListener('load',function(){ AR=img.naturalWidth/img.naturalHeight; render(); });
+  img.addEventListener('error',function(){
+    /* 画像未設置でもページ構成が分かるよう、パネルは生成しスプライトは非表示 */
+    note.style.display='block';
+    mapEl.style.display='none';
+    render();
+  });
+}
+})();
+</script>
+</body>
+</html>

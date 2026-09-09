@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# 公開ドメインが決まったら、下のURLを実際のドメインに変更してください
+Sitemap: https://www.example.co.jp/sitemap.xml

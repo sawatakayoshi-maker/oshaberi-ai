@@ -1,0 +1,739 @@
+/* ============================================================
+   株式会社パイプラント 共通スクリプト
+   ナビ挙動／現在ページのハイライト／スクロール演出／
+   案内チャットボット（全ページ共通・自動挿入）
+   ============================================================ */
+(function(){
+"use strict";
+
+/* ===== nav behavior ===== */
+const nav=document.getElementById('nav');
+if(nav) addEventListener('scroll',()=>{nav.classList.toggle('scrolled',scrollY>40);});
+const navToggle=document.getElementById('navtoggle');
+const navLinks=document.getElementById('navlinks');
+if(navToggle&&navLinks){
+  navToggle.addEventListener('click',()=>navLinks.classList.toggle('show'));
+  navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('show')));
+}
+
+/* ===== 現在ページをナビ・フッターでハイライト ===== */
+const here=(location.pathname.split('/').pop()||'index.html');
+document.querySelectorAll('.nav-links a.lk, .ft-links a').forEach(a=>{
+  if(a.getAttribute('href')===here){
+    a.classList.add('active');
+    a.setAttribute('aria-current','page');
+  }
+});
+
+/* ===== scroll reveal ===== */
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ===== hero pipe draw（トップのみ） ===== */
+addEventListener('load',()=>{
+  document.querySelectorAll('.hero svg.pipes .pl').forEach((p,i)=>{
+    const len=p.getTotalLength();
+    p.style.strokeDasharray=len;p.style.strokeDashoffset=len;
+    p.style.transition='stroke-dashoffset 1.8s ease '+(i*0.25)+'s';
+    requestAnimationFrame(()=>{p.style.strokeDashoffset=0;});
+  });
+});
+
+/* ===== 後日差し替えリンクの無効化 ===== */
+document.querySelectorAll('[data-tbd-link]').forEach(el=>{
+  el.addEventListener('click',e=>e.preventDefault());
+});
+
+/* ============================================================
+   会社情報を config.js から全ページへ自動反映
+   （管理者は config.js だけ編集すればOK）
+   ============================================================ */
+/* 管理画面(admin.html)で保存した内容を localStorage から取り込み、
+   config.js の初期値に上書きする（同じ端末・ブラウザ内で反映）。 */
+window.SITE = window.SITE || {};
+try{
+  const ov=JSON.parse(localStorage.getItem('pp_site')||'null');
+  if(ov && typeof ov==='object') Object.assign(window.SITE, ov);
+}catch(e){}
+try{
+  const nv=JSON.parse(localStorage.getItem('pp_news')||'null');
+  if(Array.isArray(nv)) window.NEWS=nv;
+}catch(e){}
+const S = window.SITE;
+
+/* ============================================================
+   流入元（UTM・参照元）の自動記録 ─ 採用の経路分析用
+   ・SNSに貼った「?utm_source=...」付きリンクで来訪すると記録
+   ・応募／お問い合わせ送信時に「流入元」として自動添付
+   → GA4未設定でも「どのSNS経由の応募か」がメールで分かる
+   ============================================================ */
+(function(){
+  try{
+    const q=new URLSearchParams(location.search);
+    const utm={};
+    ['utm_source','utm_medium','utm_campaign'].forEach(k=>{ if(q.get(k)) utm[k]=q.get(k); });
+    if(Object.keys(utm).length) sessionStorage.setItem('pp_utm',JSON.stringify(utm));
+    if(!sessionStorage.getItem('pp_ref') && document.referrer && document.referrer.indexOf(location.host)===-1){
+      sessionStorage.setItem('pp_ref',document.referrer);
+    }
+  }catch(e){}
+})();
+/* 流入元を1行のテキストにして返す（フォーム添付・GA4イベント用） */
+window.PP_SOURCE=function(){
+  try{
+    const utm=JSON.parse(sessionStorage.getItem('pp_utm')||'null');
+    const ref=sessionStorage.getItem('pp_ref')||'';
+    if(utm && utm.utm_source){
+      let t=utm.utm_source+(utm.utm_medium?' / '+utm.utm_medium:'')+(utm.utm_campaign?' / '+utm.utm_campaign:'');
+      return t;
+    }
+    if(ref) return '参照元: '+ref;
+  }catch(e){}
+  return '直接アクセス・ブックマーク等';
+};
+function telHref(n){ return 'tel:'+String(n||'').replace(/[^0-9+]/g,''); }
+/* data-site="キー名" の要素にテキストを流し込む */
+document.querySelectorAll('[data-site]').forEach(el=>{
+  const key=el.getAttribute('data-site');
+  if(key==='tel-link'){ if(S.tel){ el.setAttribute('href',telHref(S.tel)); } return; }
+  if(key==='mail-link'){ if(S.email){ el.setAttribute('href','mailto:'+S.email); } return; }
+  if(key==='address-full'){ el.textContent=(S.postal?S.postal+'　':'')+(S.address||''); return; }
+  if(S[key]!=null && S[key]!=='') el.textContent=S[key];
+});
+/* tel: で始まるリンクは config の番号で統一（表記ゆれ防止） */
+if(S.tel){
+  document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.setAttribute('href',telHref(S.tel)));
+}
+/* フッターの年号を自動更新（©表記の「西暦」を最新に） */
+document.querySelectorAll('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
+
+/* ===== Instagram / 地図リンクの自動有効化 ===== */
+(function(){
+  const ig=document.querySelector('[data-ig]');
+  if(ig){
+    if(S.instagramUrl){ ig.setAttribute('href',S.instagramUrl); ig.removeAttribute('aria-disabled'); ig.target='_blank'; ig.rel='noopener'; ig.textContent='Instagramをフォロー'; }
+  }
+  const mapWrap=document.querySelector('[data-map]');
+  if(mapWrap && S.mapEmbed){
+    mapWrap.innerHTML='<iframe title="所在地の地図" src="'+S.mapEmbed+'" width="100%" height="100%" style="border:0;min-height:inherit;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>';
+    mapWrap.style.padding='0';mapWrap.style.border='0';
+  }
+})();
+
+/* ===== canonical / og:url を公開URLから自動設定（SEO） ===== */
+(function(){
+  if(!S.siteUrl) return;
+  const base=S.siteUrl.replace(/\/+$/,'');
+  const url=base+'/'+here;
+  let c=document.querySelector('link[rel="canonical"]');
+  if(!c){ c=document.createElement('link'); c.rel='canonical'; document.head.appendChild(c); }
+  c.href=url;
+  let og=document.querySelector('meta[property="og:url"]');
+  if(!og){ og=document.createElement('meta'); og.setAttribute('property','og:url'); document.head.appendChild(og); }
+  og.content=url;
+})();
+
+/* ============================================================
+   構造化データ（JSON-LD / 地域ビジネス）を自動生成
+   → Google検索・地図での見え方を改善（ローカルSEO）
+   ============================================================ */
+(function(){
+  try{
+    const ld={
+      "@context":"https://schema.org",
+      "@type":"GeneralContractor",
+      "name":S.companyName||"株式会社パイプラント",
+      "telephone":S.tel||"",
+      "faxNumber":S.fax||"",
+      "url":S.siteUrl||location.origin,
+      "areaServed":"福井県",
+      "parentOrganization":S.group||"",
+      "address":{
+        "@type":"PostalAddress",
+        "postalCode":(S.postal||"").replace(/[^0-9-]/g,''),
+        "addressRegion":"福井県",
+        "addressLocality":"坂井市",
+        "streetAddress":(S.address||"").replace(/^福井県坂井市/,'')
+      },
+      "description":"高圧ガス・化学プラントの配管設備工事から次世代エネルギー『水素』まで。設計・製作・施工を一貫対応。"
+    };
+    if(S.email) ld.email=S.email;
+    var same=[S.instagramUrl,S.tiktokUrl,S.youtubeUrl,S.xUrl].filter(Boolean);
+    if(same.length) ld.sameAs=same;
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify(ld);
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ===== パンくずの構造化データ（BreadcrumbList）→ 検索結果に階層表示 ===== */
+(function(){
+  const bc=document.querySelector('.breadcrumb');
+  if(!bc) return;
+  try{
+    const base=(S.siteUrl||location.origin).replace(/\/+$/,'');
+    const items=[]; let pos=1;
+    bc.querySelectorAll('a, span:not(.sep)').forEach(el=>{
+      if(el.classList.contains('sep'))return;
+      const it={"@type":"ListItem","position":pos++,"name":el.textContent.trim()};
+      const href=el.getAttribute && el.getAttribute('href');
+      if(href) it.item=base+'/'+href.replace(/^\.?\//,'');
+      items.push(it);
+    });
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":items});
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ===== FAQの構造化データ（FAQPage）→ 検索結果にQ&Aが出やすくなる ===== */
+(function(){
+  const faqs=document.querySelectorAll('details.faq');
+  if(!faqs.length) return;
+  try{
+    const qa=[];
+    faqs.forEach(d=>{
+      const q=d.querySelector('summary'); const a=d.querySelector('.ans');
+      if(!q||!a)return;
+      qa.push({"@type":"Question","name":q.textContent.trim(),
+        "acceptedAnswer":{"@type":"Answer","text":a.textContent.trim()}});
+    });
+    const sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify({"@context":"https://schema.org","@type":"FAQPage","mainEntity":qa});
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ============================================================
+   Googleアナリティクス4（config の gaId を設定したときのみ作動）
+   ============================================================ */
+(function(){
+  const id=S.gaId;
+  if(!id) return;
+  const g=document.createElement('script');
+  g.async=true;g.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(id);
+  document.head.appendChild(g);
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){dataLayer.push(arguments);};
+  gtag('js',new Date());gtag('config',id);
+})();
+
+/* ============================================================
+   お知らせ（News）を news.js から描画
+   #newsList（トップ:最新3件） / #newsListFull（一覧:全件）
+   ============================================================ */
+(function(){
+  const list=window.NEWS||[];
+  const fmt=(d)=>{ const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[1]+'.'+m[2]+'.'+m[3]:(d||''); };
+  function card(n){
+    const tag=n.tag?'<span class="ntag">'+n.tag+'</span>':'';
+    const inner='<time>'+fmt(n.date)+'</time>'+tag+
+      '<div class="ntitle">'+(n.title||'')+'</div>'+
+      (n.body?'<p class="nbody">'+n.body+'</p>':'');
+    if(n.link){
+      const ext=/^https?:/.test(n.link);
+      return '<a class="news-item" href="'+n.link+'"'+(ext?' target="_blank" rel="noopener"':'')+'>'+inner+'<span class="nar">›</span></a>';
+    }
+    return '<div class="news-item">'+inner+'</div>';
+  }
+  const top=document.getElementById('newsList');
+  if(top){ top.innerHTML=list.slice(0,3).map(card).join(''); }
+  const full=document.getElementById('newsListFull');
+  if(full){ full.innerHTML=(list.length?list.map(card).join(''):'<p class="lead">お知らせは準備中です。</p>'); }
+})();
+
+/* ============================================================
+   施工事例（Works）を管理画面の保存内容で描画（あれば差し替え）
+   #worksGrid に pp_works があれば上書き表示
+   ============================================================ */
+(function(){
+  const grid=document.getElementById('worksGrid');
+  if(!grid) return;
+  let works=null;
+  try{ works=JSON.parse(localStorage.getItem('pp_works')||'null'); }catch(e){}
+  if(!Array.isArray(works) || !works.length) return; // 未登録なら静的HTMLのまま
+  const esc=(s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  grid.innerHTML=works.map(w=>{
+    const thumb=w.img
+      ? '<div class="thumb" style="background:#000"><img src="'+w.img+'" alt="'+esc(w.title)+'" style="width:100%;height:100%;object-fit:cover"></div>'
+      : '<div class="thumb ph-img">施工写真</div>';
+    const tags=(w.tags||[]).map(t=>'<span>'+esc(t)+'</span>').join('');
+    return '<article class="work">'+thumb+'<div class="wbody">'+
+      (w.cat?'<span class="cat">'+esc(w.cat)+'</span>':'')+
+      '<h3>'+esc(w.title)+'</h3>'+
+      (w.desc?'<p>'+esc(w.desc)+'</p>':'')+
+      (tags?'<div class="tags">'+tags+'</div>':'')+
+      '</div></article>';
+  }).join('');
+})();
+
+/* ===== 読み進みプログレスバー（上部） ===== */
+(function(){
+  const bar=document.createElement('div');bar.className='read-progress';document.body.appendChild(bar);
+  const upd=()=>{
+    const h=document.documentElement;
+    const max=(h.scrollHeight-h.clientHeight)||1;
+    bar.style.width=Math.min(100,(h.scrollTop/max)*100)+'%';
+  };
+  addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
+})();
+
+/* ============================================================
+   トップへ戻るボタン（全ページ自動挿入）
+   ============================================================ */
+(function(){
+  const btn=document.createElement('button');
+  btn.className='to-top';btn.id='toTop';btn.setAttribute('aria-label','ページ上部へ戻る');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(btn);
+  addEventListener('scroll',()=>btn.classList.toggle('show',scrollY>600));
+  btn.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+})();
+
+/* ============================================================
+   モバイル固定アクションバー（電話／お問い合わせ）
+   → スマホで常に「電話・相談」へ到達でき、問い合わせ率を高める
+   ============================================================ */
+(function(){
+  const bar=document.createElement('div');
+  bar.className='mobile-cta';
+  bar.innerHTML=
+    '<a class="mc-tel" href="'+telHref(S.tel||'0776-51-9550')+'">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>'+
+      '電話する</a>'+
+    '<a class="mc-contact" href="contact.html">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16v12H7l-3 3V4z" stroke-linejoin="round"/></svg>'+
+      'お問い合わせ</a>';
+  document.body.appendChild(bar);
+})();
+
+/* ============================================================
+   お問い合わせフォーム（contact.html）の送信処理
+   formEndpoint があればそこへ送信、無ければメール送信に切替
+   ============================================================ */
+(function(){
+  const form=document.getElementById('contactForm');
+  if(!form) return;
+  const status=document.getElementById('formStatus');
+  function say(msg,ok){ if(status){ status.textContent=msg; status.className='form-status'+(ok?' ok':' err'); } }
+  form.addEventListener('submit',async (e)=>{
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    const data=new FormData(form);
+    data.append('流入元',window.PP_SOURCE?window.PP_SOURCE():'');
+    if(window.gtag){ try{ gtag('event','contact_submit',{event_category:'contact',traffic_note:window.PP_SOURCE()}); }catch(_){} }
+    /* 送信先が未設定なら、メールソフトを開く方式にフォールバック */
+    if(!S.formEndpoint){
+      const to=S.email||'';
+      const subj=encodeURIComponent('【お問い合わせ】'+(data.get('name')||''));
+      const body=encodeURIComponent(
+        'お名前：'+(data.get('name')||'')+'\n'+
+        'ご連絡先：'+(data.get('contact')||'')+'\n'+
+        'ご用件：'+(data.get('topic')||'')+'\n'+
+        '流入元：'+(data.get('流入元')||'')+'\n\n'+
+        (data.get('message')||''));
+      if(to){ window.location.href='mailto:'+to+'?subject='+subj+'&body='+body;
+        say('メールソフトを開きました。内容をご確認のうえ送信してください。',true); }
+      else { say('現在フォーム送信先が未設定です。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+      return;
+    }
+    try{
+      say('送信しています…',true);
+      const res=await fetch(S.formEndpoint,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+      if(res.ok){ form.reset(); say('送信しました。ありがとうございます。担当者よりご連絡いたします。',true); }
+      else { say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+    }catch(err){ say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+  });
+})();
+
+/* ===== SCENARIO CHATBOT（全ページに自動挿入） ===== */
+const PHONE="0776-51-9550";
+const tree={
+  root:{
+    bot:["こんにちは！株式会社パイプラントの案内チャットです🔧","ご用件をお選びください。"],
+    options:[
+      {t:"🏭 工事・施工を依頼したい",go:"order"},
+      {t:"👷 採用・働くことについて",go:"recruit"},
+      {t:"📋 事業内容を知りたい",go:"biz"},
+      {t:"💧 水素の取り組みについて",go:"h2"},
+      {t:"🏢 会社概要・連絡先",go:"company"},
+    ]
+  },
+  order:{
+    bot:["ありがとうございます。どのような工事をご検討ですか？"],
+    options:[
+      {t:"プラント配管工事",go:"order_pipe"},
+      {t:"機械の組立・据付・メンテナンス",go:"order_machine"},
+      {t:"製缶加工（架台・塔槽・熱交換器 等）",go:"order_kankan"},
+      {t:"断熱・足場・その他",go:"order_other"},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  order_pipe:{
+    bot:["プラント配管工事は当社の主力です。","各種プラント向け配管の製作・施工、LNG・LPGなど高圧ガス配管、高圧水素用ステンレス『HRX19』の溶接、食品・医療向けサニタリー配管、BA巻の自動溶接によるチュービング配管まで対応します。","設計から施工まで一貫してお任せいただけます。"],
+    options:[
+      {t:"📞 電話で相談する",href:"tel:"+PHONE,alt:true},
+      {t:"✉ お問い合わせページへ",href:"contact.html",alt:true},
+      {t:"📋 事業内容ページで詳しく見る",href:"business.html",alt:true},
+      {t:"他の工事も見る",go:"order"},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  order_machine:{
+    bot:["工場設備の組立・現地据付、メンテナンス、設備故障時の緊急対応、定期保全まで対応します。","「定期保全を任せたい」といったご相談も歓迎です。"],
+    options:[
+      {t:"📞 電話で相談する",href:"tel:"+PHONE,alt:true},
+      {t:"✉ お問い合わせページへ",href:"contact.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  order_kankan:{
+    bot:["各種製缶加工に対応します。","配管用架台・スタンション・サポート、ステンレス製・鉄製の塔槽類、熱交換器、各種ダクト及び煙道、各種架台・歩廊などを製作します。"],
+    options:[
+      {t:"📞 電話で相談する",href:"tel:"+PHONE,alt:true},
+      {t:"✉ お問い合わせページへ",href:"contact.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  order_other:{
+    bot:["断熱工事や足場工事にも対応しています。","その他のご要望についてもご相談に応じますので、まずはお気軽にお問い合わせください。"],
+    options:[
+      {t:"📞 電話で相談する",href:"tel:"+PHONE,alt:true},
+      {t:"✉ お問い合わせページへ",href:"contact.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  recruit:{
+    bot:["採用にご興味をお持ちいただきありがとうございます👷","どんなことが知りたいですか？"],
+    options:[
+      {t:"未経験でも大丈夫？",go:"rec_exp"},
+      {t:"どんな仕事をするの？",go:"rec_job"},
+      {t:"募集要項・応募方法",go:"rec_apply"},
+      {t:"👷 採用ページを見る",href:"recruit.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  rec_exp:{
+    bot:["未経験の方も歓迎です。","専門性の高い配管技術を、先輩のサポートを受けながら一歩ずつ習得できます。一人ひとりの技術力に加え、チームワークを大切にする現場です。"],
+    options:[
+      {t:"募集要項を見たい",go:"rec_apply"},
+      {t:"👷 採用ページを見る",href:"recruit.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  rec_job:{
+    bot:["工場で使われる配管の設計から製作、施工までを担います。","プラント配管工事を中心に、機械の組立・据付、製缶加工など。水素ステーションやFCVなど、次世代エネルギーの最前線に関わるチャンスもあります。"],
+    options:[
+      {t:"未経験でも大丈夫？",go:"rec_exp"},
+      {t:"募集要項を見たい",go:"rec_apply"},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  rec_apply:{
+    bot:(function(){
+      /* 募集要項が config（管理画面）に入力済みなら、その内容を自動で案内する */
+      if((S.recJobTitle||'').trim()){
+        const lines=['現在の募集はこちらです👇',
+          '【職種】'+S.recJobTitle+(S.recEmployment?'（'+S.recEmployment+'）':'')+
+          (S.recSalary?'\n【給与】'+S.recSalary:'')+
+          (S.recHours?'\n【勤務時間】'+S.recHours:'')+
+          (S.recHolidays?'\n【休日】'+S.recHolidays:''),
+          '採用ページの「かんたんエントリー」（お名前と連絡先だけ・30秒）からご応募いただけます。'];
+        return lines;
+      }
+      return ["職種・給与・勤務時間・福利厚生などの詳細は、現在準備中です（※後日掲載）。","まずはお電話、またはお問い合わせフォームよりお気軽にご連絡ください。"];
+    })(),
+    options:[
+      {t:"📞 電話する（"+PHONE+"）",href:"tel:"+PHONE,alt:true},
+      {t:"👷 採用ページへ移動",href:"recruit.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  biz:{
+    bot:["当社の主な事業内容はこちらです。","①プラント配管工事（主力）②機械組立・据付・各種メンテナンス ③各種製缶加工 ④断熱・足場ほか。","詳しく知りたい分野はありますか？"],
+    options:[
+      {t:"プラント配管工事",go:"order_pipe"},
+      {t:"機械組立・据付・メンテナンス",go:"order_machine"},
+      {t:"製缶加工",go:"order_kankan"},
+      {t:"水素の取り組み",go:"h2"},
+      {t:"📋 事業内容ページを見る",href:"business.html",alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  h2:{
+    bot:["次世代エネルギー『水素』の分野に積極的に取り組んでいます💧","・水素ステーションの増設・新規開設工事\n・自動車（FCV）向け水素タンクの共同開発\n・水素用高圧配管等の工事\n・各化学プラント向けの水素燃料への転換工事"],
+    options:[
+      {t:"💧 水素への挑戦ページを見る",href:"hydrogen.html",alt:true},
+      {t:"📞 電話で相談する",href:"tel:"+PHONE,alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+  company:{
+    bot:["会社概要・連絡先はこちらです🏢","【名称】株式会社パイプラント\n【所在地】〒919-0411 福井県坂井市春江町藤鷲塚37-18\n【TEL／FAX】0776-51-9550 ／ 0776-51-9551\n【所属】ナカテックグループ"],
+    options:[
+      {t:"🏢 会社概要ページへ",href:"company.html",alt:true},
+      {t:"📞 電話する",href:"tel:"+PHONE,alt:true},
+      {t:"← 最初に戻る",go:"root",back:true},
+    ]
+  },
+};
+
+/* チャットボットのDOMを全ページに挿入（HTML側の重複記述を不要にする） */
+document.body.insertAdjacentHTML('beforeend',
+'<button class="cb-launch" id="cbLaunch" aria-label="チャットで相談する">'+
+  '<span class="pulse"></span>'+
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.4 8.4 0 0 1-12 7.6L3 21l1.9-6A8.4 8.4 0 1 1 21 11.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+  'ご相談・採用チャット'+
+'</button>'+
+'<div class="cb-panel" id="cbPanel" role="dialog" aria-label="相談チャット">'+
+  '<div class="cb-head">'+
+    '<div class="ava"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 14h6a3 3 0 0 0 0-6h-6M7 8H5M7 14H5"/><circle cx="11" cy="8" r="1.6" fill="#fff" stroke="none"/><circle cx="11" cy="14" r="1.6" fill="#fff" stroke="none"/></svg></div>'+
+    '<div class="ht"><b>パイプラント案内チャット</b><span>オンライン・自動応答</span></div>'+
+    '<button class="x" id="cbClose" aria-label="閉じる">×</button>'+
+  '</div>'+
+  '<div class="cb-body" id="cbBody"></div>'+
+  '<div class="cb-quick" id="cbQuick"></div>'+
+'</div>');
+
+const cbLaunch=document.getElementById('cbLaunch');
+const cbPanel=document.getElementById('cbPanel');
+const cbClose=document.getElementById('cbClose');
+const cbBody=document.getElementById('cbBody');
+const cbQuick=document.getElementById('cbQuick');
+let cbStarted=false;
+
+function botRow(text){
+  const row=document.createElement('div');row.className='cb-row';
+  row.innerHTML='<div class="bava"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M11 14h6a3 3 0 0 0 0-6h-6M7 8H5M7 14H5"/></svg></div>';
+  const b=document.createElement('div');b.className='bubble';b.innerText=text;
+  row.appendChild(b);cbBody.appendChild(row);cbBody.scrollTop=cbBody.scrollHeight;
+}
+function userRow(text){
+  const b=document.createElement('div');b.className='bubble user';b.innerText=text;
+  cbBody.appendChild(b);cbBody.scrollTop=cbBody.scrollHeight;
+}
+function typing(){
+  const row=document.createElement('div');row.className='cb-row';row.id='typingRow';
+  row.innerHTML='<div class="bava"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M11 14h6a3 3 0 0 0 0-6h-6"/></svg></div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  cbBody.appendChild(row);cbBody.scrollTop=cbBody.scrollHeight;
+}
+function clearTyping(){const t=document.getElementById('typingRow');if(t)t.remove();}
+
+function renderNode(key){
+  const node=tree[key];if(!node)return;
+  cbQuick.innerHTML='';
+  typing();
+  let i=0;
+  const showNext=()=>{
+    if(i<node.bot.length){
+      if(i===0)clearTyping();
+      botRow(node.bot[i]);i++;
+      setTimeout(showNext,420);
+    }else{
+      renderOptions(node.options);
+    }
+  };
+  setTimeout(showNext,520);
+}
+function renderOptions(options){
+  cbQuick.innerHTML='';
+  options.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='qbtn'+(o.alt?' alt':'')+(o.back?' back':'');
+    btn.innerText=o.t;
+    btn.addEventListener('click',()=>{
+      if(o.href){
+        window.location.href=o.href;
+        return;
+      }
+      if(!o.back)userRow(o.t);
+      renderNode(o.go);
+    });
+    cbQuick.appendChild(btn);
+  });
+}
+function openPanel(){
+  cbPanel.classList.add('open');cbLaunch.style.display='none';
+  if(!cbStarted){cbStarted=true;renderNode('root');}
+}
+function closePanel(){cbPanel.classList.remove('open');cbLaunch.style.display='';}
+cbLaunch.addEventListener('click',openPanel);
+cbClose.addEventListener('click',closePanel);
+
+/* ESCキー：チャット／モバイルメニューを閉じる */
+document.addEventListener('keydown',(e)=>{
+  if(e.key!=='Escape')return;
+  if(cbPanel.classList.contains('open'))closePanel();
+  if(navLinks&&navLinks.classList.contains('show'))navLinks.classList.remove('show');
+});
+/* チャットの外側タップで閉じる */
+document.addEventListener('click',(e)=>{
+  if(!cbPanel.classList.contains('open'))return;
+  if(cbPanel.contains(e.target)||cbLaunch.contains(e.target))return;
+  closePanel();
+});
+
+})();
+
+(function(){
+"use strict";
+var S=window.SITE||{};
+/* ============================================================
+   ▼▼ 採用強化アップデート（低コスト採用 実行プラン対応） ▼▼
+   1) SNS 4媒体リンクの自動有効化（フッター・採用ページ）
+   2) 募集要項を config から自動反映（空欄は「後日掲載」）
+   3) Googleしごと検索用 JobPosting 構造化データの自動生成
+   4) 応募専用かんたんフォーム（entryForm）の送信処理
+   5) og:image の自動設定
+   ※ 管理者は admin.html（または config.js）を編集するだけでOK
+   ============================================================ */
+
+/* ===== 1) SNSリンク（TikTok / Instagram / YouTube / X） ===== */
+(function(){
+  var sns=[
+    {key:'tiktokUrl',    name:'TikTok'},
+    {key:'instagramUrl', name:'Instagram'},
+    {key:'youtubeUrl',   name:'YouTube'},
+    {key:'xUrl',         name:'X（旧Twitter）'}
+  ];
+  /* data-sns="tiktokUrl" などの要素を自動で有効化／「準備中」表示 */
+  document.querySelectorAll('[data-sns]').forEach(function(el){
+    var key=el.getAttribute('data-sns'); var url=S[key];
+    if(url){
+      el.setAttribute('href',url); el.removeAttribute('aria-disabled');
+      el.classList.remove('is-tbd'); el.target='_blank'; el.rel='noopener';
+      var note=el.querySelector('.sns-note'); if(note) note.textContent='公式アカウントを見る →';
+    }else{
+      el.classList.add('is-tbd');
+      el.addEventListener('click',function(e){e.preventDefault();});
+    }
+  });
+  /* フッターにSNSアイコンを自動挿入（URLが1つでも設定されたら表示） */
+  var icons={
+    tiktokUrl:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.27 4.27 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 1 1-2.59-2.59c.27 0 .53.04.78.12V9.77a5.76 5.76 0 0 0-.78-.05 5.66 5.66 0 1 0 5.66 5.66V9.01a7.3 7.3 0 0 0 4.27 1.37V7.3a4.28 4.28 0 0 1-3.19-1.48z"/></svg>',
+    instagramUrl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>',
+    youtubeUrl:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.5s-.22-1.56-.9-2.25c-.86-.9-1.82-.9-2.26-.96C16.7 4.06 12 4.06 12 4.06h-.01s-4.7 0-7.84.23c-.44.05-1.4.06-2.26.96C1.2 5.94 1 7.5 1 7.5S.77 9.33.77 11.16v1.66C.77 14.65 1 16.5 1 16.5s.21 1.56.89 2.25c.86.9 2 .87 2.5.96 1.8.17 7.61.22 7.61.22s4.71-.01 7.85-.23c.44-.06 1.4-.07 2.26-.97.68-.69.9-2.25.9-2.25s.22-1.84.22-3.66v-1.66C23.22 9.33 23 7.5 23 7.5zM9.5 14.9V8.6l6.1 3.16-6.1 3.15z"/></svg>',
+    xUrl:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.25 2h3.32l-7.25 8.29L22.85 22h-6.68l-5.23-6.84L4.96 22H1.63l7.76-8.87L1.15 2h6.85l4.73 6.25L18.25 2zm-1.17 18h1.84L6.99 3.9H5.02L17.08 20z"/></svg>'
+  };
+  var has=sns.some(function(o){return S[o.key];});
+  if(has){
+    var ftIn=document.querySelector('.ft .ft-in');
+    if(ftIn && !document.querySelector('.ft-sns')){
+      var bar=document.createElement('div'); bar.className='ft-sns';
+      bar.innerHTML='<span class="ft-sns-label">公式SNS</span>'+sns.filter(function(o){return S[o.key];}).map(function(o){
+        return '<a href="'+S[o.key]+'" target="_blank" rel="noopener" aria-label="'+o.name+'">'+icons[o.key]+'</a>';
+      }).join('');
+      ftIn.appendChild(bar);
+    }
+  }
+})();
+
+/* ===== 2) 募集要項を config から自動反映 ===== */
+(function(){
+  var map={recJobTitle:'rec-jobTitle',recEmployment:'rec-employment',recSalary:'rec-salary',
+           recHours:'rec-hours',recHolidays:'rec-holidays',recBenefits:'rec-benefits'};
+  Object.keys(map).forEach(function(k){
+    var el=document.querySelector('[data-rec="'+k+'"]');
+    if(!el) return;
+    var v=(S[k]||'').trim();
+    if(v){ el.innerHTML=''; el.textContent=v; }
+    /* 空欄なら静的HTMLの「後日掲載」表示のまま */
+  });
+})();
+
+/* ===== 3) JobPosting 構造化データ（Googleしごと検索・無料掲載） =====
+   必須項目（職種・掲載開始日）が入力された場合のみ自動生成します。
+   ※ ページに表示されている内容と一致させるのがGoogleのルールのため、
+     未入力（後日掲載）の間は出力しません。 */
+(function(){
+  if(!document.getElementById('recruitTable')) return;       /* 採用ページのみ */
+  if(!(S.recJobTitle||'').trim() || !(S.recDatePosted||'').trim()) return;
+  try{
+    var empMap={'正社員':'FULL_TIME','契約社員':'CONTRACTOR','パート・アルバイト':'PART_TIME'};
+    var desc='プラント配管の設計・製作・施工／機械組立・据付・メンテナンス／製缶加工 など。'+
+      '未経験からでも、先輩のサポートを受けながら確かな配管技術を習得できます。'+
+      '水素ステーションやFCVなど次世代エネルギーの最前線に関わるチャンスもあります。'+
+      ((S.recBenefits||'').trim()?('福利厚生：'+S.recBenefits):'');
+    var ld={
+      "@context":"https://schema.org/",
+      "@type":"JobPosting",
+      "title":S.recJobTitle,
+      "description":"<p>"+desc+"</p>",
+      "datePosted":S.recDatePosted,
+      "hiringOrganization":{
+        "@type":"Organization",
+        "name":S.companyName||"株式会社パイプラント",
+        "sameAs":S.siteUrl||undefined
+      },
+      "jobLocation":{
+        "@type":"Place",
+        "address":{
+          "@type":"PostalAddress",
+          "postalCode":(S.postal||"").replace(/[^0-9-]/g,''),
+          "addressRegion":"福井県",
+          "addressLocality":"坂井市",
+          "streetAddress":(S.address||"").replace(/^福井県坂井市/,''),
+          "addressCountry":"JP"
+        }
+      }
+    };
+    if(empMap[S.recEmployment]) ld.employmentType=empMap[S.recEmployment];
+    if((S.recValidThrough||'').trim()) ld.validThrough=S.recValidThrough;
+    var mn=parseInt(S.recSalaryMin,10), mx=parseInt(S.recSalaryMax,10);
+    if(mn>0){
+      ld.baseSalary={"@type":"MonetaryAmount","currency":"JPY",
+        "value":{"@type":"QuantitativeValue","minValue":mn,"unitText":"MONTH"}};
+      if(mx>0) ld.baseSalary.value.maxValue=mx;
+    }
+    var sc=document.createElement('script');
+    sc.type='application/ld+json';
+    sc.textContent=JSON.stringify(ld);
+    document.head.appendChild(sc);
+  }catch(e){}
+})();
+
+/* ===== 4) 応募専用かんたんフォーム（3項目） ===== */
+(function(){
+  var form=document.getElementById('entryForm');
+  if(!form) return;
+  var status=document.getElementById('entryStatus');
+  function say(msg,ok){ if(status){ status.textContent=msg; status.className='form-status'+(ok?' ok':' err'); } }
+  form.addEventListener('submit',async function(e){
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    var data=new FormData(form);
+    data.append('種別','採用エントリー');
+    var src=window.PP_SOURCE?window.PP_SOURCE():'';
+    data.append('流入元',src);
+    if(window.gtag){ try{ gtag('event','entry_submit',{event_category:'recruit',traffic_note:src}); }catch(_){} }
+    if(!S.formEndpoint){
+      var to=S.email||'';
+      var subj=encodeURIComponent('【採用エントリー】'+(data.get('name')||''));
+      var body=encodeURIComponent('お名前：'+(data.get('name')||'')+'\n連絡先：'+(data.get('contact')||'')+'\n流入元：'+src+'\n\n'+(data.get('message')||''));
+      if(to){ window.location.href='mailto:'+to+'?subject='+subj+'&body='+body;
+        say('メールソフトを開きました。内容をご確認のうえ送信してください。',true); }
+      else{ say('現在フォーム送信先が未設定です。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+      return;
+    }
+    try{
+      say('送信しています…',true);
+      var res=await fetch(S.formEndpoint,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+      if(res.ok){ form.reset(); say('エントリーを受け付けました。担当者よりご連絡いたします。ありがとうございます！',true); }
+      else{ say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+    }catch(err){ say('送信に失敗しました。お手数ですがお電話（'+(S.tel||'')+'）でご連絡ください。',false); }
+  });
+})();
+
+/* ===== 5) og:image の自動設定（siteUrl設定後は絶対URLに昇格） ===== */
+(function(){
+  var img=S.ogImage||'assets/ogp.png';
+  var abs=S.siteUrl ? S.siteUrl.replace(/\/+$/,'')+'/'+img.replace(/^\.?\//,'') : img;
+  var og=document.querySelector('meta[property="og:image"]');
+  if(!og){ og=document.createElement('meta'); og.setAttribute('property','og:image'); document.head.appendChild(og); }
+  og.content=abs;
+})();
+
+})();
